@@ -26,6 +26,23 @@ export class UserService {
   }
 
   /**
+   * Get or create user by Clerk ID
+   * If user doesn't exist, creates a new user with the provided email
+   * Returns the user with their subscription status
+   */
+  static async getOrCreateUser(clerkId: string, email: string): Promise<User> {
+    // Try to find existing user
+    let user = await this.getUserByClerkId(clerkId)
+
+    // If user doesn't exist, create them
+    if (!user) {
+      user = await this.createUser(clerkId, email)
+    }
+
+    return user
+  }
+
+  /**
    * Update user subscription status
    */
   static async updateSubscriptionStatus(userId: string, subscribed: boolean): Promise<User> {

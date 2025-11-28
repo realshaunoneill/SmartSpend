@@ -68,8 +68,11 @@ export function SpendingSummary({ data, period, onPeriodChange }: SpendingSummar
                   <span className="capitalize text-muted-foreground">{item.category}</span>
                   <span className="font-medium text-foreground">${item.amount.toFixed(2)}</span>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                  <div className="h-full bg-primary transition-all" style={{ width: `${item.percentage}%` }} />
+                <div className="h-2 w-full overflow-hidden rounded-full bg-muted/50">
+                  <div 
+                    className="h-full rounded-full bg-primary transition-all" 
+                    style={{ width: `${item.percentage}%` }} 
+                  />
                 </div>
               </div>
             ))}

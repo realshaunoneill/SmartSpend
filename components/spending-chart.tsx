@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
@@ -39,8 +40,42 @@ const mockData = {
   ],
 }
 
+// Custom tooltip component that properly uses theme colors
+function CustomTooltip({ active, payload, label }: any) {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-lg border border-border bg-popover p-3 shadow-lg">
+        <p className="mb-1 font-semibold text-foreground">{label}</p>
+        <p className="text-sm text-foreground">
+          <span className="font-medium">Amount:</span> ${payload[0].value?.toFixed(2)}
+        </p>
+      </div>
+    )
+  }
+  return null
+}
+
 export function SpendingChart({ period }: SpendingChartProps) {
   const data = mockData[period]
+  const [colors, setColors] = useState({
+    primary: "#10b981",
+    border: "#e5e7eb",
+    muted: "#f3f4f6",
+    mutedForeground: "#6b7280",
+  })
+
+  useEffect(() => {
+    // Get computed CSS variables after component mounts
+    const root = document.documentElement
+    const styles = getComputedStyle(root)
+    
+    setColors({
+      primary: styles.getPropertyValue("--color-primary").trim() || "#10b981",
+      border: styles.getPropertyValue("--color-border").trim() || "#e5e7eb",
+      muted: styles.getPropertyValue("--color-muted").trim() || "#f3f4f6",
+      mutedForeground: styles.getPropertyValue("--color-muted-foreground").trim() || "#6b7280",
+    })
+  }, [])
 
   return (
     <Card>
@@ -51,18 +86,28 @@ export function SpendingChart({ period }: SpendingChartProps) {
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-            <XAxis dataKey="name" className="text-xs" stroke="hsl(var(--muted-foreground))" />
-            <YAxis className="text-xs" stroke="hsl(var(--muted-foreground))" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "0.5rem",
-              }}
-              labelStyle={{ color: "hsl(var(--foreground))" }}
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              stroke={colors.border}
+              opacity={0.5}
             />
-            <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            <XAxis 
+              dataKey="name" 
+              tick={{ fill: colors.mutedForeground, fontSize: 12 }}
+              stroke={colors.border}
+              tickLine={{ stroke: colors.border }}
+            />
+            <YAxis 
+              tick={{ fill: colors.mutedForeground, fontSize: 12 }}
+              stroke={colors.border}
+              tickLine={{ stroke: colors.border }}
+            />
+            <Tooltip content={<CustomTooltip />} cursor={false} />
+            <Bar 
+              dataKey="amount" 
+              fill={colors.primary}
+              radius={[4, 4, 0, 0]}
+            />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

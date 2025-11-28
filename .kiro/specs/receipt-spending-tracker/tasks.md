@@ -50,15 +50,15 @@
   - **Property 2: Session termination**
   - **Validates: Requirements 1.4**
 
-- [ ] 3. Build user service and API routes
-- [ ] 3.1 Implement UserService
+- [x] 3. Build user service and API routes
+- [x] 3.1 Implement UserService
   - Create createUser function with Drizzle queries
   - Create getUserByClerkId function
   - Create updateSubscriptionStatus function
   - Create getUserProfile function
   - _Requirements: 1.2, 2.2_
 
-- [ ] 3.2 Implement user API routes
+- [x] 3.2 Implement user API routes
   - Create GET /api/users/me endpoint
   - Create PATCH /api/users/me endpoint
   - Create PATCH /api/users/me/subscription endpoint
@@ -69,8 +69,8 @@
   - **Property 3: Subscription status update**
   - **Validates: Requirements 2.2, 2.3**
 
-- [ ] 4. Implement household management
-- [ ] 4.1 Implement HouseholdService
+- [x] 4. Implement household management
+- [x] 4.1 Implement HouseholdService
   - Create createHousehold function that creates household and assigns owner
   - Create getHouseholdsByUser function
   - Create getHouseholdMembers function
@@ -88,7 +88,7 @@
   - **Property 5: Member invitation**
   - **Validates: Requirements 3.3**
 
-- [ ] 4.4 Implement household API routes
+- [x] 4.4 Implement household API routes
   - Create GET /api/households endpoint
   - Create POST /api/households endpoint
   - Create GET /api/households/:id endpoint
@@ -107,34 +107,34 @@
   - **Property 7: Multi-household access**
   - **Validates: Requirements 3.6**
 
-- [ ] 5. Build household UI components
-- [ ] 5.1 Create household list and card components
+- [x] 5. Build household UI components
+- [x] 5.1 Create household list and card components
   - Implement HouseholdList component
   - Implement HouseholdCard component with household details
   - Add household selector dropdown for switching contexts
   - _Requirements: 3.4, 3.6_
 
-- [ ] 5.2 Create household management dialogs
+- [x] 5.2 Create household management dialogs
   - Implement CreateHouseholdDialog with form validation
   - Implement InviteMemberDialog with email input
   - Implement HouseholdMembersList with role indicators
   - Add RemoveMemberButton with owner-only visibility
   - _Requirements: 3.1, 3.3, 3.4, 3.5_
 
-- [ ] 5.3 Create household page
+- [x] 5.3 Create household page
   - Build /app/sharing/page.tsx with household management UI
   - Integrate household list and creation dialog
   - Add member management interface
   - _Requirements: 3.1, 3.3, 3.4, 3.5, 3.6_
 
-- [ ] 6. Implement bank connection functionality
-- [ ] 6.1 Create encryption utility for credentials
+- [ ]* 6. Implement bank connection functionality
+- [ ]* 6.1 Create encryption utility for credentials
   - Implement encrypt function using AES-256
   - Implement decrypt function
   - Store encryption key in environment variables
   - _Requirements: 4.2_
 
-- [ ] 6.2 Implement BankConnectionService
+- [ ]* 6.2 Implement BankConnectionService
   - Create createConnection function with credential encryption
   - Create getConnectionsByUser function
   - Create disconnectBank function that removes credentials
@@ -150,7 +150,7 @@
   - **Property 9: Bank disconnection**
   - **Validates: Requirements 4.4**
 
-- [ ] 6.5 Implement bank connection API routes
+- [ ]* 6.5 Implement bank connection API routes
   - Create GET /api/bank-connections endpoint
   - Create POST /api/bank-connections endpoint
   - Create DELETE /api/bank-connections/:id endpoint
@@ -158,27 +158,27 @@
   - Add error handling for connection failures
   - _Requirements: 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 6.6 Build bank connection UI components
+- [ ]* 6.6 Build bank connection UI components
   - Implement BankConnectionList component
   - Implement AddBankDialog with bank selection
   - Implement BankConnectionCard with status indicator
   - Add DisconnectBankButton with confirmation
   - _Requirements: 4.2, 4.3, 4.4_
 
-- [ ] 6.7 Create bank connections page
+- [ ]* 6.7 Create bank connections page
   - Build /app/bank/page.tsx with bank management UI
   - Integrate connection list and add dialog
   - Display connection status and last sync time
   - _Requirements: 4.2, 4.3, 4.4_
 
-- [ ] 7. Implement error handling and logging
-- [ ] 7.1 Create error handling utilities
+- [x] 7. Implement error handling and logging
+- [x] 7.1 Create error handling utilities
   - Implement ErrorResponse type and factory functions
   - Create error logging utility with different log levels
   - Add request ID generation for tracing
   - _Requirements: 6.1, 6.5_
 
-- [ ] 7.2 Add error handling to API routes
+- [x] 7.2 Add error handling to API routes
   - Wrap all API route handlers with try-catch
   - Return appropriate HTTP status codes for different error types
   - Log errors with context and stack traces

@@ -1,10 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { LayoutDashboard, Receipt, CreditCard, Users, Settings, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useAuth } from "@/lib/mock-auth"
+import { useUser, useClerk } from "@clerk/nextjs"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import {
@@ -25,12 +25,11 @@ const navItems = [
 
 export function Navigation() {
   const pathname = usePathname()
-  const router = useRouter()
-  const { user, logout } = useAuth()
+  const { user } = useUser()
+  const { signOut } = useClerk()
 
-  const handleLogout = () => {
-    logout()
-    router.push("/")
+  const handleLogout = async () => {
+    await signOut()
   }
 
   return (
@@ -71,7 +70,7 @@ export function Navigation() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
                 <img
-                  src={user?.avatar_url || "/placeholder.svg?height=32&width=32&query=user avatar"}
+                  src={user?.imageUrl || "/placeholder.svg?height=32&width=32&query=user avatar"}
                   alt="User avatar"
                   className="h-8 w-8 rounded-full object-cover"
                 />
@@ -79,8 +78,8 @@ export function Navigation() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="px-2 py-1.5">
-                <p className="text-sm font-medium">{user?.full_name}</p>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <p className="text-sm font-medium">{user?.fullName || user?.firstName || "User"}</p>
+                <p className="text-xs text-muted-foreground">{user?.primaryEmailAddress?.emailAddress}</p>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>

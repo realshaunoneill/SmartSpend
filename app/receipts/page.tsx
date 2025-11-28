@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Navigation } from "@/components/navigation"
 import { ReceiptUpload } from "@/components/receipt-upload"
 import { ReceiptList } from "@/components/receipt-list"
-import { useAuth } from "@/lib/mock-auth"
+import { useUser } from "@clerk/nextjs"
 
 // Mock receipts data (since we can't use server-side getReceipts with client auth)
 const mockReceipts = [
@@ -51,16 +51,16 @@ const mockReceipts = [
 ]
 
 export default function ReceiptsPage() {
-  const { isAuthenticated, user } = useAuth()
+  const { isLoaded, isSignedIn, user } = useUser()
   const router = useRouter()
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login")
+    if (isLoaded && !isSignedIn) {
+      router.push("/sign-in")
     }
-  }, [isAuthenticated, router])
+  }, [isLoaded, isSignedIn, router])
 
-  if (!isAuthenticated || !user) {
+  if (!isLoaded || !isSignedIn || !user) {
     return null
   }
 

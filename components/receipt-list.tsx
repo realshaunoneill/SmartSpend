@@ -50,7 +50,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                 className="flex items-center gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-muted/50"
               >
                 {/* Receipt Image Thumbnail */}
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <div className="h-16 w-16 overflow-hidden rounded-md border bg-muted">
                     {receipt.image_url ? (
                       <img

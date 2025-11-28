@@ -1,13 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { Navigation } from "@/components/navigation"
 import { QuickStats } from "@/components/quick-stats"
 import { SpendingSummary } from "@/components/spending-summary"
 import { SpendingChart } from "@/components/spending-chart"
 import { ReceiptList } from "@/components/receipt-list"
-import { useAuth } from "@/lib/mock-auth"
+import { useUser } from "@clerk/nextjs"
 
 // Mock data
 const mockStats = {
@@ -99,16 +98,22 @@ const mockSpendingData = {
 
 export default function DashboardPage() {
   const [period, setPeriod] = useState<"week" | "month" | "year">("month")
-  const { isAuthenticated } = useAuth()
-  const router = useRouter()
+  const { isLoaded, user } = useUser()
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login")
-    }
-  }, [isAuthenticated, router])
+  // Show loading state while Clerk is loading
+  if (!isLoaded) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
-  if (!isAuthenticated) {
+  // User will be redirected by middleware if not authenticated
+  if (!user) {
     return null
   }
 

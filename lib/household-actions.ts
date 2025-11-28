@@ -1,43 +1,51 @@
 "use server"
 
+import { auth } from '@clerk/nextjs/server'
+import { HouseholdService } from '@/lib/services/household-service'
+import { UserService } from '@/lib/services/user-service'
 import type { Household } from "./types"
 
-export async function createHousehold(data: { name: string; userId: string }) {
-  // Mock create household
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  const household: Household = {
-    id: `household-${Date.now()}`,
-    name: data.name,
-    created_by: data.userId,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+async function getCurrentUser() {
+  const { userId: clerkId } = await auth()
+  
+  if (!clerkId) {
+    throw new Error('Authentication required')
   }
 
+  const user = await UserService.getUserByClerkId(clerkId)
+  
+  if (!user) {
+    throw new Error('User not found')
+  }
+
+  return user
+}
+
+export async function createHousehold(data: { name: string; userId: string }) {
+  const user = await getCurrentUser()
+  const household = await HouseholdService.createHousehold(user.id, data.name)
   return household
 }
 
 export async function inviteMember(data: { householdId: string; email: string }) {
-  // Mock send invite
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-
-  return {
-    inviteId: `invite-${Date.now()}`,
-    email: data.email,
-    status: "pending",
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-  }
+  const user = await getCurrentUser()
+  const householdUser = await HouseholdService.inviteMember(
+    data.householdId,
+    data.email,
+    user.id
+  )
+  return householdUser
 }
 
 export async function removeMember(data: { householdId: string; userId: string }) {
-  // Mock remove member
-  await new Promise((resolve) => setTimeout(resolve, 500))
+  const user = await getCurrentUser()
+  await HouseholdService.removeMember(data.householdId, data.userId, user.id)
   return { success: true }
 }
 
 export async function leaveHousehold(data: { householdId: string; userId: string }) {
-  // Mock leave household
-  await new Promise((resolve) => setTimeout(resolve, 500))
+  const user = await getCurrentUser()
+  await HouseholdService.leaveMember(data.householdId, user.id)
   return { success: true }
 }
 
@@ -46,13 +54,12 @@ export async function updateMemberRole(data: {
   userId: string
   role: "admin" | "member"
 }) {
-  // Mock update role
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  return { success: true }
+  // This would need to be implemented in HouseholdService
+  throw new Error('Update member role is not yet implemented')
 }
 
 export async function deleteHousehold(householdId: string) {
-  // Mock delete household
-  await new Promise((resolve) => setTimeout(resolve, 500))
+  const user = await getCurrentUser()
+  await HouseholdService.deleteHousehold(householdId, user.id)
   return { success: true }
 }
