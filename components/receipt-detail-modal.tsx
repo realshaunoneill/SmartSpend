@@ -33,10 +33,10 @@ export function ReceiptDetailModal({
       <DialogContent 
         className="p-0 overflow-hidden border-0"
         style={{
-          maxWidth: "95vw",
-          width: "95vw",
-          maxHeight: "95vh",
-          height: "95vh",
+          maxWidth: "1200px",
+          width: "90vw",
+          maxHeight: "90vh",
+          height: "90vh",
         }}
       >
         <VisuallyHidden>
@@ -44,21 +44,13 @@ export function ReceiptDetailModal({
         </VisuallyHidden>
         <div className="flex h-full w-full">
           {/* Left Column - Receipt Image */}
-          <div className="w-[60%] bg-slate-950 p-12 flex items-center justify-center border-r border-slate-800 overflow-auto">
+          <div className="w-[45%] p-8 flex items-center justify-center border-r overflow-auto">
             {receipt.imageUrl ? (
-              <div className="relative">
-                {/* Receipt frame */}
-                <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden border-8 border-slate-700 max-w-md">
-                  <img
-                    src={receipt.imageUrl}
-                    alt="Receipt"
-                    className="w-full h-auto max-h-[70vh] object-contain"
-                  />
-                </div>
-                
-                {/* Subtle shadow effect */}
-                <div className="absolute -bottom-4 -right-4 w-full h-full bg-black/20 rounded-2xl blur-xl -z-10" />
-              </div>
+              <img
+                src={receipt.imageUrl}
+                alt="Receipt"
+                className="max-w-full h-auto max-h-[60vh] object-contain rounded-lg shadow-lg"
+              />
             ) : (
               <div className="flex flex-col items-center justify-center text-muted-foreground p-12">
                 <ReceiptIcon className="h-24 w-24 mb-4 opacity-20" />
@@ -68,7 +60,7 @@ export function ReceiptDetailModal({
           </div>
 
           {/* Right Column - Receipt Details */}
-          <ScrollArea className="w-[40%] shrink-0">
+          <ScrollArea className="w-[55%] shrink-0">
             <div className="p-8 space-y-6">
               {/* Header */}
               <div>
@@ -125,28 +117,39 @@ export function ReceiptDetailModal({
                     Items ({receipt.items.length})
                   </div>
                   <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2">
-                    {receipt.items.map((item: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm leading-tight">
-                            {item.name}
-                          </p>
-                          {item.quantity && (
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              Qty: {item.quantity}
+                    {receipt.items.map((item: any, index: number) => {
+                      const quantity = parseFloat(item.quantity) || 1;
+                      const totalPrice = parseFloat(item.price) || 0;
+                      const unitPrice = quantity > 1 ? totalPrice / quantity : null;
+
+                      return (
+                        <div
+                          key={index}
+                          className="flex justify-between items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm leading-tight">
+                              {item.name}
+                            </p>
+                            {item.quantity && (
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Qty: {item.quantity}
+                                {unitPrice && (
+                                  <span className="ml-2">
+                                    @ {receipt.currency} {unitPrice.toFixed(2)} each
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                          </div>
+                          {item.price && (
+                            <p className="font-semibold text-sm whitespace-nowrap">
+                              {receipt.currency} {item.price}
                             </p>
                           )}
                         </div>
-                        {item.price && (
-                          <p className="font-semibold text-sm whitespace-nowrap">
-                            {receipt.currency} {item.price}
-                          </p>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
