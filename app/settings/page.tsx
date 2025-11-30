@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { SubscriptionBanner } from "@/components/subscription-banner"
 import { useUser } from "@clerk/nextjs"
 import { useUser as useUserData } from "@/lib/hooks/use-user"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -41,6 +42,7 @@ export default function SettingsPage() {
     return (
       <>
         <Navigation />
+        <SubscriptionBanner page="settings" />
         <main className="container mx-auto max-w-4xl space-y-8 p-6">
           <div className="flex min-h-[400px] items-center justify-center">
             <div className="text-center">
@@ -64,6 +66,7 @@ export default function SettingsPage() {
   return (
     <>
       <Navigation />
+      <SubscriptionBanner page="settings" />
       <main className="container mx-auto max-w-4xl space-y-8 p-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>

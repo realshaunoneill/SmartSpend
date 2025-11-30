@@ -7,6 +7,7 @@ import { SpendingSummary } from "@/components/spending-summary"
 import { SpendingChart } from "@/components/spending-chart"
 import { ReceiptList } from "@/components/receipt-list"
 import { HouseholdSelector } from "@/components/household-selector"
+import { SubscriptionGate } from "@/components/subscription-gate"
 import { useUser } from "@clerk/nextjs"
 import { useDashboardStats } from "@/lib/hooks/use-dashboard-stats"
 import { useHouseholds } from "@/lib/hooks/use-households"
@@ -99,21 +100,23 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <QuickStats stats={quickStats} />
+        <SubscriptionGate feature="analytics">
+          <QuickStats stats={quickStats} />
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          <SpendingSummary 
-            period={period} 
-            onPeriodChange={setPeriod} 
-            householdId={actualHouseholdId} 
-            personalOnly={isPersonalOnly} 
-          />
-          <SpendingChart 
-            period={period} 
-            householdId={actualHouseholdId} 
-            personalOnly={isPersonalOnly} 
-          />
-        </div>
+          <div className="grid gap-8 lg:grid-cols-2">
+            <SpendingSummary 
+              period={period} 
+              onPeriodChange={setPeriod} 
+              householdId={actualHouseholdId} 
+              personalOnly={isPersonalOnly} 
+            />
+            <SpendingChart 
+              period={period} 
+              householdId={actualHouseholdId} 
+              personalOnly={isPersonalOnly} 
+            />
+          </div>
+        </SubscriptionGate>
 
         {stats?.recentReceipts && stats.recentReceipts.length > 0 && (
           <div>

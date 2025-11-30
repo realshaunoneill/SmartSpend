@@ -1,12 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useUser } from "@clerk/nextjs"
+import { useUser as useClerkUser } from "@clerk/nextjs"
+import { useUser } from "@/lib/hooks/use-user"
 import { Navigation } from "@/components/navigation"
 import { CreateHouseholdDialog } from "@/components/create-household-dialog"
 import { HouseholdList } from "@/components/household-list"
 import { HouseholdSelector } from "@/components/household-selector"
 import { HouseholdMembersList } from "@/components/household-members-list"
+import { SubscriptionGate } from "@/components/subscription-gate"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useHouseholds } from "@/lib/hooks/use-households"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -24,7 +26,8 @@ interface Member {
 }
 
 export default function SharingPage() {
-  const { user, isLoaded } = useUser()
+  const { user: clerkUser, isLoaded } = useClerkUser()
+  const { user, isSubscribed } = useUser()
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>()
   const queryClient = useQueryClient()
   
@@ -99,25 +102,26 @@ export default function SharingPage() {
     <>
       <Navigation />
       <main className="container mx-auto max-w-6xl space-y-8 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Sharing</h1>
-            <p className="mt-2 text-muted-foreground">Manage households and share receipts with family or roommates</p>
-          </div>
-          <div className="flex items-center gap-4">
-            {households.length > 0 && (
-              <HouseholdSelector
-                households={households}
-                selectedHouseholdId={selectedHouseholdId}
-                onSelect={setSelectedHouseholdId}
+        <SubscriptionGate feature="sharing">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">Sharing</h1>
+              <p className="mt-2 text-muted-foreground">Manage households and share receipts with family or roommates</p>
+            </div>
+            <div className="flex items-center gap-4">
+              {households.length > 0 && (
+                <HouseholdSelector
+                  households={households}
+                  selectedHouseholdId={selectedHouseholdId}
+                  onSelect={setSelectedHouseholdId}
+                />
+              )}
+              <CreateHouseholdDialog 
+                userId={currentUserId} 
+                onHouseholdCreated={handleHouseholdCreated} 
               />
-            )}
-            <CreateHouseholdDialog 
-              userId={currentUserId} 
-              onHouseholdCreated={handleHouseholdCreated} 
-            />
+            </div>
           </div>
-        </div>
 
         {householdsLoading ? (
           <div className="grid gap-8 lg:grid-cols-2">
@@ -192,6 +196,7 @@ export default function SharingPage() {
             )}
           </div>
         )}
+        </SubscriptionGate>
       </main>
     </>
   )

@@ -9,13 +9,16 @@ import { ReceiptListSkeleton } from "@/components/receipt-list-skeleton"
 import { HouseholdSelector } from "@/components/household-selector"
 import { Pagination } from "@/components/pagination"
 import { ReceiptDetailModal } from "@/components/receipt-detail-modal"
+import { SubscriptionGate } from "@/components/subscription-gate"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useUser } from "@clerk/nextjs"
+import { useUser as useClerkUser } from "@clerk/nextjs"
+import { useUser } from "@/lib/hooks/use-user"
 import { useReceipts, useRecentReceipts } from "@/lib/hooks/use-receipts"
 import { useHouseholds } from "@/lib/hooks/use-households"
 
 export default function ReceiptsPage() {
-  const { isLoaded, isSignedIn, user } = useUser()
+  const { isLoaded, isSignedIn, user: clerkUser } = useClerkUser()
+  const { user } = useUser()
   const router = useRouter()
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>()
   const [currentPage, setCurrentPage] = useState(1)
@@ -96,12 +99,14 @@ export default function ReceiptsPage() {
         {/* Upload and Recent Receipts Section */}
         <div className="grid gap-8 lg:grid-cols-2">
           <div>
-            <ReceiptUpload
-              clerkId={user.id}
-              userEmail={user.emailAddresses[0]?.emailAddress || ""}
-              householdId={selectedHouseholdId}
-              onUploadComplete={handleUploadComplete}
-            />
+            <SubscriptionGate feature="upload">
+              <ReceiptUpload
+                clerkId={clerkUser.id}
+                userEmail={clerkUser.emailAddresses[0]?.emailAddress || ""}
+                householdId={selectedHouseholdId}
+                onUploadComplete={handleUploadComplete}
+              />
+            </SubscriptionGate>
           </div>
           <div>
             <Card>

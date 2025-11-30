@@ -5,6 +5,8 @@ import { Navigation } from "@/components/navigation"
 import { AddBankDialog } from "@/components/add-bank-dialog"
 import { BankConnectionCard } from "@/components/bank-connection-card"
 import { BankTransactionsList } from "@/components/bank-transactions-list"
+import { SubscriptionBanner } from "@/components/subscription-banner"
+import { SubscriptionGate } from "@/components/subscription-gate"
 import type { BankConnection, BankTransaction } from "@/lib/types"
 
 // Mock data
@@ -106,16 +108,18 @@ export default function BankPage() {
   return (
     <>
       <Navigation />
+      <SubscriptionBanner page="bank" />
       <main className="container mx-auto max-w-6xl space-y-8 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Bank Accounts</h1>
-            <p className="mt-2 text-muted-foreground">
-              Connect and manage your bank accounts for automatic transaction syncing
-            </p>
+        <SubscriptionGate feature="bank">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">Bank Accounts</h1>
+              <p className="mt-2 text-muted-foreground">
+                Connect and manage your bank accounts for automatic transaction syncing
+              </p>
+            </div>
+            <AddBankDialog userId="user-123" onBankAdded={handleBankAdded} />
           </div>
-          <AddBankDialog userId="user-123" onBankAdded={handleBankAdded} />
-        </div>
 
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground">Connected Accounts</h2>
@@ -140,6 +144,7 @@ export default function BankPage() {
         </div>
 
         <BankTransactionsList transactions={transactions} />
+        </SubscriptionGate>
       </main>
     </>
   )
