@@ -9,10 +9,11 @@ import {
   Hash,
   ShoppingBag,
 } from "lucide-react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 interface ReceiptDetailModalProps {
   receipt: any
@@ -29,29 +30,46 @@ export function ReceiptDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] p-0">
-        <ScrollArea className="max-h-[90vh]">
-          <div className="grid md:grid-cols-2 gap-0">
-            {/* Left Column - Receipt Image */}
-            <div className="bg-muted/30 p-6 flex items-center justify-center border-r">
-              {receipt.imageUrl ? (
-                <div className="w-full">
+      <DialogContent 
+        className="p-0 overflow-hidden border-0"
+        style={{
+          maxWidth: "95vw",
+          width: "95vw",
+          maxHeight: "95vh",
+          height: "95vh",
+        }}
+      >
+        <VisuallyHidden>
+          <DialogTitle>Receipt Details - {receipt.merchantName}</DialogTitle>
+        </VisuallyHidden>
+        <div className="flex h-full w-full">
+          {/* Left Column - Receipt Image */}
+          <div className="w-[60%] bg-slate-950 p-12 flex items-center justify-center border-r border-slate-800 overflow-auto">
+            {receipt.imageUrl ? (
+              <div className="relative">
+                {/* Receipt frame */}
+                <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden border-8 border-slate-700 max-w-md">
                   <img
                     src={receipt.imageUrl}
                     alt="Receipt"
-                    className="w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-lg"
+                    className="w-full h-auto max-h-[70vh] object-contain"
                   />
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center text-muted-foreground p-12">
-                  <ReceiptIcon className="h-24 w-24 mb-4 opacity-20" />
-                  <p className="text-sm">No image available</p>
-                </div>
-              )}
-            </div>
+                
+                {/* Subtle shadow effect */}
+                <div className="absolute -bottom-4 -right-4 w-full h-full bg-black/20 rounded-2xl blur-xl -z-10" />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-muted-foreground p-12">
+                <ReceiptIcon className="h-24 w-24 mb-4 opacity-20" />
+                <p className="text-sm">No image available</p>
+              </div>
+            )}
+          </div>
 
-            {/* Right Column - Receipt Details */}
-            <div className="p-6 space-y-6">
+          {/* Right Column - Receipt Details */}
+          <ScrollArea className="w-[40%] shrink-0">
+            <div className="p-8 space-y-6">
               {/* Header */}
               <div>
                 <div className="flex items-start justify-between mb-2">
@@ -176,8 +194,8 @@ export function ReceiptDetailModal({
                 </div>
               </div>
             </div>
-          </div>
-        </ScrollArea>
+          </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   )
