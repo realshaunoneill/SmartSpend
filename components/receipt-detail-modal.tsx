@@ -30,7 +30,7 @@ export function ReceiptDetailModal({
   open,
   onOpenChange,
 }: ReceiptDetailModalProps) {
-  // Fetch household name if receipt is assigned to one
+  // Fetch household name and user's role if receipt is assigned to one
   const { data: household } = useQuery({
     queryKey: ["household", receipt?.householdId],
     queryFn: async () => {
@@ -42,6 +42,30 @@ export function ReceiptDetailModal({
     },
     enabled: !!receipt?.householdId && open,
   });
+
+  // Get current user data to check permissions
+  const { data: currentUser } = useQuery({
+    queryKey: ["current-user"],
+    queryFn: async () => {
+      const response = await fetch("/api/users/me");
+      if (!response.ok) throw new Error("Failed to fetch user");
+      return response.json();
+    },
+    enabled: open,
+  });
+
+  // Check if user can modify this receipt
+  const canModifyReceipt = currentUser && receipt && (
+    // User is the owner
+    receipt.userId === currentUser.id ||
+    // Or user is household admin (for removing from household only)
+    (receipt.householdId && household?.members?.some((m: any) => 
+      m.userId === currentUser.id && m.role === 'owner'
+    ))
+  );
+
+  // Check if user is the receipt owner
+  const isReceiptOwner = currentUser && receipt && receipt.userId === currentUser.id;
 
   if (!receipt) return null
 
@@ -111,18 +135,27 @@ export function ReceiptDetailModal({
                   </div>
                 )}
 
-                {/* Assignment Button */}
-                <div className="mt-4">
-                  <ReceiptAssignmentDialog
-                    receiptId={receipt.id}
-                    currentHouseholdId={receipt.householdId}
-                  >
-                    <Button variant="secondary" size="sm" className="w-full">
-                      <Users className="h-4 w-4 mr-2" />
-                      {receipt.householdId ? "Change Household" : "Assign to Household"}
-                    </Button>
-                  </ReceiptAssignmentDialog>
-                </div>
+                {/* Assignment Button - Only show if user has permission */}
+                {canModifyReceipt && (
+                  <div className="mt-4">
+                    <ReceiptAssignmentDialog
+                      receiptId={receipt.id}
+                      currentHouseholdId={receipt.householdId}
+                      isOwner={isReceiptOwner}
+                      canRemoveOnly={!isReceiptOwner && receipt.householdId}
+                    >
+                      <Button variant="secondary" size="sm" className="w-full">
+                        <Users className="h-4 w-4 mr-2" />
+                        {!isReceiptOwner && receipt.householdId 
+                          ? "Remove from Household" 
+                          : receipt.householdId 
+                            ? "Change Household" 
+                            : "Assign to Household"
+                        }
+                      </Button>
+                    </ReceiptAssignmentDialog>
+                  </div>
+                )}
 
                 {/* Meta Info */}
                 <div className="flex flex-wrap gap-3 mt-4">

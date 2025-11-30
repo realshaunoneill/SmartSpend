@@ -37,32 +37,59 @@ export async function PATCH(
       return NextResponse.json({ error: "Receipt not found" }, { status: 404 });
     }
 
-    // Check if user owns the receipt
-    if (receipt.userId !== user.id) {
-      return NextResponse.json(
-        { error: "Not authorized to modify this receipt" },
-        { status: 403 }
-      );
-    }
-
-    // If assigning to a household, verify user is a member
-    if (householdId) {
-      const [membership] = await db
-        .select()
-        .from(householdUsers)
-        .where(
-          and(
-            eq(householdUsers.householdId, householdId),
-            eq(householdUsers.userId, user.id)
+    // Check permissions based on current state and action
+    const isOwner = receipt.userId === user.id;
+    
+    // If receipt is currently in a household, check if user can remove it
+    if (receipt.householdId && householdId === null) {
+      // Removing from household - check if user is owner OR household admin
+      if (!isOwner) {
+        const [membership] = await db
+          .select()
+          .from(householdUsers)
+          .where(
+            and(
+              eq(householdUsers.householdId, receipt.householdId),
+              eq(householdUsers.userId, user.id)
+            )
           )
-        )
-        .limit(1);
+          .limit(1);
 
-      if (!membership) {
+        if (!membership || membership.role !== "owner") {
+          return NextResponse.json(
+            { error: "Only the receipt owner or household admin can remove receipts" },
+            { status: 403 }
+          );
+        }
+      }
+    } else {
+      // Adding to household or changing household - only owner can do this
+      if (!isOwner) {
         return NextResponse.json(
-          { error: "Not a member of this household" },
+          { error: "Only the receipt owner can assign receipts to households" },
           { status: 403 }
         );
+      }
+
+      // If assigning to a household, verify user is a member
+      if (householdId) {
+        const [membership] = await db
+          .select()
+          .from(householdUsers)
+          .where(
+            and(
+              eq(householdUsers.householdId, householdId),
+              eq(householdUsers.userId, user.id)
+            )
+          )
+          .limit(1);
+
+        if (!membership) {
+          return NextResponse.json(
+            { error: "Not a member of this household" },
+            { status: 403 }
+          );
+        }
       }
     }
 

@@ -1,10 +1,66 @@
+"use client"
+
+import { useState } from "react"
 import { Navigation } from "@/components/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { useUser } from "@clerk/nextjs"
+import { useUser as useUserData } from "@/lib/hooks/use-user"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 
 export default function SettingsPage() {
+  const { user: clerkUser, isLoaded } = useUser()
+  const { user: userData, isLoading: userDataLoading } = useUserData()
+  const [isUpdating, setIsUpdating] = useState(false)
+  const queryClient = useQueryClient()
+
+  const updateSubscriptionMutation = useMutation({
+    mutationFn: async (subscribed: boolean) => {
+      const response = await fetch("/api/users/me/subscription", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscribed }),
+      })
+      if (!response.ok) throw new Error("Failed to update subscription")
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] })
+      toast.success("Subscription updated successfully")
+    },
+    onError: () => {
+      toast.error("Failed to update subscription")
+    },
+  })
+
+  if (!isLoaded || userDataLoading) {
+    return (
+      <>
+        <Navigation />
+        <main className="container mx-auto max-w-4xl space-y-8 p-6">
+          <div className="flex min-h-[400px] items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <p className="mt-4 text-muted-foreground">Loading settings...</p>
+            </div>
+          </div>
+        </main>
+      </>
+    )
+  }
+
+  if (!clerkUser) {
+    return null
+  }
+
+  const handleSubscriptionChange = (subscribed: boolean) => {
+    updateSubscriptionMutation.mutate(subscribed)
+  }
+
   return (
     <>
       <Navigation />
@@ -17,18 +73,38 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Profile</CardTitle>
-            <CardDescription>Update your personal information</CardDescription>
+            <CardDescription>Your account information from Clerk</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" defaultValue="Demo User" />
+              <Input 
+                id="name" 
+                value={clerkUser.fullName || "Not set"} 
+                disabled 
+              />
+              <p className="text-xs text-muted-foreground">
+                To update your name, please use your Clerk account settings
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue="demo@smartspend.com" disabled />
+              <Input 
+                id="email" 
+                type="email" 
+                value={clerkUser.emailAddresses[0]?.emailAddress || "No email"} 
+                disabled 
+              />
             </div>
-            <Button>Save Changes</Button>
+            <div className="space-y-2">
+              <Label htmlFor="clerk-id">User ID</Label>
+              <Input 
+                id="clerk-id" 
+                value={clerkUser.id} 
+                disabled 
+                className="font-mono text-xs"
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -40,11 +116,68 @@ export default function SettingsPage() {
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between rounded-lg border p-4">
-                <div>
-                  <p className="font-medium text-foreground">Free Plan</p>
-                  <p className="text-sm text-muted-foreground">Up to 50 receipts per month</p>
+                <div className="flex items-center gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-foreground">
+                        {userData?.subscribed ? "Pro Plan" : "Free Plan"}
+                      </p>
+                      <Badge variant={userData?.subscribed ? "default" : "secondary"}>
+                        {userData?.subscribed ? "pro" : "free"}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {userData?.subscribed 
+                        ? "Unlimited receipts and advanced features" 
+                        : "Up to 50 receipts per month"}
+                    </p>
+                  </div>
                 </div>
-                <Button>Upgrade to Pro</Button>
+                <div className="flex gap-2">
+                  {!userData?.subscribed ? (
+                    <Button 
+                      onClick={() => handleSubscriptionChange(true)}
+                      disabled={updateSubscriptionMutation.isPending}
+                    >
+                      {updateSubscriptionMutation.isPending ? "Updating..." : "Upgrade to Pro"}
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline"
+                      onClick={() => handleSubscriptionChange(false)}
+                      disabled={updateSubscriptionMutation.isPending}
+                    >
+                      {updateSubscriptionMutation.isPending ? "Updating..." : "Downgrade to Free"}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Account Information</CardTitle>
+            <CardDescription>Your SmartSpend account details</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Member Since</Label>
+                <p className="text-sm text-muted-foreground">
+                  {userData?.createdAt 
+                    ? new Date(userData.createdAt).toLocaleDateString()
+                    : "Unknown"}
+                </p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Last Updated</Label>
+                <p className="text-sm text-muted-foreground">
+                  {userData?.updatedAt 
+                    ? new Date(userData.updatedAt).toLocaleDateString()
+                    : "Unknown"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -56,7 +189,14 @@ export default function SettingsPage() {
             <CardDescription>Irreversible actions</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="destructive">Delete Account</Button>
+            <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+              <p className="mb-4 text-sm text-muted-foreground">
+                Deleting your account will permanently remove all your data, including receipts, households, and settings. This action cannot be undone.
+              </p>
+              <Button variant="destructive" disabled>
+                Delete Account (Coming Soon)
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </main>

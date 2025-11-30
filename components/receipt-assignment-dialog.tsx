@@ -24,12 +24,16 @@ import { toast } from "sonner";
 interface ReceiptAssignmentDialogProps {
   receiptId: string;
   currentHouseholdId?: string;
+  isOwner?: boolean;
+  canRemoveOnly?: boolean;
   children: React.ReactNode;
 }
 
 export function ReceiptAssignmentDialog({
   receiptId,
   currentHouseholdId,
+  isOwner = true,
+  canRemoveOnly = false,
   children,
 }: ReceiptAssignmentDialogProps) {
   const [open, setOpen] = useState(false);
@@ -77,14 +81,17 @@ export function ReceiptAssignmentDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Assign Receipt to Household
+            {canRemoveOnly ? "Remove Receipt from Household" : "Assign Receipt to Household"}
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           <div className="space-y-3">
             <label className="text-sm font-medium">
-              Choose where to share this receipt
+              {canRemoveOnly 
+                ? "Remove this receipt from the household?" 
+                : "Choose where to share this receipt"
+              }
             </label>
             <div className="space-y-2">
               {/* Current Selection Display */}
@@ -116,28 +123,36 @@ export function ReceiptAssignmentDialog({
 
               {/* Options */}
               <div className="space-y-1">
-                <button
-                  type="button"
-                  onClick={() => setSelectedHouseholdId("__personal__")}
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                    selectedHouseholdId === "__personal__"
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:bg-muted/50"
-                  }`}
-                >
-                  <div className="p-1.5 rounded-md bg-muted">
-                    <User className="h-4 w-4" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-medium">Personal Receipt</p>
-                    <p className="text-xs text-muted-foreground">Only visible to you</p>
-                  </div>
-                  {selectedHouseholdId === "__personal__" && (
-                    <Check className="h-4 w-4 text-primary ml-auto" />
-                  )}
-                </button>
+                {/* Personal option - always available for owners, only for removal for admins */}
+                {(isOwner || canRemoveOnly) && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedHouseholdId("__personal__")}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                      selectedHouseholdId === "__personal__"
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="p-1.5 rounded-md bg-muted">
+                      <User className="h-4 w-4" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-medium">
+                        {canRemoveOnly ? "Remove from Household" : "Personal Receipt"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {canRemoveOnly ? "Make this receipt private" : "Only visible to you"}
+                      </p>
+                    </div>
+                    {selectedHouseholdId === "__personal__" && (
+                      <Check className="h-4 w-4 text-primary ml-auto" />
+                    )}
+                  </button>
+                )}
 
-                {households.map((household: any) => (
+                {/* Household options - only for owners */}
+                {isOwner && !canRemoveOnly && households.map((household: any) => (
                   <button
                     key={household.id}
                     type="button"
@@ -169,9 +184,13 @@ export function ReceiptAssignmentDialog({
               onClick={handleAssign}
               disabled={assignReceipt.isPending}
               className="flex-1"
+              variant={canRemoveOnly ? "destructive" : "default"}
             >
               <Check className="h-4 w-4 mr-2" />
-              {assignReceipt.isPending ? "Assigning..." : "Save Changes"}
+              {assignReceipt.isPending 
+                ? (canRemoveOnly ? "Removing..." : "Assigning...") 
+                : (canRemoveOnly ? "Remove Receipt" : "Save Changes")
+              }
             </Button>
             <Button
               variant="outline"
