@@ -71,16 +71,6 @@ export default function DashboardPage() {
     topCategory: "No data",
   }
 
-  const spendingData = stats ? {
-    total: stats.totalSpent,
-    change: 0, // We don't have historical data yet
-    byCategory: stats.spendingByCategory,
-  } : {
-    total: 0,
-    change: 0,
-    byCategory: [],
-  }
-
   return (
     <>
       <Navigation />
@@ -108,8 +98,8 @@ export default function DashboardPage() {
         <QuickStats stats={quickStats} />
 
         <div className="grid gap-8 lg:grid-cols-2">
-          <SpendingSummary data={spendingData} period={period} onPeriodChange={setPeriod} />
-          <SpendingChart period={period} />
+          <SpendingSummary period={period} onPeriodChange={setPeriod} householdId={selectedHouseholdId} />
+          <SpendingChart period={period} householdId={selectedHouseholdId} />
         </div>
 
         {stats?.recentReceipts && stats.recentReceipts.length > 0 && (

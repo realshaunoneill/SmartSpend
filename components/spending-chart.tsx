@@ -3,41 +3,12 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { TrendingUp } from "lucide-react"
+import { useSpendingTrends } from "@/lib/hooks/use-spending-trends"
 
 interface SpendingChartProps {
   period: "week" | "month" | "year"
-}
-
-const mockData = {
-  week: [
-    { name: "Mon", amount: 45.32 },
-    { name: "Tue", amount: 89.5 },
-    { name: "Wed", amount: 125.67 },
-    { name: "Thu", amount: 78.23 },
-    { name: "Fri", amount: 156.89 },
-    { name: "Sat", amount: 203.45 },
-    { name: "Sun", amount: 92.18 },
-  ],
-  month: [
-    { name: "Week 1", amount: 456.78 },
-    { name: "Week 2", amount: 623.45 },
-    { name: "Week 3", amount: 789.12 },
-    { name: "Week 4", amount: 977.97 },
-  ],
-  year: [
-    { name: "Jan", amount: 2345.67 },
-    { name: "Feb", amount: 2156.34 },
-    { name: "Mar", amount: 2789.45 },
-    { name: "Apr", amount: 3012.89 },
-    { name: "May", amount: 2867.23 },
-    { name: "Jun", amount: 3156.78 },
-    { name: "Jul", amount: 2945.34 },
-    { name: "Aug", amount: 3234.56 },
-    { name: "Sep", amount: 2876.45 },
-    { name: "Oct", amount: 3123.67 },
-    { name: "Nov", amount: 2989.34 },
-    { name: "Dec", amount: 3456.78 },
-  ],
+  householdId?: string
 }
 
 // Custom tooltip component that properly uses theme colors
@@ -55,8 +26,8 @@ function CustomTooltip({ active, payload, label }: any) {
   return null
 }
 
-export function SpendingChart({ period }: SpendingChartProps) {
-  const data = mockData[period]
+export function SpendingChart({ period, householdId }: SpendingChartProps) {
+  const { data: trendsData, isLoading, error } = useSpendingTrends(householdId, period)
   const [colors, setColors] = useState({
     primary: "#10b981",
     border: "#e5e7eb",
@@ -77,15 +48,82 @@ export function SpendingChart({ period }: SpendingChartProps) {
     })
   }, [])
 
+  const periodLabels = {
+    week: "past 7 days",
+    month: "this month",
+    year: "this year",
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Spending Trends</CardTitle>
+          <CardDescription>Your spending patterns over time</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-[300px] items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <p className="mt-4 text-sm text-muted-foreground">Loading trends...</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Spending Trends</CardTitle>
+          <CardDescription>Your spending patterns over time</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-[300px] items-center justify-center">
+            <div className="text-center">
+              <p className="text-sm text-destructive">Failed to load spending trends</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!trendsData || trendsData.chartData.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Spending Trends</CardTitle>
+          <CardDescription>Your spending patterns over time</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-[300px] items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">No spending data</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Upload some receipts to see your spending trends for {periodLabels[period]}.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Spending Trends</CardTitle>
-        <CardDescription>Your spending patterns over time</CardDescription>
+        <CardDescription>Your spending patterns for {periodLabels[period]}</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
+          <BarChart data={trendsData.chartData}>
             <CartesianGrid 
               strokeDasharray="3 3" 
               stroke={colors.border}
