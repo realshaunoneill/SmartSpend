@@ -73,6 +73,19 @@ export const receiptItems = pgTable('receipt_items', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+// Household Invitations Table
+export const householdInvitations = pgTable('household_invitations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  householdId: uuid('household_id').notNull().references(() => households.id, { onDelete: 'cascade' }),
+  invitedByUserId: uuid('invited_by_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  invitedEmail: text('invited_email').notNull(),
+  status: text('status').notNull().default('pending'), // 'pending' | 'accepted' | 'declined' | 'expired'
+  token: text('token').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 // TypeScript Types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -91,6 +104,9 @@ export type NewReceipt = typeof receipts.$inferInsert;
 
 export type ReceiptItem = typeof receiptItems.$inferSelect;
 export type NewReceiptItem = typeof receiptItems.$inferInsert;
+
+export type HouseholdInvitation = typeof householdInvitations.$inferSelect;
+export type NewHouseholdInvitation = typeof householdInvitations.$inferInsert;
 
 // Additional types for business logic
 export type HouseholdMember = {

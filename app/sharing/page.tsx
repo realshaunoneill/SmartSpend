@@ -8,12 +8,9 @@ import { HouseholdList } from "@/components/household-list"
 import { HouseholdSelector } from "@/components/household-selector"
 import { HouseholdMembersList } from "@/components/household-members-list"
 import { Skeleton } from "@/components/ui/skeleton"
-import type { Household } from "@/lib/types"
-
-interface HouseholdWithDetails extends Household {
-  memberCount: number
-  isAdmin: boolean
-}
+import { useHouseholds } from "@/lib/hooks/use-households"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { Users } from "lucide-react"
 
 interface Member {
   id: string
@@ -26,147 +23,71 @@ interface Member {
 }
 
 export default function SharingPage() {
-  const { user } = useUser()
-  const [households, setHouseholds] = useState<HouseholdWithDetails[]>([])
-  const [selectedHousehold, setSelectedHousehold] = useState<HouseholdWithDetails | null>(null)
-  const [members, setMembers] = useState<Member[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isMembersLoading, setIsMembersLoading] = useState(false)
-  const [currentUserId, setCurrentUserId] = useState<string>("")
+  const { user, isLoaded } = useUser()
+  const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>()
+  const queryClient = useQueryClient()
+  
+  // Get current user data
+  const { data: currentUser } = useQuery({
+    queryKey: ["current-user"],
+    queryFn: async () => {
+      const response = await fetch("/api/users/me")
+      if (!response.ok) throw new Error("Failed to fetch user")
+      return response.json()
+    },
+    enabled: !!user,
+  })
 
-  // Fetch current user ID from database
+  // Get households
+  const { data: households = [], isLoading: householdsLoading } = useHouseholds()
+
+  const handleHouseholdCreated = () => {
+    queryClient.invalidateQueries({ queryKey: ["households"] })
+  }
+
+  // Get members for selected household
+  const { data: members = [], isLoading: membersLoading } = useQuery({
+    queryKey: ["household-members", selectedHouseholdId],
+    queryFn: async () => {
+      if (!selectedHouseholdId) return []
+      
+      const response = await fetch(`/api/households/${selectedHouseholdId}/members`)
+      if (!response.ok) throw new Error("Failed to fetch members")
+      
+      const data = await response.json()
+      return data.map((member: any) => ({
+        id: member.userId,
+        user_id: member.userId,
+        full_name: member.email.split('@')[0],
+        email: member.email,
+        role: member.role === 'owner' ? 'admin' : 'member',
+        joined_at: member.joinedAt,
+      }))
+    },
+    enabled: !!selectedHouseholdId,
+  })
+
+  // Select first household by default
   useEffect(() => {
-    async function fetchCurrentUser() {
-      if (!user) return
-
-      try {
-        const response = await fetch('/api/users/me')
-        if (response.ok) {
-          const userData = await response.json()
-          setCurrentUserId(userData.id)
-        }
-      } catch (error) {
-        console.error('Error fetching current user:', error)
-      }
+    if (households.length > 0 && !selectedHouseholdId) {
+      setSelectedHouseholdId(households[0].id)
     }
+  }, [households, selectedHouseholdId])
 
-    fetchCurrentUser()
-  }, [user])
+  const selectedHousehold = households.find((h: any) => h.id === selectedHouseholdId)
+  const currentUserId = currentUser?.id
+  const isCurrentUserAdmin = selectedHousehold && currentUser ? 
+    members.find((m: any) => m.user_id === currentUser.id)?.role === 'admin' : false
 
-  // Fetch households
-  const fetchHouseholds = async () => {
-    setIsLoading(true)
-    try {
-      const response = await fetch('/api/households')
-      if (response.ok) {
-        const data = await response.json()
-        
-        // Fetch member count and role for each household
-        const householdsWithDetails = await Promise.all(
-          data.map(async (household: Household) => {
-            try {
-              const membersResponse = await fetch(`/api/households/${household.id}/members`)
-              if (membersResponse.ok) {
-                const membersData = await membersResponse.json()
-                const memberCount = membersData.length
-                const currentUserMember = membersData.find((m: any) => m.userId === currentUserId)
-                const isAdmin = currentUserMember?.role === 'owner'
-                
-                return {
-                  ...household,
-                  memberCount,
-                  isAdmin,
-                }
-              }
-              return {
-                ...household,
-                memberCount: 0,
-                isAdmin: false,
-              }
-            } catch {
-              return {
-                ...household,
-                memberCount: 0,
-                isAdmin: false,
-              }
-            }
-          })
-        )
-        
-        setHouseholds(householdsWithDetails)
-        
-        // Select first household by default
-        if (householdsWithDetails.length > 0 && !selectedHousehold) {
-          setSelectedHousehold(householdsWithDetails[0])
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching households:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Fetch members for selected household
-  const fetchMembers = async (householdId: string) => {
-    setIsMembersLoading(true)
-    try {
-      const response = await fetch(`/api/households/${householdId}/members`)
-      if (response.ok) {
-        const data = await response.json()
-        
-        // Transform the data to match the expected format
-        const transformedMembers = data.map((member: any) => ({
-          id: member.userId,
-          user_id: member.userId,
-          full_name: member.email.split('@')[0], // Use email prefix as name for now
-          email: member.email,
-          role: member.role === 'owner' ? 'admin' : 'member',
-          joined_at: member.joinedAt,
-        }))
-        
-        setMembers(transformedMembers)
-      }
-    } catch (error) {
-      console.error('Error fetching members:', error)
-    } finally {
-      setIsMembersLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (currentUserId) {
-      fetchHouseholds()
-    }
-  }, [currentUserId])
-
-  useEffect(() => {
-    if (selectedHousehold) {
-      fetchMembers(selectedHousehold.id)
-    }
-  }, [selectedHousehold])
-
-  const handleUpdate = () => {
-    fetchHouseholds()
-    if (selectedHousehold) {
-      fetchMembers(selectedHousehold.id)
-    }
-  }
-
-  const handleHouseholdSelect = (householdId: string) => {
-    const household = households.find(h => h.id === householdId)
-    if (household) {
-      setSelectedHousehold(household)
-    }
-  }
-
-  if (!user) {
+  if (!isLoaded || !user) {
     return (
       <>
         <Navigation />
         <main className="container mx-auto max-w-6xl space-y-8 p-6">
           <div className="text-center">
-            <p className="text-muted-foreground">Please sign in to manage households</p>
+            <p className="text-muted-foreground">
+              {!isLoaded ? "Loading..." : "Please sign in to manage households"}
+            </p>
           </div>
         </main>
       </>
@@ -186,15 +107,18 @@ export default function SharingPage() {
             {households.length > 0 && (
               <HouseholdSelector
                 households={households}
-                selectedHouseholdId={selectedHousehold?.id}
-                onSelect={handleHouseholdSelect}
+                selectedHouseholdId={selectedHouseholdId}
+                onSelect={setSelectedHouseholdId}
               />
             )}
-            <CreateHouseholdDialog userId={currentUserId} onHouseholdCreated={handleUpdate} />
+            <CreateHouseholdDialog 
+              userId={currentUserId} 
+              onHouseholdCreated={handleHouseholdCreated} 
+            />
           </div>
         </div>
 
-        {isLoading ? (
+        {householdsLoading ? (
           <div className="grid gap-8 lg:grid-cols-2">
             <div className="space-y-4">
               <Skeleton className="h-8 w-48" />
@@ -204,6 +128,20 @@ export default function SharingPage() {
               <Skeleton className="h-8 w-48" />
               <Skeleton className="h-48 w-full" />
             </div>
+          </div>
+        ) : households.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="rounded-full bg-muted p-6 mb-6">
+              <Users className="h-12 w-12 text-muted-foreground" />
+            </div>
+            <h3 className="text-2xl font-semibold mb-2">No households yet</h3>
+            <p className="text-muted-foreground mb-6 max-w-md">
+              Create your first household to start sharing receipts with family members or roommates.
+            </p>
+            <CreateHouseholdDialog 
+              userId={currentUserId} 
+              onHouseholdCreated={handleHouseholdCreated}
+            />
           </div>
         ) : (
           <div className="grid gap-8 lg:grid-cols-2">
@@ -212,24 +150,28 @@ export default function SharingPage() {
               <HouseholdList
                 households={households}
                 currentUserId={currentUserId}
-                onUpdate={handleUpdate}
-                onSelect={setSelectedHousehold}
-                selectedId={selectedHousehold?.id}
+                onUpdate={() => {
+                  queryClient.invalidateQueries({ queryKey: ["households"] })
+                }}
+                onSelect={(household: any) => setSelectedHouseholdId(household.id)}
+                selectedId={selectedHouseholdId}
               />
             </div>
 
             <div>
               {selectedHousehold && (
                 <>
-                  {isMembersLoading ? (
+                  {membersLoading ? (
                     <Skeleton className="h-64 w-full" />
                   ) : (
                     <HouseholdMembersList
                       householdId={selectedHousehold.id}
                       members={members}
                       currentUserId={currentUserId}
-                      isCurrentUserAdmin={selectedHousehold.isAdmin}
-                      onUpdate={handleUpdate}
+                      isCurrentUserAdmin={isCurrentUserAdmin}
+                      onUpdate={() => {
+                        queryClient.invalidateQueries({ queryKey: ["household-members", selectedHouseholdId] })
+                      }}
                     />
                   )}
                 </>

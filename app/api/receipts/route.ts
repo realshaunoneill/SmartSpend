@@ -7,7 +7,7 @@ import { eq, desc } from "drizzle-orm";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const { userId: clerkId } = await auth();
 
@@ -20,12 +20,26 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Get all receipts for the user
-    const userReceipts = await db
-      .select()
-      .from(receipts)
-      .where(eq(receipts.userId, user.id))
-      .orderBy(desc(receipts.createdAt));
+    const { searchParams } = new URL(req.url);
+    const householdId = searchParams.get("householdId");
+
+    let userReceipts;
+
+    if (householdId) {
+      // Get receipts for specific household
+      userReceipts = await db
+        .select()
+        .from(receipts)
+        .where(eq(receipts.householdId, householdId))
+        .orderBy(desc(receipts.createdAt));
+    } else {
+      // Get all receipts for the user (personal + household)
+      userReceipts = await db
+        .select()
+        .from(receipts)
+        .where(eq(receipts.userId, user.id))
+        .orderBy(desc(receipts.createdAt));
+    }
 
     // Get items for each receipt
     const receiptsWithItems = await Promise.all(

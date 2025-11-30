@@ -61,4 +61,12 @@ export class UserService {
     const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
     return user || null
   }
+
+  /**
+   * Get user by email address
+   */
+  static async getUserByEmail(email: string): Promise<User | null> {
+    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1)
+    return user || null
+  }
 }

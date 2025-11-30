@@ -8,6 +8,7 @@ import {
   getHttpStatusCode,
   Logger,
 } from '@/lib/errors'
+import { getClerkUserEmail } from '@/lib/auth-helpers'
 
 /**
  * GET /api/users/me

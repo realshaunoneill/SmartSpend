@@ -1,12 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { Crown, User, MoreVertical, Trash2 } from "lucide-react"
+import { Crown, User, MoreVertical, Trash2, UserPlus, Mail } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { removeMember, updateMemberRole } from "@/lib/household-actions"
+import { useSendInvitation, useHouseholdInvitations } from "@/lib/hooks/use-invitations"
+import { toast } from "sonner"
 
 interface Member {
   id: string
@@ -34,6 +38,11 @@ export function HouseholdMembersList({
   onUpdate,
 }: HouseholdMembersListProps) {
   const [loadingMemberId, setLoadingMemberId] = useState<string>()
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
+  
+  const sendInvitation = useSendInvitation()
+  const { data: invitations = [] } = useHouseholdInvitations(householdId)
 
   const handleRemove = async (userId: string) => {
     if (!confirm("Remove this member from the household?")) return
@@ -62,10 +71,79 @@ export function HouseholdMembersList({
     }
   }
 
+  const handleSendInvitation = async () => {
+    if (!inviteEmail.trim()) {
+      toast.error("Please enter an email address")
+      return
+    }
+
+    try {
+      await sendInvitation.mutateAsync({
+        householdId,
+        email: inviteEmail.trim(),
+      })
+      
+      toast.success("Invitation sent successfully!")
+      setInviteEmail("")
+      setInviteDialogOpen(false)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send invitation")
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Members</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Members</CardTitle>
+          {isCurrentUserAdmin && (
+            <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Invite Member
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Invite New Member</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">Email Address</label>
+                    <Input
+                      type="email"
+                      placeholder="Enter email address"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleSendInvitation()
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleSendInvitation}
+                      disabled={sendInvitation.isPending}
+                      className="flex-1"
+                    >
+                      <Mail className="h-4 w-4 mr-2" />
+                      Send Invitation
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setInviteDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -137,6 +215,36 @@ export function HouseholdMembersList({
               </div>
             )
           })}
+
+          {/* Pending Invitations */}
+          {invitations.length > 0 && (
+            <div className="mt-6 pt-4 border-t">
+              <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                Pending Invitations
+              </h4>
+              <div className="space-y-2">
+                {invitations.map((invitation: any) => (
+                  <div
+                    key={invitation.id}
+                    className="flex items-center justify-between rounded-lg border bg-muted/50 p-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{invitation.invitedEmail}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Invited {new Date(invitation.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="outline">Pending</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

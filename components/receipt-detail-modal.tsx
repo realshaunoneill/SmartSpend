@@ -8,11 +8,14 @@ import {
   Receipt as ReceiptIcon,
   Hash,
   ShoppingBag,
+  Users,
 } from "lucide-react"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
+import { ReceiptAssignmentDialog } from "@/components/receipt-assignment-dialog"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 interface ReceiptDetailModalProps {
@@ -42,6 +45,7 @@ export function ReceiptDetailModal({
         <VisuallyHidden>
           <DialogTitle>Receipt Details - {receipt.merchantName}</DialogTitle>
         </VisuallyHidden>
+
         <div className="flex h-full w-full">
           {/* Left Column - Receipt Image */}
           <div className="w-[45%] p-8 flex items-center justify-center border-r overflow-auto">
@@ -81,6 +85,19 @@ export function ReceiptDetailModal({
                       )}
                     </div>
                   </div>
+                </div>
+
+                {/* Assignment Button */}
+                <div className="mt-4">
+                  <ReceiptAssignmentDialog
+                    receiptId={receipt.id}
+                    currentHouseholdId={receipt.householdId}
+                  >
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Users className="h-4 w-4 mr-2" />
+                      {receipt.householdId ? "Change Household" : "Assign to Household"}
+                    </Button>
+                  </ReceiptAssignmentDialog>
                 </div>
 
                 {/* Meta Info */}

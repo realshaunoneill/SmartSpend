@@ -1,12 +1,16 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 
-export function useReceipts() {
+export function useReceipts(householdId?: string) {
   const queryClient = useQueryClient()
 
   const query = useQuery({
-    queryKey: ["receipts"],
+    queryKey: ["receipts", householdId],
     queryFn: async () => {
-      const response = await fetch("/api/receipts")
+      const url = householdId 
+        ? `/api/receipts?householdId=${householdId}`
+        : "/api/receipts"
+      
+      const response = await fetch(url)
       if (!response.ok) {
         throw new Error("Failed to fetch receipts")
       }
@@ -15,7 +19,7 @@ export function useReceipts() {
   })
 
   const refetch = () => {
-    queryClient.invalidateQueries({ queryKey: ["receipts"] })
+    queryClient.invalidateQueries({ queryKey: ["receipts", householdId] })
   }
 
   return {

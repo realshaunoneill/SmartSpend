@@ -6,6 +6,7 @@ import { LayoutDashboard, Receipt, CreditCard, Users, Settings, LogOut } from "l
 import { cn } from "@/lib/utils"
 import { useUser, useClerk } from "@clerk/nextjs"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { InvitationNotifications } from "@/components/invitation-notifications"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -65,6 +66,7 @@ export function Navigation() {
         </div>
 
         <div className="flex items-center gap-2">
+          <InvitationNotifications />
           <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

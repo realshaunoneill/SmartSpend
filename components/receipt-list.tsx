@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ReceiptIcon, Calendar, Store } from "lucide-react"
+import { ReceiptIcon, Calendar, Store, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ReceiptDetailModal } from "@/components/receipt-detail-modal"
@@ -109,6 +109,12 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                     )}
                     {(receipt as any).items && (receipt as any).items.length > 0 && (
                       <span>{(receipt as any).items.length} items</span>
+                    )}
+                    {(receipt as any).householdId && (
+                      <Badge variant="secondary" className="text-xs">
+                        <Users className="h-3 w-3 mr-1" />
+                        Shared
+                      </Badge>
                     )}
                   </div>
                 </div>
