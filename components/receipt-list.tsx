@@ -116,6 +116,11 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                         Shared
                       </Badge>
                     )}
+                    {(receipt as any).submittedBy && (receipt as any).householdId && (
+                      <span className="text-xs">
+                        by {(receipt as any).submittedBy.split('@')[0]}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

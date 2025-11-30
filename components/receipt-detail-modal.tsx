@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { ReceiptAssignmentDialog } from "@/components/receipt-assignment-dialog"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+import { useQuery } from "@tanstack/react-query"
 
 interface ReceiptDetailModalProps {
   receipt: any
@@ -29,6 +30,19 @@ export function ReceiptDetailModal({
   open,
   onOpenChange,
 }: ReceiptDetailModalProps) {
+  // Fetch household name if receipt is assigned to one
+  const { data: household } = useQuery({
+    queryKey: ["household", receipt?.householdId],
+    queryFn: async () => {
+      if (!receipt?.householdId) return null;
+      
+      const response = await fetch(`/api/households/${receipt.householdId}`);
+      if (!response.ok) return null;
+      return response.json();
+    },
+    enabled: !!receipt?.householdId && open,
+  });
+
   if (!receipt) return null
 
   return (
@@ -87,13 +101,23 @@ export function ReceiptDetailModal({
                   </div>
                 </div>
 
+                {/* Current Household Badge */}
+                {household && (
+                  <div className="mt-4">
+                    <Badge variant="secondary" className="flex items-center gap-2 w-fit">
+                      <Users className="h-3 w-3" />
+                      Shared with {household.name}
+                    </Badge>
+                  </div>
+                )}
+
                 {/* Assignment Button */}
                 <div className="mt-4">
                   <ReceiptAssignmentDialog
                     receiptId={receipt.id}
                     currentHouseholdId={receipt.householdId}
                   >
-                    <Button variant="outline" size="sm" className="w-full">
+                    <Button variant="secondary" size="sm" className="w-full">
                       <Users className="h-4 w-4 mr-2" />
                       {receipt.householdId ? "Change Household" : "Assign to Household"}
                     </Button>

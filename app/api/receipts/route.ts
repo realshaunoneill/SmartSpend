@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { receipts, receiptItems } from "@/lib/db/schema";
+import { receipts, receiptItems, users } from "@/lib/db/schema";
 import { UserService } from "@/lib/services/user-service";
 import { eq, desc } from "drizzle-orm";
 
@@ -41,22 +41,32 @@ export async function GET(req: NextRequest) {
         .orderBy(desc(receipts.createdAt));
     }
 
-    // Get items for each receipt
-    const receiptsWithItems = await Promise.all(
+    // Get items and user info for each receipt
+    const receiptsWithDetails = await Promise.all(
       userReceipts.map(async (receipt) => {
         const items = await db
           .select()
           .from(receiptItems)
           .where(eq(receiptItems.receiptId, receipt.id));
 
+        // Get user who created the receipt
+        const [receiptUser] = await db
+          .select({
+            email: users.email,
+          })
+          .from(users)
+          .where(eq(users.id, receipt.userId))
+          .limit(1);
+
         return {
           ...receipt,
           items,
+          submittedBy: receiptUser?.email || "Unknown",
         };
       }),
     );
 
-    return NextResponse.json(receiptsWithItems);
+    return NextResponse.json(receiptsWithDetails);
   } catch (error) {
     console.error("Error fetching receipts:", error);
     return NextResponse.json(

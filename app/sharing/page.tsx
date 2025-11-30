@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useHouseholds } from "@/lib/hooks/use-households"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Users } from "lucide-react"
+import { HouseholdReceipts } from "@/components/household-receipts"
 
 interface Member {
   id: string
@@ -144,39 +145,51 @@ export default function SharingPage() {
             />
           </div>
         ) : (
-          <div className="grid gap-8 lg:grid-cols-2">
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-foreground">Your Households</h2>
-              <HouseholdList
-                households={households}
-                currentUserId={currentUserId}
-                onUpdate={() => {
-                  queryClient.invalidateQueries({ queryKey: ["households"] })
-                }}
-                onSelect={(household: any) => setSelectedHouseholdId(household.id)}
-                selectedId={selectedHouseholdId}
-              />
+          <div className="space-y-8">
+            <div className="grid gap-8 lg:grid-cols-2">
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-foreground">Your Households</h2>
+                <HouseholdList
+                  households={households}
+                  currentUserId={currentUserId}
+                  onUpdate={() => {
+                    queryClient.invalidateQueries({ queryKey: ["households"] })
+                  }}
+                  onSelect={(household: any) => setSelectedHouseholdId(household.id)}
+                  selectedId={selectedHouseholdId}
+                />
+              </div>
+
+              <div>
+                {selectedHousehold && (
+                  <>
+                    {membersLoading ? (
+                      <Skeleton className="h-64 w-full" />
+                    ) : (
+                      <HouseholdMembersList
+                        householdId={selectedHousehold.id}
+                        members={members}
+                        currentUserId={currentUserId}
+                        isCurrentUserAdmin={isCurrentUserAdmin}
+                        onUpdate={() => {
+                          queryClient.invalidateQueries({ queryKey: ["household-members", selectedHouseholdId] })
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
             </div>
 
-            <div>
-              {selectedHousehold && (
-                <>
-                  {membersLoading ? (
-                    <Skeleton className="h-64 w-full" />
-                  ) : (
-                    <HouseholdMembersList
-                      householdId={selectedHousehold.id}
-                      members={members}
-                      currentUserId={currentUserId}
-                      isCurrentUserAdmin={isCurrentUserAdmin}
-                      onUpdate={() => {
-                        queryClient.invalidateQueries({ queryKey: ["household-members", selectedHouseholdId] })
-                      }}
-                    />
-                  )}
-                </>
-              )}
-            </div>
+            {/* Household Receipts */}
+            {selectedHousehold && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-foreground">
+                  {selectedHousehold.name} Receipts
+                </h2>
+                <HouseholdReceipts householdId={selectedHousehold.id} />
+              </div>
+            )}
           </div>
         )}
       </main>
