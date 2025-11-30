@@ -1,8 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import { ReceiptIcon, Calendar, Store } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { ReceiptDetailModal } from "@/components/receipt-detail-modal"
 import type { Receipt } from "@/lib/types"
 
 interface ReceiptListProps {
@@ -22,13 +24,22 @@ const categoryColors: Record<string, string> = {
 }
 
 export function ReceiptList({ receipts }: ReceiptListProps) {
+  const [selectedReceipt, setSelectedReceipt] = useState<any>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   }
 
+  const handleReceiptClick = (receipt: any) => {
+    setSelectedReceipt(receipt)
+    setModalOpen(true)
+  }
+
   return (
-    <Card>
+    <>
+      <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ReceiptIcon className="h-5 w-5" />
@@ -47,15 +58,16 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
             {receipts.map((receipt) => (
               <div
                 key={receipt.id}
-                className="flex items-center gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-muted/50"
+                onClick={() => handleReceiptClick(receipt)}
+                className="flex items-center gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-muted/50 cursor-pointer"
               >
                 {/* Receipt Image Thumbnail */}
                 <div className="shrink-0">
                   <div className="h-16 w-16 overflow-hidden rounded-md border bg-muted">
-                    {receipt.image_url ? (
+                    {(receipt as any).imageUrl ? (
                       <img
-                        src={receipt.image_url || "/placeholder.svg"}
-                        alt={`Receipt from ${receipt.merchant_name}`}
+                        src={(receipt as any).imageUrl || "/placeholder.svg"}
+                        alt={`Receipt from ${(receipt as any).merchantName || "merchant"}`}
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -72,26 +84,31 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                     <div className="flex items-center gap-2">
                       <Store className="h-4 w-4 text-muted-foreground" />
                       <span className="font-semibold text-foreground">
-                        {receipt.merchant_name || "Unknown Merchant"}
+                        {(receipt as any).merchantName || "Unknown Merchant"}
                       </span>
                     </div>
                     <span className="whitespace-nowrap text-lg font-bold text-foreground">
-                      ${receipt.total_amount.toFixed(2)}
+                      {(receipt as any).currency || "$"} {(receipt as any).totalAmount || "0.00"}
                     </span>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {formatDate(receipt.transaction_date)}
-                    </div>
-                    {receipt.category && (
-                      <Badge variant="secondary" className={categoryColors[receipt.category] || categoryColors.other}>
-                        {receipt.category}
+                    {(receipt as any).transactionDate && (
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {(receipt as any).transactionDate}
+                      </div>
+                    )}
+                    {(receipt as any).category && (
+                      <Badge variant="secondary" className={categoryColors[(receipt as any).category] || categoryColors.other}>
+                        {(receipt as any).category}
                       </Badge>
                     )}
-                    {receipt.payment_method && (
-                      <span className="capitalize">{receipt.payment_method.replace("_", " ")}</span>
+                    {(receipt as any).paymentMethod && (
+                      <span className="capitalize">{(receipt as any).paymentMethod.replace("_", " ")}</span>
+                    )}
+                    {(receipt as any).items && (receipt as any).items.length > 0 && (
+                      <span>{(receipt as any).items.length} items</span>
                     )}
                   </div>
                 </div>
@@ -101,5 +118,12 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
         )}
       </CardContent>
     </Card>
+
+      <ReceiptDetailModal
+        receipt={selectedReceipt}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
+    </>
   )
 }

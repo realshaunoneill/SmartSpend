@@ -18,7 +18,17 @@ interface UploadState {
 const ENV_PATH_PREFIX =
   process.env.NODE_ENV === "production" ? "prod" : "dev"
 
-export function ReceiptUpload({ clerkId, userEmail, householdId }: { clerkId: string; userEmail: string; householdId?: string }) {
+export function ReceiptUpload({ 
+  clerkId, 
+  userEmail, 
+  householdId,
+  onUploadComplete 
+}: { 
+  clerkId: string; 
+  userEmail: string; 
+  householdId?: string;
+  onUploadComplete?: () => void;
+}) {
   const [uploadState, setUploadState] = useState<UploadState>({ status: "idle" })
   const [previewUrl, setPreviewUrl] = useState<string>()
 
@@ -102,6 +112,11 @@ export function ReceiptUpload({ clerkId, userEmail, householdId }: { clerkId: st
         receiptData,
       })
 
+      // Call the callback to refresh the list
+      if (onUploadComplete) {
+        onUploadComplete()
+      }
+
       // Reset after 5 seconds
       setTimeout(() => {
         setUploadState({ status: "idle" })
@@ -181,42 +196,102 @@ export function ReceiptUpload({ clerkId, userEmail, householdId }: { clerkId: st
 
           {/* Receipt Data Preview */}
           {uploadState.status === "success" && uploadState.receiptData && (
-            <div className="rounded-lg border bg-card p-4">
-              <h4 className="mb-3 text-sm font-semibold text-foreground">Receipt Details</h4>
-              <div className="space-y-2 text-sm">
-                {uploadState.receiptData.merchantName && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Merchant:</span>
-                    <span className="font-medium text-foreground">
-                      {uploadState.receiptData.merchantName}
-                    </span>
-                  </div>
-                )}
-                {uploadState.receiptData.totalAmount && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total:</span>
-                    <span className="font-medium text-foreground">
-                      {uploadState.receiptData.currency} {uploadState.receiptData.totalAmount}
-                    </span>
-                  </div>
-                )}
-                {uploadState.receiptData.location && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Location:</span>
-                    <span className="font-medium text-foreground">
-                      {uploadState.receiptData.location}
-                    </span>
-                  </div>
-                )}
-                {uploadState.receiptData.itemCount !== undefined && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Items:</span>
-                    <span className="font-medium text-foreground">
-                      {uploadState.receiptData.itemCount}
-                    </span>
-                  </div>
-                )}
+            <div className="space-y-4">
+              <div className="rounded-lg border bg-card p-4">
+                <h4 className="mb-3 text-sm font-semibold text-foreground">Receipt Details</h4>
+                <div className="space-y-2 text-sm">
+                  {uploadState.receiptData.merchantName && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Merchant:</span>
+                      <span className="font-medium text-foreground">
+                        {uploadState.receiptData.merchantName}
+                      </span>
+                    </div>
+                  )}
+                  {uploadState.receiptData.location && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Location:</span>
+                      <span className="font-medium text-foreground text-right max-w-[200px] truncate">
+                        {uploadState.receiptData.location}
+                      </span>
+                    </div>
+                  )}
+                  {uploadState.receiptData.transactionDate && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Date:</span>
+                      <span className="font-medium text-foreground">
+                        {uploadState.receiptData.transactionDate}
+                      </span>
+                    </div>
+                  )}
+                  {uploadState.receiptData.subtotal && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal:</span>
+                      <span className="font-medium text-foreground">
+                        {uploadState.receiptData.currency} {uploadState.receiptData.subtotal}
+                      </span>
+                    </div>
+                  )}
+                  {uploadState.receiptData.tax && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Tax:</span>
+                      <span className="font-medium text-foreground">
+                        {uploadState.receiptData.currency} {uploadState.receiptData.tax}
+                      </span>
+                    </div>
+                  )}
+                  {uploadState.receiptData.serviceCharge && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Service Charge:</span>
+                      <span className="font-medium text-foreground">
+                        {uploadState.receiptData.currency} {uploadState.receiptData.serviceCharge}
+                      </span>
+                    </div>
+                  )}
+                  {uploadState.receiptData.totalAmount && (
+                    <div className="flex justify-between border-t pt-2 mt-2">
+                      <span className="text-muted-foreground font-semibold">Total:</span>
+                      <span className="font-bold text-foreground">
+                        {uploadState.receiptData.currency} {uploadState.receiptData.totalAmount}
+                      </span>
+                    </div>
+                  )}
+                  {uploadState.receiptData.paymentMethod && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Payment:</span>
+                      <span className="font-medium text-foreground capitalize">
+                        {uploadState.receiptData.paymentMethod}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Line Items */}
+              {uploadState.receiptData.items && uploadState.receiptData.items.length > 0 && (
+                <div className="rounded-lg border bg-card p-4">
+                  <h4 className="mb-3 text-sm font-semibold text-foreground">
+                    Items ({uploadState.receiptData.items.length})
+                  </h4>
+                  <div className="space-y-2">
+                    {uploadState.receiptData.items.map((item: any, index: number) => (
+                      <div key={index} className="flex justify-between text-sm border-b pb-2 last:border-0">
+                        <div className="flex-1">
+                          <div className="font-medium text-foreground">{item.name}</div>
+                          {item.quantity && (
+                            <div className="text-xs text-muted-foreground">Qty: {item.quantity}</div>
+                          )}
+                        </div>
+                        {item.price && (
+                          <div className="font-medium text-foreground">
+                            {uploadState.receiptData.currency} {item.price}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

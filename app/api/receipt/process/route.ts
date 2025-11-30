@@ -154,6 +154,15 @@ export async function POST(req: NextRequest) {
 
     console.log("Receipt processing completed successfully");
 
+    // Fetch the saved items from database
+    const items = ocrData.items && Array.isArray(ocrData.items)
+      ? ocrData.items.map((item: any) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        }))
+      : [];
+
     return NextResponse.json({
       id: receipt.id,
       merchantName: receipt.merchantName,
@@ -161,7 +170,13 @@ export async function POST(req: NextRequest) {
       currency: receipt.currency,
       location: receipt.location,
       transactionDate: receipt.transactionDate,
-      itemCount: ocrData.items?.length || 0,
+      tax: receipt.tax,
+      serviceCharge: receipt.serviceCharge,
+      subtotal: receipt.subtotal,
+      receiptNumber: receipt.receiptNumber,
+      paymentMethod: receipt.paymentMethod,
+      items,
+      itemCount: items.length,
     });
   } catch (error) {
     console.error("Receipt processing error:", error);
