@@ -41,6 +41,38 @@ export const bankConnections = pgTable('bank_connections', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+// Receipts Table
+export const receipts = pgTable('receipts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  householdId: uuid('household_id').references(() => households.id, { onDelete: 'cascade' }),
+  imageUrl: text('image_url').notNull(),
+  merchantName: text('merchant_name'),
+  totalAmount: text('total_amount'),
+  currency: text('currency'),
+  transactionDate: text('transaction_date'),
+  category: text('category'),
+  paymentMethod: text('payment_method'),
+  location: text('location'),
+  tax: text('tax'),
+  serviceCharge: text('service_charge'),
+  subtotal: text('subtotal'),
+  receiptNumber: text('receipt_number'),
+  ocrData: jsonb('ocr_data'), // Full OCR response
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Receipt Items Table
+export const receiptItems = pgTable('receipt_items', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  receiptId: uuid('receipt_id').notNull().references(() => receipts.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  quantity: text('quantity'),
+  price: text('price'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 // TypeScript Types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -53,6 +85,12 @@ export type NewHouseholdUser = typeof householdUsers.$inferInsert;
 
 export type BankConnection = typeof bankConnections.$inferSelect;
 export type NewBankConnection = typeof bankConnections.$inferInsert;
+
+export type Receipt = typeof receipts.$inferSelect;
+export type NewReceipt = typeof receipts.$inferInsert;
+
+export type ReceiptItem = typeof receiptItems.$inferSelect;
+export type NewReceiptItem = typeof receiptItems.$inferInsert;
 
 // Additional types for business logic
 export type HouseholdMember = {

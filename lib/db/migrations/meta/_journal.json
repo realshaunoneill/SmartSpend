@@ -8,6 +8,20 @@
       "when": 1764358642352,
       "tag": "0000_empty_texas_twister",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1764530938259,
+      "tag": "0001_lethal_moondragon",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764531063249,
+      "tag": "0002_slow_goliath",
+      "breakpoints": true
     }
   ]
 }

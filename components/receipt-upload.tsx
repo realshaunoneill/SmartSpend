@@ -6,7 +6,8 @@ import { useState } from "react"
 import { Upload, Loader2, CheckCircle2, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { scanReceiptImage, saveReceipt } from "@/lib/receipt-scanner"
+
+import { upload } from "@vercel/blob/client"
 
 interface UploadState {
   status: "idle" | "uploading" | "scanning" | "success" | "error"
@@ -14,7 +15,10 @@ interface UploadState {
   receiptData?: any
 }
 
-export function ReceiptUpload({ userId, householdId }: { userId: string; householdId?: string }) {
+const ENV_PATH_PREFIX =
+  process.env.NODE_ENV === "production" ? "prod" : "dev"
+
+export function ReceiptUpload({ clerkId, userEmail, householdId }: { clerkId: string; userEmail: string; householdId?: string }) {
   const [uploadState, setUploadState] = useState<UploadState>({ status: "idle" })
   const [previewUrl, setPreviewUrl] = useState<string>()
 
@@ -45,38 +49,70 @@ export function ReceiptUpload({ userId, householdId }: { userId: string; househo
     setPreviewUrl(url)
 
     try {
-      // Step 1: Upload to storage
-      setUploadState({ status: "uploading", message: "Uploading image..." })
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Mock upload
-      const imageUrl = "/placeholder.svg?key=receipt1" // Mock URL
-
-      // Step 2: Scan with AI
-      setUploadState({ status: "scanning", message: "Scanning receipt..." })
-      const ocrData = await scanReceiptImage(imageUrl)
-
-      // Step 3: Save to database
-      const receipt = await saveReceipt({
-        imageUrl,
-        ocrData,
-        userId,
-        householdId,
+      // Step 1: Upload to Vercel Blob
+      setUploadState({
+        status: "uploading",
+        message: "Uploading image...",
       })
+
+      const receiptId = `receipt-${Date.now()}`
+      const blob = await upload(
+        `${ENV_PATH_PREFIX}/receipts/${userEmail}/${receiptId}/${file.name}`,
+        file,
+        {
+          access: "public",
+          handleUploadUrl: "/api/receipt/upload",
+          clientPayload: JSON.stringify({
+            receiptId,
+            householdId,
+          }),
+        },
+      )
+
+      console.log("Upload completed:", blob.url)
+
+      // Step 2: Process receipt with OpenAI
+      setUploadState({
+        status: "scanning",
+        message: "Analyzing receipt...",
+      })
+
+      const processResponse = await fetch("/api/receipt/process", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          imageUrl: blob.url,
+          householdId,
+        }),
+      })
+
+      if (!processResponse.ok) {
+        throw new Error("Failed to process receipt")
+      }
+
+      const receiptData = await processResponse.json()
+
+      console.log("Receipt processed:", receiptData)
 
       setUploadState({
         status: "success",
-        message: "Receipt uploaded successfully!",
-        receiptData: receipt,
+        message: "Receipt uploaded and processed successfully!",
+        receiptData,
       })
 
-      // Reset after 3 seconds
+      // Reset after 5 seconds
       setTimeout(() => {
         setUploadState({ status: "idle" })
         setPreviewUrl(undefined)
-      }, 3000)
+      }, 5000)
     } catch (error) {
+      console.error("Receipt upload error:", error)
       setUploadState({
         status: "error",
-        message: "Failed to process receipt",
+        message:
+          error instanceof Error ? error.message : "Failed to process receipt",
       })
     }
   }
@@ -146,27 +182,45 @@ export function ReceiptUpload({ userId, householdId }: { userId: string; househo
           {/* Receipt Data Preview */}
           {uploadState.status === "success" && uploadState.receiptData && (
             <div className="rounded-lg border bg-card p-4">
-              <h4 className="mb-3 text-sm font-semibold text-foreground">Scanned Data</h4>
+              <h4 className="mb-3 text-sm font-semibold text-foreground">Receipt Details</h4>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Merchant:</span>
-                  <span className="font-medium text-foreground">{uploadState.receiptData.ocrData.merchant_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total:</span>
-                  <span className="font-medium text-foreground">
-                    ${uploadState.receiptData.ocrData.total_amount.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Category:</span>
-                  <span className="font-medium capitalize text-foreground">
-                    {uploadState.receiptData.ocrData.category}
-                  </span>
-                </div>
+                {uploadState.receiptData.merchantName && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Merchant:</span>
+                    <span className="font-medium text-foreground">
+                      {uploadState.receiptData.merchantName}
+                    </span>
+                  </div>
+                )}
+                {uploadState.receiptData.totalAmount && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total:</span>
+                    <span className="font-medium text-foreground">
+                      {uploadState.receiptData.currency} {uploadState.receiptData.totalAmount}
+                    </span>
+                  </div>
+                )}
+                {uploadState.receiptData.location && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Location:</span>
+                    <span className="font-medium text-foreground">
+                      {uploadState.receiptData.location}
+                    </span>
+                  </div>
+                )}
+                {uploadState.receiptData.itemCount !== undefined && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Items:</span>
+                    <span className="font-medium text-foreground">
+                      {uploadState.receiptData.itemCount}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}
+
+
 
           {/* Action Buttons */}
           {uploadState.status === "error" && (

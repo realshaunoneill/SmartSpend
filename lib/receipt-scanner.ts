@@ -1,57 +1,40 @@
 "use server"
 
-// Mock OCR scanning with OpenAI Vision (replace with real API when ready)
-export async function scanReceiptImage(imageUrl: string) {
-  // Simulate AI processing delay
-  await new Promise((resolve) => setTimeout(resolve, 1500))
+import { db } from "@/lib/db";
+import { receipts } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
-  // Mock OCR result
-  return {
-    merchant_name: "Whole Foods Market",
-    total_amount: 87.43,
-    currency: "USD",
-    transaction_date: new Date().toISOString(),
-    category: "groceries",
-    payment_method: "credit_card",
-    items: [
-      {
-        item_name: "Organic Bananas",
-        quantity: 2,
-        unit_price: 3.99,
-        total_price: 7.98,
-      },
-      {
-        item_name: "Almond Milk",
-        quantity: 1,
-        unit_price: 4.99,
-        total_price: 4.99,
-      },
-      {
-        item_name: "Mixed Greens",
-        quantity: 1,
-        unit_price: 5.49,
-        total_price: 5.49,
-      },
-    ],
-    raw_data: {
-      confidence: 0.95,
-      processor: "openai-vision",
-    },
-  }
+/**
+ * Get receipts for a user
+ */
+export async function getUserReceipts(userId: string) {
+  return await db
+    .select()
+    .from(receipts)
+    .where(eq(receipts.userId, userId))
+    .orderBy(receipts.createdAt);
 }
 
-export async function saveReceipt(data: {
-  imageUrl: string
-  ocrData: any
-  userId: string
-  householdId?: string
-}) {
-  // Mock save to database
-  await new Promise((resolve) => setTimeout(resolve, 500))
+/**
+ * Get receipts for a household
+ */
+export async function getHouseholdReceipts(householdId: string) {
+  return await db
+    .select()
+    .from(receipts)
+    .where(eq(receipts.householdId, householdId))
+    .orderBy(receipts.createdAt);
+}
 
-  return {
-    id: `receipt-${Date.now()}`,
-    ...data,
-    created_at: new Date().toISOString(),
-  }
+/**
+ * Get a single receipt by ID
+ */
+export async function getReceiptById(receiptId: string) {
+  const [receipt] = await db
+    .select()
+    .from(receipts)
+    .where(eq(receipts.id, receiptId))
+    .limit(1);
+
+  return receipt || null;
 }
