@@ -9,6 +9,7 @@ import type { Receipt } from "@/lib/types"
 
 interface ReceiptListProps {
   receipts: Receipt[]
+  onReceiptClick?: (receipt: any) => void
 }
 
 const categoryColors: Record<string, string> = {
@@ -23,7 +24,7 @@ const categoryColors: Record<string, string> = {
   other: "bg-gray-500/10 text-gray-700 dark:text-gray-400",
 }
 
-export function ReceiptList({ receipts }: ReceiptListProps) {
+export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -33,8 +34,12 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
   }
 
   const handleReceiptClick = (receipt: any) => {
-    setSelectedReceipt(receipt)
-    setModalOpen(true)
+    if (onReceiptClick) {
+      onReceiptClick(receipt)
+    } else {
+      setSelectedReceipt(receipt)
+      setModalOpen(true)
+    }
   }
 
   return (
@@ -130,11 +135,13 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
       </CardContent>
     </Card>
 
-      <ReceiptDetailModal
-        receipt={selectedReceipt}
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-      />
+      {!onReceiptClick && (
+        <ReceiptDetailModal
+          receipt={selectedReceipt}
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+        />
+      )}
     </>
   )
 }

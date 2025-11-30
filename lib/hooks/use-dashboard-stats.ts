@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { useReceipts } from "./use-receipts"
+import { useRecentReceipts } from "./use-receipts"
 
 interface DashboardStats {
   totalReceipts: number
@@ -15,7 +15,7 @@ interface DashboardStats {
 }
 
 export function useDashboardStats(householdId?: string) {
-  const { receipts, isLoading: receiptsLoading } = useReceipts(householdId)
+  const { receipts, isLoading: receiptsLoading } = useRecentReceipts(householdId, 100) // Get more for stats
 
   const stats = useQuery({
     queryKey: ["dashboard-stats", householdId, receipts?.length],

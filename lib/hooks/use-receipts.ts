@@ -1,16 +1,33 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 
-export function useReceipts(householdId?: string) {
+interface ReceiptsResponse {
+  receipts: any[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
+}
+
+export function useReceipts(householdId?: string, page: number = 1, limit: number = 10) {
   const queryClient = useQueryClient()
 
   const query = useQuery({
-    queryKey: ["receipts", householdId],
-    queryFn: async () => {
-      const url = householdId 
-        ? `/api/receipts?householdId=${householdId}`
-        : "/api/receipts"
+    queryKey: ["receipts", householdId, page, limit],
+    queryFn: async (): Promise<ReceiptsResponse> => {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      })
       
-      const response = await fetch(url)
+      if (householdId) {
+        params.append("householdId", householdId)
+      }
+      
+      const response = await fetch(`/api/receipts?${params}`)
       if (!response.ok) {
         throw new Error("Failed to fetch receipts")
       }
@@ -23,9 +40,15 @@ export function useReceipts(householdId?: string) {
   }
 
   return {
-    receipts: query.data || [],
+    receipts: query.data?.receipts || [],
+    pagination: query.data?.pagination,
     isLoading: query.isLoading,
     error: query.error,
     refetch,
   }
+}
+
+// Hook for getting recent receipts (for dashboard)
+export function useRecentReceipts(householdId?: string, limit: number = 5) {
+  return useReceipts(householdId, 1, limit)
 }
