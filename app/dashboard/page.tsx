@@ -17,7 +17,12 @@ export default function DashboardPage() {
   const { isLoaded, user } = useUser()
   
   const { data: households = [] } = useHouseholds()
-  const { stats, isLoading: statsLoading } = useDashboardStats(selectedHouseholdId)
+  
+  // Determine view mode based on selection
+  const isPersonalOnly = selectedHouseholdId === "personal"
+  const actualHouseholdId = isPersonalOnly ? undefined : selectedHouseholdId
+  
+  const { stats, isLoading: statsLoading } = useDashboardStats(actualHouseholdId, isPersonalOnly)
 
   // Show loading state while Clerk is loading
   if (!isLoaded) {
@@ -81,25 +86,33 @@ export default function DashboardPage() {
             <p className="mt-2 text-muted-foreground">Track your spending and manage your receipts</p>
           </div>
           
-          {households.length > 0 && (
-            <div className="flex items-center gap-4">
-              <HouseholdSelector
-                households={[
-                  { id: "", name: "Personal Dashboard" },
-                  ...households
-                ]}
-                selectedHouseholdId={selectedHouseholdId || ""}
-                onSelect={(id) => setSelectedHouseholdId(id || undefined)}
-              />
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            <HouseholdSelector
+              households={[
+                { id: "", name: "All Receipts" },
+                { id: "personal", name: "Personal Only" },
+                ...households
+              ]}
+              selectedHouseholdId={selectedHouseholdId || ""}
+              onSelect={(id) => setSelectedHouseholdId(id || undefined)}
+            />
+          </div>
         </div>
 
         <QuickStats stats={quickStats} />
 
         <div className="grid gap-8 lg:grid-cols-2">
-          <SpendingSummary period={period} onPeriodChange={setPeriod} householdId={selectedHouseholdId} />
-          <SpendingChart period={period} householdId={selectedHouseholdId} />
+          <SpendingSummary 
+            period={period} 
+            onPeriodChange={setPeriod} 
+            householdId={actualHouseholdId} 
+            personalOnly={isPersonalOnly} 
+          />
+          <SpendingChart 
+            period={period} 
+            householdId={actualHouseholdId} 
+            personalOnly={isPersonalOnly} 
+          />
         </div>
 
         {stats?.recentReceipts && stats.recentReceipts.length > 0 && (

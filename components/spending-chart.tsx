@@ -9,6 +9,7 @@ import { useSpendingTrends } from "@/lib/hooks/use-spending-trends"
 interface SpendingChartProps {
   period: "week" | "month" | "year"
   householdId?: string
+  personalOnly?: boolean
 }
 
 // Custom tooltip component that properly uses theme colors
@@ -26,8 +27,8 @@ function CustomTooltip({ active, payload, label }: any) {
   return null
 }
 
-export function SpendingChart({ period, householdId }: SpendingChartProps) {
-  const { data: trendsData, isLoading, error } = useSpendingTrends(householdId, period)
+export function SpendingChart({ period, householdId, personalOnly = false }: SpendingChartProps) {
+  const { data: trendsData, isLoading, error } = useSpendingTrends(householdId, period, personalOnly)
   const [colors, setColors] = useState({
     primary: "#10b981",
     border: "#e5e7eb",

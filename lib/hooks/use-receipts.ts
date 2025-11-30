@@ -12,11 +12,11 @@ interface ReceiptsResponse {
   }
 }
 
-export function useReceipts(householdId?: string, page: number = 1, limit: number = 10) {
+export function useReceipts(householdId?: string, page: number = 1, limit: number = 10, personalOnly: boolean = false) {
   const queryClient = useQueryClient()
 
   const query = useQuery({
-    queryKey: ["receipts", householdId, page, limit],
+    queryKey: ["receipts", householdId, page, limit, personalOnly],
     queryFn: async (): Promise<ReceiptsResponse> => {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -25,6 +25,10 @@ export function useReceipts(householdId?: string, page: number = 1, limit: numbe
       
       if (householdId) {
         params.append("householdId", householdId)
+      }
+      
+      if (personalOnly) {
+        params.append("personalOnly", "true")
       }
       
       const response = await fetch(`/api/receipts?${params}`)
@@ -49,6 +53,6 @@ export function useReceipts(householdId?: string, page: number = 1, limit: numbe
 }
 
 // Hook for getting recent receipts (for dashboard)
-export function useRecentReceipts(householdId?: string, limit: number = 5) {
-  return useReceipts(householdId, 1, limit)
+export function useRecentReceipts(householdId?: string, limit: number = 5, personalOnly: boolean = false) {
+  return useReceipts(householdId, 1, limit, personalOnly)
 }

@@ -8,10 +8,11 @@ interface SpendingSummaryProps {
   period: "week" | "month" | "year"
   onPeriodChange: (period: "week" | "month" | "year") => void
   householdId?: string
+  personalOnly?: boolean
 }
 
-export function SpendingSummary({ period, onPeriodChange, householdId }: SpendingSummaryProps) {
-  const { data: trendsData, isLoading, error } = useSpendingTrends(householdId, period)
+export function SpendingSummary({ period, onPeriodChange, householdId, personalOnly = false }: SpendingSummaryProps) {
+  const { data: trendsData, isLoading, error } = useSpendingTrends(householdId, period, personalOnly)
   
   const periodLabels = {
     week: "This Week",

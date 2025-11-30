@@ -69,7 +69,11 @@ export const receiptItems = pgTable('receipt_items', {
   receiptId: uuid('receipt_id').notNull().references(() => receipts.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   quantity: text('quantity'),
-  price: text('price'),
+  unitPrice: text('unit_price'),
+  totalPrice: text('total_price'),
+  price: text('price'), // Keep for backward compatibility
+  category: text('category'),
+  description: text('description'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 

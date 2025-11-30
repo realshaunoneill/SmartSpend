@@ -1,13 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
 import { Receipt, Scan, CreditCard, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { useAuth } from "@clerk/nextjs"
 
 const features = [
   {
@@ -65,15 +62,6 @@ const benefits = [
 ]
 
 export default function LandingPage() {
-  const { isSignedIn } = useAuth()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (isSignedIn) {
-      router.push("/dashboard")
-    }
-  }, [isSignedIn, router])
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
@@ -88,9 +76,6 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <ThemeToggle />
             <Link href="/sign-in">
-              <Button variant="ghost" className="hidden sm:inline-flex">Log in</Button>
-            </Link>
-            <Link href="/sign-up">
               <Button className="shadow-lg shadow-primary/20">Get Started</Button>
             </Link>
           </div>

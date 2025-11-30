@@ -14,11 +14,11 @@ interface DashboardStats {
   recentReceipts: any[]
 }
 
-export function useDashboardStats(householdId?: string) {
-  const { receipts, isLoading: receiptsLoading } = useRecentReceipts(householdId, 100) // Get more for stats
+export function useDashboardStats(householdId?: string, personalOnly: boolean = false) {
+  const { receipts, isLoading: receiptsLoading } = useRecentReceipts(householdId, 100, personalOnly) // Get more for stats
 
   const stats = useQuery({
-    queryKey: ["dashboard-stats", householdId, receipts?.length],
+    queryKey: ["dashboard-stats", householdId, personalOnly, receipts?.length],
     queryFn: () => {
       if (!receipts || receipts.length === 0) {
         return {

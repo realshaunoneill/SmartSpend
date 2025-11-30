@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { receipts, receiptItems, users } from "@/lib/db/schema";
 import { UserService } from "@/lib/services/user-service";
-import { eq, desc, count } from "drizzle-orm";
+import { eq, desc, count, isNull, and } from "drizzle-orm";
 
 export const runtime = "nodejs";
 
@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const householdId = searchParams.get("householdId");
+    const personalOnly = searchParams.get("personalOnly") === "true";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const offset = (page - 1) * limit;
@@ -44,6 +45,22 @@ export async function GET(req: NextRequest) {
         .select({ count: count() })
         .from(receipts)
         .where(eq(receipts.householdId, householdId));
+      totalCount = countResult.count;
+    } else if (personalOnly) {
+      // Get only personal receipts (not assigned to any household)
+      userReceipts = await db
+        .select()
+        .from(receipts)
+        .where(and(eq(receipts.userId, user.id), isNull(receipts.householdId)))
+        .orderBy(desc(receipts.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      // Get total count for pagination
+      const [countResult] = await db
+        .select({ count: count() })
+        .from(receipts)
+        .where(and(eq(receipts.userId, user.id), isNull(receipts.householdId)));
       totalCount = countResult.count;
     } else {
       // Get all receipts for the user (personal + household)

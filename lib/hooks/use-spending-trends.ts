@@ -16,12 +16,12 @@ interface SpendingTrendsData {
   }>
 }
 
-export function useSpendingTrends(householdId?: string, period: "week" | "month" | "year" = "month") {
+export function useSpendingTrends(householdId?: string, period: "week" | "month" | "year" = "month", personalOnly: boolean = false) {
   // Get all receipts for analysis (not paginated)
-  const { receipts, isLoading: receiptsLoading } = useReceipts(householdId, 1, 1000)
+  const { receipts, isLoading: receiptsLoading } = useReceipts(householdId, 1, 1000, personalOnly)
 
   const trendsData = useQuery({
-    queryKey: ["spending-trends", householdId, period, receipts?.length],
+    queryKey: ["spending-trends", householdId, period, personalOnly, receipts?.length],
     queryFn: (): SpendingTrendsData => {
       if (!receipts || receipts.length === 0) {
         return {
