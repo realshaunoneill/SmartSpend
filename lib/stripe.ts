@@ -117,13 +117,13 @@ export async function createCheckoutSession(
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
-      payment_method_types: ["card"],
       line_items: [
         {
           price: priceId,
           quantity: 1,
         },
       ],
+      allow_promotion_codes: true,
       success_url: successUrl || `${process.env.NEXT_PUBLIC_APP_URL}/settings?success=true`,
       cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL}/settings?canceled=true`,
       client_reference_id: userId,
