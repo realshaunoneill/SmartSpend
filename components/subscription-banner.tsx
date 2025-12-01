@@ -55,11 +55,30 @@ export function SubscriptionBanner({ page = "default" }: SubscriptionBannerProps
 
   const message = pageMessages[page as keyof typeof pageMessages] || pageMessages.default
 
-  const handleSubscribe = () => {
-    // TODO: Implement subscription flow (Stripe, etc.)
-    console.log("Subscribe clicked for page:", page)
-    // For now, just show an alert
-    alert("Subscription flow would be implemented here with Stripe or similar payment processor")
+  const handleSubscribe = async () => {
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create checkout session");
+      }
+
+      const { url } = await response.json();
+      
+      if (url) {
+        // Redirect to Stripe checkout
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      alert("Failed to start checkout. Please try again.");
+    }
   }
 
   const handleDismiss = () => {

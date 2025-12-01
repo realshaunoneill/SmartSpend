@@ -69,4 +69,28 @@ export class UserService {
     const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1)
     return user || null
   }
+
+  /**
+   * Update user Stripe customer ID
+   */
+  static async updateStripeCustomerId(userId: string, stripeCustomerId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ stripeCustomerId, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning()
+    return user
+  }
+
+  /**
+   * Get user by Stripe customer ID
+   */
+  static async getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | null> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.stripeCustomerId, stripeCustomerId))
+      .limit(1)
+    return user || null
+  }
 }

@@ -88,10 +88,30 @@ export function SubscriptionGate({
   const config = featureConfig[feature]
   const FeatureIcon = config.icon
 
-  const handleSubscribe = () => {
-    // TODO: Implement subscription flow
-    console.log("Subscribe clicked for feature:", feature)
-    alert("Subscription flow would be implemented here with Stripe or similar payment processor")
+  const handleSubscribe = async () => {
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create checkout session");
+      }
+
+      const { url } = await response.json();
+      
+      if (url) {
+        // Redirect to Stripe checkout
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      alert("Failed to start checkout. Please try again.");
+    }
   }
 
   return (
