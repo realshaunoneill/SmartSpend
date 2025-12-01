@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { SubscriptionBanner } from "@/components/subscription-banner"
 import { useUser } from "@clerk/nextjs"
 import { useUser as useUserData } from "@/lib/hooks/use-user"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -19,30 +18,52 @@ export default function SettingsPage() {
   const [isUpdating, setIsUpdating] = useState(false)
   const queryClient = useQueryClient()
 
-  const updateSubscriptionMutation = useMutation({
-    mutationFn: async (subscribed: boolean) => {
-      const response = await fetch("/api/users/me/subscription", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscribed }),
+  const handleUpgrade = async () => {
+    setIsUpdating(true)
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
       })
-      if (!response.ok) throw new Error("Failed to update subscription")
-      return response.json()
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user"] })
-      toast.success("Subscription updated successfully")
-    },
-    onError: () => {
-      toast.error("Failed to update subscription")
-    },
-  })
+
+      if (!response.ok) {
+        throw new Error("Failed to create checkout session")
+      }
+
+      const { url } = await response.json()
+      
+      if (url) {
+        // Redirect to Stripe checkout
+        window.location.href = url
+      }
+    } catch (error) {
+      console.error("Error creating checkout session:", error)
+      toast.error("Failed to start checkout. Please try again.")
+      setIsUpdating(false)
+    }
+  }
+
+  const handleManageSubscription = async () => {
+    setIsUpdating(true)
+    try {
+      // TODO: Implement Stripe Customer Portal
+      // For now, show a message
+      toast.info("Subscription management coming soon! Contact support to manage your subscription.")
+      setIsUpdating(false)
+    } catch (error) {
+      console.error("Error managing subscription:", error)
+      toast.error("Failed to open subscription management.")
+      setIsUpdating(false)
+    }
+  }
 
   if (!isLoaded || userDataLoading) {
     return (
       <>
         <Navigation />
-        <SubscriptionBanner page="settings" />
         <main className="container mx-auto max-w-4xl space-y-8 p-6">
           <div className="flex min-h-[400px] items-center justify-center">
             <div className="text-center">
@@ -59,14 +80,11 @@ export default function SettingsPage() {
     return null
   }
 
-  const handleSubscriptionChange = (subscribed: boolean) => {
-    updateSubscriptionMutation.mutate(subscribed)
-  }
+
 
   return (
     <>
       <Navigation />
-      <SubscriptionBanner page="settings" />
       <main className="container mx-auto max-w-4xl space-y-8 p-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
@@ -123,38 +141,62 @@ export default function SettingsPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-foreground">
-                        {userData?.subscribed ? "Pro Plan" : "Free Plan"}
+                        {userData?.subscribed ? "Premium Plan" : "Free Plan"}
                       </p>
                       <Badge variant={userData?.subscribed ? "default" : "secondary"}>
-                        {userData?.subscribed ? "pro" : "free"}
+                        {userData?.subscribed ? "Premium" : "Free"}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {userData?.subscribed 
-                        ? "Unlimited receipts and advanced features" 
-                        : "Up to 50 receipts per month"}
+                        ? "Unlimited receipts, advanced analytics, and household sharing" 
+                        : "Limited to 50 receipts per month"}
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-2">
                   {!userData?.subscribed ? (
                     <Button 
-                      onClick={() => handleSubscriptionChange(true)}
-                      disabled={updateSubscriptionMutation.isPending}
+                      onClick={handleUpgrade}
+                      disabled={isUpdating}
                     >
-                      {updateSubscriptionMutation.isPending ? "Updating..." : "Upgrade to Pro"}
+                      {isUpdating ? "Processing..." : "Upgrade to Premium"}
                     </Button>
                   ) : (
                     <Button 
                       variant="outline"
-                      onClick={() => handleSubscriptionChange(false)}
-                      disabled={updateSubscriptionMutation.isPending}
+                      onClick={handleManageSubscription}
+                      disabled={isUpdating}
                     >
-                      {updateSubscriptionMutation.isPending ? "Updating..." : "Downgrade to Free"}
+                      Manage Subscription
                     </Button>
                   )}
                 </div>
               </div>
+              
+              {userData?.subscribed && (
+                <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+                  <h4 className="font-medium text-sm">Premium Features</h4>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    <li className="flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                      Unlimited receipt storage
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                      Advanced spending analytics
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                      Household sharing & collaboration
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                      Priority support
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

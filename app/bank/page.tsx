@@ -5,7 +5,6 @@ import { Navigation } from "@/components/navigation"
 import { AddBankDialog } from "@/components/add-bank-dialog"
 import { BankConnectionCard } from "@/components/bank-connection-card"
 import { BankTransactionsList } from "@/components/bank-transactions-list"
-import { SubscriptionBanner } from "@/components/subscription-banner"
 import { SubscriptionGate } from "@/components/subscription-gate"
 import type { BankConnection, BankTransaction } from "@/lib/types"
 
@@ -108,7 +107,6 @@ export default function BankPage() {
   return (
     <>
       <Navigation />
-      <SubscriptionBanner page="bank" />
       <main className="container mx-auto max-w-6xl space-y-8 p-6">
         <SubscriptionGate feature="bank">
           <div className="flex items-center justify-between">

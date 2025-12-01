@@ -12,6 +12,8 @@ import { useUser } from "@clerk/nextjs"
 import { useDashboardStats } from "@/lib/hooks/use-dashboard-stats"
 import { useHouseholds } from "@/lib/hooks/use-households"
 
+import { SubscriptionBanner } from "@/components/subscription-banner"
+
 export default function DashboardPage() {
   const [period, setPeriod] = useState<"week" | "month" | "year">("month")
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>()
