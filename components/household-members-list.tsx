@@ -27,6 +27,7 @@ interface HouseholdMembersListProps {
   members: Member[]
   currentUserId: string
   isCurrentUserAdmin: boolean
+  isSubscribed?: boolean
   onUpdate: () => void
 }
 
@@ -35,6 +36,7 @@ export function HouseholdMembersList({
   members,
   currentUserId,
   isCurrentUserAdmin,
+  isSubscribed = false,
   onUpdate,
 }: HouseholdMembersListProps) {
   const [loadingMemberId, setLoadingMemberId] = useState<string>()
@@ -96,7 +98,7 @@ export function HouseholdMembersList({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Members</CardTitle>
-          {isCurrentUserAdmin && (
+          {isCurrentUserAdmin && isSubscribed && (
             <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm">
@@ -149,7 +151,7 @@ export function HouseholdMembersList({
         <div className="space-y-3">
           {members.map((member) => {
             const isCurrentUser = member.user_id === currentUserId
-            const canManage = isCurrentUserAdmin && !isCurrentUser
+            const canManage = isCurrentUserAdmin && !isCurrentUser && isSubscribed
 
             return (
               <div key={member.id} className="flex items-center justify-between rounded-lg border bg-card p-4">

@@ -102,26 +102,39 @@ export default function SharingPage() {
     <>
       <Navigation />
       <main className="container mx-auto max-w-6xl space-y-8 p-6">
-        <SubscriptionGate feature="sharing">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">Sharing</h1>
-              <p className="mt-2 text-muted-foreground">Manage households and share receipts with family or roommates</p>
-            </div>
-            <div className="flex items-center gap-4">
-              {households.length > 0 && (
-                <HouseholdSelector
-                  households={households}
-                  selectedHouseholdId={selectedHouseholdId}
-                  onSelect={setSelectedHouseholdId}
-                />
-              )}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Sharing</h1>
+            <p className="mt-2 text-muted-foreground">
+              {isSubscribed 
+                ? "Manage households and share receipts with family or roommates"
+                : "View your households and shared receipts"
+              }
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            {households.length > 0 && (
+              <HouseholdSelector
+                households={households}
+                selectedHouseholdId={selectedHouseholdId}
+                onSelect={setSelectedHouseholdId}
+              />
+            )}
+            {isSubscribed ? (
               <CreateHouseholdDialog 
                 userId={currentUserId} 
                 onHouseholdCreated={handleHouseholdCreated} 
               />
-            </div>
+            ) : (
+              <SubscriptionGate feature="sharing">
+                <CreateHouseholdDialog 
+                  userId={currentUserId} 
+                  onHouseholdCreated={handleHouseholdCreated} 
+                />
+              </SubscriptionGate>
+            )}
           </div>
+        </div>
 
         {householdsLoading ? (
           <div className="grid gap-8 lg:grid-cols-2">
@@ -141,12 +154,24 @@ export default function SharingPage() {
             </div>
             <h3 className="text-2xl font-semibold mb-2">No households yet</h3>
             <p className="text-muted-foreground mb-6 max-w-md">
-              Create your first household to start sharing receipts with family members or roommates.
+              {isSubscribed 
+                ? "Create your first household to start sharing receipts with family members or roommates."
+                : "You're not part of any households yet. Upgrade to Premium to create and manage households."
+              }
             </p>
-            <CreateHouseholdDialog 
-              userId={currentUserId} 
-              onHouseholdCreated={handleHouseholdCreated}
-            />
+            {isSubscribed ? (
+              <CreateHouseholdDialog 
+                userId={currentUserId} 
+                onHouseholdCreated={handleHouseholdCreated}
+              />
+            ) : (
+              <SubscriptionGate feature="sharing">
+                <CreateHouseholdDialog 
+                  userId={currentUserId} 
+                  onHouseholdCreated={handleHouseholdCreated}
+                />
+              </SubscriptionGate>
+            )}
           </div>
         ) : (
           <div className="space-y-8">
@@ -156,6 +181,7 @@ export default function SharingPage() {
                 <HouseholdList
                   households={households}
                   currentUserId={currentUserId}
+                  isSubscribed={isSubscribed}
                   onUpdate={() => {
                     queryClient.invalidateQueries({ queryKey: ["households"] })
                   }}
@@ -175,6 +201,7 @@ export default function SharingPage() {
                         members={members}
                         currentUserId={currentUserId}
                         isCurrentUserAdmin={isCurrentUserAdmin}
+                        isSubscribed={isSubscribed}
                         onUpdate={() => {
                           queryClient.invalidateQueries({ queryKey: ["household-members", selectedHouseholdId] })
                         }}
@@ -196,7 +223,6 @@ export default function SharingPage() {
             )}
           </div>
         )}
-        </SubscriptionGate>
       </main>
     </>
   )

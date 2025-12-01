@@ -11,6 +11,7 @@ interface HouseholdWithDetails extends Household {
 interface HouseholdListProps {
   households: HouseholdWithDetails[]
   currentUserId: string
+  isSubscribed?: boolean
   onUpdate: () => void
   onSelect?: (household: HouseholdWithDetails) => void
   selectedId?: string
@@ -19,6 +20,7 @@ interface HouseholdListProps {
 export function HouseholdList({ 
   households, 
   currentUserId, 
+  isSubscribed = false,
   onUpdate,
   onSelect,
   selectedId
@@ -47,6 +49,7 @@ export function HouseholdList({
           <HouseholdCard 
             household={household} 
             currentUserId={currentUserId} 
+            isSubscribed={isSubscribed}
             onUpdate={onUpdate} 
           />
         </div>

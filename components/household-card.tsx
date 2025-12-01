@@ -16,10 +16,11 @@ interface HouseholdCardProps {
     isAdmin: boolean
   }
   currentUserId: string
+  isSubscribed?: boolean
   onUpdate: () => void
 }
 
-export function HouseholdCard({ household, currentUserId, onUpdate }: HouseholdCardProps) {
+export function HouseholdCard({ household, currentUserId, isSubscribed = false, onUpdate }: HouseholdCardProps) {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleLeave = async () => {
@@ -74,30 +75,40 @@ export function HouseholdCard({ household, currentUserId, onUpdate }: HouseholdC
             </div>
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {household.isAdmin ? (
-                <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Household
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={handleLeave}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Leave Household
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {isSubscribed && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {household.isAdmin ? (
+                  <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Household
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={handleLeave}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Leave Household
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </CardHeader>
       <CardContent>
-        <InviteMemberDialog householdId={household.id} onMemberInvited={onUpdate} />
+        {isSubscribed ? (
+          <InviteMemberDialog householdId={household.id} onMemberInvited={onUpdate} />
+        ) : (
+          <div className="text-center py-4">
+            <p className="text-sm text-muted-foreground">
+              Upgrade to Premium to manage household members
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
