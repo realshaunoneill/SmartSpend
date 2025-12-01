@@ -86,7 +86,7 @@ export function SubscriptionBanner({ page = "default" }: SubscriptionBannerProps
   }
 
   return (
-    <Card className="mx-4 mb-6 border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 shadow-lg">
+    <Card className="mx-4 mb-6 border-2 border-primary/20 bg-linear-to-r from-primary/5 to-primary/10 shadow-lg">
       <div className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4 flex-1">

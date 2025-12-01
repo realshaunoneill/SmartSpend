@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { UserService } from '@/lib/services/user-service'
 import { getClerkUserEmail } from '@/lib/auth-helpers'
+import { syncStripeDataToDatabase } from '@/lib/stripe'
 import {
   createErrorResponse,
   ErrorCode,
@@ -9,6 +10,108 @@ import {
   getHttpStatusCode,
   Logger,
 } from '@/lib/errors'
+
+/**
+ * GET /api/users/me/subscription
+ * Get user subscription details from Stripe
+ */
+export async function GET(req: Request) {
+  const requestId = generateRequestId()
+
+  try {
+    const { userId: clerkId } = await auth()
+
+    if (!clerkId) {
+      Logger.warn('Unauthenticated request to GET /api/users/me/subscription', {
+        requestId,
+      })
+      const errorResponse = createErrorResponse(
+        ErrorCode.UNAUTHORIZED,
+        'Authentication required',
+        undefined,
+        requestId
+      )
+      return NextResponse.json(errorResponse, {
+        status: getHttpStatusCode(ErrorCode.UNAUTHORIZED),
+      })
+    }
+
+    // Get Clerk user email
+    const email = await getClerkUserEmail(clerkId)
+
+    if (!email) {
+      Logger.warn('User has no email address', {
+        requestId,
+        context: { clerkId },
+      })
+      const errorResponse = createErrorResponse(
+        ErrorCode.BAD_REQUEST,
+        'User email not found',
+        undefined,
+        requestId
+      )
+      return NextResponse.json(errorResponse, {
+        status: getHttpStatusCode(ErrorCode.BAD_REQUEST),
+      })
+    }
+
+    // Get or create user in database
+    const user = await UserService.getOrCreateUser(clerkId, email)
+
+    // Check if user has a Stripe customer ID
+    if (!user.stripeCustomerId) {
+      Logger.info('User has no Stripe customer ID', {
+        requestId,
+        userId: user.id,
+        context: { clerkId, email },
+      })
+      return NextResponse.json({
+        hasStripeCustomer: false,
+        subscribed: user.subscribed,
+        message: 'No Stripe customer found for this user',
+      })
+    }
+
+    // Get subscription details from Stripe (this also updates the database)
+    const subscriptionData = await syncStripeDataToDatabase(user.stripeCustomerId)
+
+    // Refetch user to get updated subscription status
+    const updatedUser = await UserService.getUserProfile(user.id)
+
+    Logger.info('Retrieved subscription details from Stripe', {
+      requestId,
+      userId: user.id,
+      context: {
+        clerkId,
+        email,
+        stripeCustomerId: user.stripeCustomerId,
+        subscriptionData,
+        subscriptionStatus: updatedUser?.subscribed,
+      },
+    })
+
+    return NextResponse.json({
+      hasStripeCustomer: true,
+      stripeCustomerId: user.stripeCustomerId,
+      subscribed: updatedUser?.subscribed || false,
+      subscriptionData,
+      message: `Subscription status synced from Stripe: ${subscriptionData.status}`,
+    })
+  } catch (error) {
+    Logger.error('Error retrieving subscription details', error as Error, {
+      requestId,
+    })
+    const errorResponse = createErrorResponse(
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      'Failed to retrieve subscription details',
+      undefined,
+      requestId
+    )
+    return NextResponse.json(errorResponse, {
+      status: getHttpStatusCode(ErrorCode.INTERNAL_SERVER_ERROR),
+    })
+  }
+}
 
 /**
  * PATCH /api/users/me/subscription
