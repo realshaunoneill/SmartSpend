@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { receipts, receiptItems, users } from "@/lib/db/schema";
 import { UserService } from "@/lib/services/user-service";
+import { getClerkUserEmail } from "@/lib/auth-helpers";
 import { eq, desc, count, isNull, and } from "drizzle-orm";
 
 export const runtime = "nodejs";
@@ -15,10 +16,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await UserService.getUserByClerkId(clerkId);
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Get Clerk user email
+    const email = await getClerkUserEmail(clerkId);
+    if (!email) {
+      return NextResponse.json({ error: "User email not found" }, { status: 400 });
     }
+
+    // Get or create user in database
+    const user = await UserService.getOrCreateUser(clerkId, email);
 
     const { searchParams } = new URL(req.url);
     const householdId = searchParams.get("householdId");

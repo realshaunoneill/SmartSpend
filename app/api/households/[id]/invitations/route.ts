@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { households, householdUsers, householdInvitations, users } from "@/lib/db/schema";
 import { UserService } from "@/lib/services/user-service";
+import { getClerkUserEmail } from "@/lib/auth-helpers";
 import { eq, and } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
@@ -19,10 +20,14 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await UserService.getUserByClerkId(clerkId);
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Get Clerk user email
+    const userEmail = await getClerkUserEmail(clerkId);
+    if (!userEmail) {
+      return NextResponse.json({ error: "User email not found" }, { status: 400 });
     }
+
+    // Get or create user in database
+    const user = await UserService.getOrCreateUser(clerkId, userEmail);
 
     const { id: householdId } = await params;
     const { email } = await req.json();
@@ -144,10 +149,14 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await UserService.getUserByClerkId(clerkId);
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Get Clerk user email
+    const userEmail = await getClerkUserEmail(clerkId);
+    if (!userEmail) {
+      return NextResponse.json({ error: "User email not found" }, { status: 400 });
     }
+
+    // Get or create user in database
+    const user = await UserService.getOrCreateUser(clerkId, userEmail);
 
     const { id: householdId } = await params;
 

@@ -99,24 +99,27 @@ export async function PATCH(req: Request) {
       })
     }
 
-    // Get user from database
-    const user = await UserService.getUserByClerkId(clerkId)
+    // Get Clerk user email
+    const email = await getClerkUserEmail(clerkId)
 
-    if (!user) {
-      Logger.warn('User not found in database', {
+    if (!email) {
+      Logger.warn('User has no email address', {
         requestId,
         context: { clerkId },
       })
       const errorResponse = createErrorResponse(
-        ErrorCode.NOT_FOUND,
-        'User not found',
+        ErrorCode.BAD_REQUEST,
+        'User email not found',
         undefined,
         requestId
       )
       return NextResponse.json(errorResponse, {
-        status: getHttpStatusCode(ErrorCode.NOT_FOUND),
+        status: getHttpStatusCode(ErrorCode.BAD_REQUEST),
       })
     }
+
+    // Get or create user in database
+    const user = await UserService.getOrCreateUser(clerkId, email)
 
     const body = await req.json()
 

@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { receipts, receiptItems } from "@/lib/db/schema";
 import { UserService } from "@/lib/services/user-service";
+import { getClerkUserEmail } from "@/lib/auth-helpers";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -123,10 +124,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await UserService.getUserByClerkId(clerkId);
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Get Clerk user email
+    const email = await getClerkUserEmail(clerkId);
+    if (!email) {
+      return NextResponse.json({ error: "User email not found" }, { status: 400 });
     }
+
+    // Get or create user in database
+    const user = await UserService.getOrCreateUser(clerkId, email);
 
     const body = await req.json();
     const { imageUrl, householdId } = body;
