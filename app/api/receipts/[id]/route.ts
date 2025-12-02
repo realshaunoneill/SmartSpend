@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/db";
-import { receipts } from "@/lib/db/schema";
-import { eq, and, isNull } from "drizzle-orm";
+import { UserService } from "@/lib/services/user-service";
+import { getClerkUserEmail } from "@/lib/auth-helpers";
 import { submitLogEvent } from "@/lib/logging";
+import { getReceiptById, deleteReceipt } from "@/lib/receipt-scanner";
 
 export async function DELETE(
   request: NextRequest,
@@ -16,15 +16,19 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Get Clerk user email
+    const email = await getClerkUserEmail(clerkId);
+    if (!email) {
+      return NextResponse.json({ error: "User email not found" }, { status: 400 });
+    }
+
+    // Get or create user in database
+    const user = await UserService.getOrCreateUser(clerkId, email);
+
     const receiptId = params.id;
 
-    // Get the receipt to verify ownership
-    const receipt = await db.query.receipts.findFirst({
-      where: and(
-        eq(receipts.id, receiptId),
-        isNull(receipts.deletedAt)
-      ),
-    });
+    // Get the receipt to verify ownership and log details
+    const receipt = await getReceiptById(receiptId);
 
     if (!receipt) {
       return NextResponse.json(
@@ -34,34 +38,35 @@ export async function DELETE(
     }
 
     // Verify the user owns this receipt
-    if (receipt.userId !== clerkId) {
+    if (receipt.userId !== user.id) {
       return NextResponse.json(
         { error: "You can only delete your own receipts" },
         { status: 403 }
       );
     }
 
-    // Soft delete the receipt
-    await db
-      .update(receipts)
-      .set({
-        deletedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(receipts.id, receiptId));
+    // Soft delete the receipt using helper function
+    const deleted = await deleteReceipt(receiptId, user.id);
+
+    if (!deleted) {
+      return NextResponse.json(
+        { error: "Failed to delete receipt" },
+        { status: 500 }
+      );
+    }
 
     // Log the deletion
-    await submitLogEvent({
-      level: "info",
-      category: "receipt",
-      message: "Receipt soft deleted",
-      metadata: {
+    submitLogEvent(
+      "receipt",
+      "Receipt soft deleted",
+      null,
+      {
         receiptId,
-        userId: clerkId,
+        userId: user.id,
         merchantName: receipt.merchantName,
         totalAmount: receipt.totalAmount,
-      },
-    });
+      }
+    );
 
     return NextResponse.json({
       success: true,
@@ -70,15 +75,16 @@ export async function DELETE(
   } catch (error) {
     console.error("Error deleting receipt:", error);
 
-    await submitLogEvent({
-      level: "error",
-      category: "receipt-error",
-      message: "Failed to delete receipt",
-      metadata: {
+    submitLogEvent(
+      "receipt-error",
+      "Failed to delete receipt",
+      null,
+      {
         error: error instanceof Error ? error.message : "Unknown error",
         receiptId: params.id,
       },
-    });
+      true // alert on error
+    );
 
     return NextResponse.json(
       { error: "Failed to delete receipt" },

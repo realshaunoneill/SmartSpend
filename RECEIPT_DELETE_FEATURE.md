@@ -14,13 +14,37 @@ Implemented soft delete functionality for receipts, allowing users to delete the
 - Applied migration using `scripts/add-deleted-at.ts`
 - Column successfully added to production database
 
-### 3. Delete API Endpoint (`app/api/receipts/[id]/route.ts`)
-**New endpoint:** `DELETE /api/receipts/:id`
+### 3. Receipt Service Helper Functions (`lib/receipt-scanner.ts`)
+**New helper functions for receipt management:**
+
+#### `getReceipts(options: GetReceiptsOptions)`
+Centralized function for fetching receipts with pagination and filtering.
+
+**Options:**
+- `userId`: User ID (required)
+- `householdId`: Filter by household (optional)
+- `personalOnly`: Only personal receipts (optional)
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 10)
+- `includeDeleted`: Include soft-deleted receipts (default: false)
+
+**Returns:** `PaginatedReceipts` with receipts array and pagination metadata
+
+#### `getReceiptById(receiptId: string, includeDeleted?: boolean)`
+Get a single receipt by ID with optional deleted filter.
+
+#### `deleteReceipt(receiptId: string, userId: string)`
+Soft delete a receipt with ownership verification.
+
+**Returns:** `boolean` - true if deleted, false if not found or unauthorized
+
+### 4. Delete API Endpoint (`app/api/receipts/[id]/route.ts`)
+**Endpoint:** `DELETE /api/receipts/:id`
 
 **Features:**
 - Verifies user authentication
-- Checks receipt ownership (only owner can delete)
-- Performs soft delete by setting `deletedAt` timestamp
+- Uses `getReceiptById()` helper to fetch receipt
+- Uses `deleteReceipt()` helper to perform soft delete
 - Logs deletion event
 - Returns success/error response
 
@@ -29,13 +53,18 @@ Implemented soft delete functionality for receipts, allowing users to delete the
 - Returns 403 Forbidden if non-owner attempts deletion
 - Returns 404 if receipt not found or already deleted
 
-### 4. Receipt List Query Updates (`app/api/receipts/route.ts`)
-**Updated all receipt queries to filter out deleted receipts:**
-- Household receipts: Added `isNull(receipts.deletedAt)` filter
-- Personal receipts: Added `isNull(receipts.deletedAt)` filter
-- All receipts: Added `isNull(receipts.deletedAt)` filter
+### 5. Receipt List API Refactoring (`app/api/receipts/route.ts`)
+**Simplified endpoint using helper functions:**
+- Now uses `getReceipts()` helper from `receipt-scanner.ts`
+- All query logic moved to reusable service layer
+- Automatically filters out deleted receipts
+- Cleaner, more maintainable code
 
-**Result:** Deleted receipts no longer appear in any receipt lists
+**Benefits:**
+- Single source of truth for receipt queries
+- Easier to test and maintain
+- Consistent filtering across all endpoints
+- Reduced code duplication
 
 ### 5. Analytics Query Updates
 **Updated analytics endpoints to exclude deleted receipts:**
