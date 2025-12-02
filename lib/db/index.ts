@@ -28,7 +28,11 @@ function getDb() {
       });
 
       // Initialize Drizzle with the connection and schema
-      dbInstance = drizzle(client, { schema });
+      // Use casing: 'snake_case' to match database column names
+      dbInstance = drizzle(client, { 
+        schema,
+        casing: 'snake_case'
+      });
 
       submitLogEvent('database', 'Database connection established successfully', null);
     } catch (error) {
