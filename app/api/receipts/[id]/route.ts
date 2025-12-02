@@ -7,7 +7,7 @@ import { getReceiptById, deleteReceipt } from "@/lib/receipt-scanner";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId: clerkId } = await auth();
@@ -25,7 +25,8 @@ export async function DELETE(
     // Get or create user in database
     const user = await UserService.getOrCreateUser(clerkId, email);
 
-    const receiptId = params.id;
+    // Await params in Next.js 15+
+    const { id: receiptId } = await params;
 
     // Get the receipt to verify ownership and log details
     const receipt = await getReceiptById(receiptId);
@@ -75,13 +76,16 @@ export async function DELETE(
   } catch (error) {
     console.error("Error deleting receipt:", error);
 
+    // Get receiptId from params for error logging
+    const { id: receiptId } = await params;
+    
     submitLogEvent(
       "receipt-error",
       "Failed to delete receipt",
       null,
       {
         error: error instanceof Error ? error.message : "Unknown error",
-        receiptId: params.id,
+        receiptId,
       },
       true // alert on error
     );
