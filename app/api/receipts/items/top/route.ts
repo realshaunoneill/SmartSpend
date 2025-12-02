@@ -73,6 +73,7 @@ export async function GET(req: NextRequest) {
             sql`TO_DATE(${receipts.transactionDate}, 'YYYY-MM-DD')`,
             startDate.toISOString().split('T')[0]
           ),
+          sql`${receipts.deletedAt} IS NULL`,
           householdId ? eq(receipts.householdId, householdId) : undefined
         )
       )

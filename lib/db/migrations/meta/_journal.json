@@ -29,6 +29,13 @@
       "when": 1764534255875,
       "tag": "0003_goofy_red_shift",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1764692526040,
+      "tag": "0004_bright_stick",
+      "breakpoints": true
     }
   ]
 }

@@ -37,11 +37,14 @@ export async function GET(req: NextRequest) {
     let totalCount;
 
     if (householdId) {
-      // Get receipts for specific household
+      // Get receipts for specific household (exclude deleted)
       userReceipts = await db
         .select()
         .from(receipts)
-        .where(eq(receipts.householdId, householdId))
+        .where(and(
+          eq(receipts.householdId, householdId),
+          isNull(receipts.deletedAt)
+        ))
         .orderBy(desc(receipts.createdAt))
         .limit(limit)
         .offset(offset);
@@ -50,14 +53,21 @@ export async function GET(req: NextRequest) {
       const [countResult] = await db
         .select({ count: count() })
         .from(receipts)
-        .where(eq(receipts.householdId, householdId));
+        .where(and(
+          eq(receipts.householdId, householdId),
+          isNull(receipts.deletedAt)
+        ));
       totalCount = countResult.count;
     } else if (personalOnly) {
-      // Get only personal receipts (not assigned to any household)
+      // Get only personal receipts (not assigned to any household, exclude deleted)
       userReceipts = await db
         .select()
         .from(receipts)
-        .where(and(eq(receipts.userId, user.id), isNull(receipts.householdId)))
+        .where(and(
+          eq(receipts.userId, user.id),
+          isNull(receipts.householdId),
+          isNull(receipts.deletedAt)
+        ))
         .orderBy(desc(receipts.createdAt))
         .limit(limit)
         .offset(offset);
@@ -66,14 +76,21 @@ export async function GET(req: NextRequest) {
       const [countResult] = await db
         .select({ count: count() })
         .from(receipts)
-        .where(and(eq(receipts.userId, user.id), isNull(receipts.householdId)));
+        .where(and(
+          eq(receipts.userId, user.id),
+          isNull(receipts.householdId),
+          isNull(receipts.deletedAt)
+        ));
       totalCount = countResult.count;
     } else {
-      // Get all receipts for the user (personal + household)
+      // Get all receipts for the user (personal + household, exclude deleted)
       userReceipts = await db
         .select()
         .from(receipts)
-        .where(eq(receipts.userId, user.id))
+        .where(and(
+          eq(receipts.userId, user.id),
+          isNull(receipts.deletedAt)
+        ))
         .orderBy(desc(receipts.createdAt))
         .limit(limit)
         .offset(offset);
@@ -82,7 +99,10 @@ export async function GET(req: NextRequest) {
       const [countResult] = await db
         .select({ count: count() })
         .from(receipts)
-        .where(eq(receipts.userId, user.id));
+        .where(and(
+          eq(receipts.userId, user.id),
+          isNull(receipts.deletedAt)
+        ));
       totalCount = countResult.count;
     }
 

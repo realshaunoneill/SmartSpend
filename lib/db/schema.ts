@@ -61,6 +61,7 @@ export const receipts = pgTable('receipts', {
   receiptNumber: text('receipt_number'),
   ocrData: jsonb('ocr_data'), // Full OCR response
   processingTokens: jsonb('processing_tokens'), // OpenAI token usage: { prompt_tokens, completion_tokens, total_tokens }
+  deletedAt: timestamp('deleted_at'), // Soft delete timestamp
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
