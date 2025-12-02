@@ -4,143 +4,11 @@ import { db } from "@/lib/db";
 import { receipts, receiptItems } from "@/lib/db/schema";
 import { UserService } from "@/lib/services/user-service";
 import { getClerkUserEmail } from "@/lib/auth-helpers";
-import OpenAI from "openai";
+import { analyzeReceiptImage } from "@/lib/openai";
 import { submitLogEvent } from "@/lib/logging";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
-
-async function analyzeReceipt(imageUrl: string, userEmail: string, userId: string) {
-  submitLogEvent('receipt-process', "Fetching image for analysis", null, { imageUrl, userId });
-
-  const inputImageRes = await fetch(imageUrl);
-  if (!inputImageRes.ok) {
-    throw new Error(`Failed to download image: ${inputImageRes.statusText}`);
-  }
-
-  const contentType = inputImageRes.headers.get("content-type");
-  const inputImageBuffer = await inputImageRes.arrayBuffer();
-
-  const buffer = Buffer.from(inputImageBuffer);
-  const base64Image = buffer.toString("base64");
-  const mimeType = contentType || "image/png";
-
-  submitLogEvent('receipt-process', "Calling OpenAI Vision API", null, { userId, userEmail });
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: `Analyze this receipt image and extract the following information in JSON format:
-
-REQUIRED FIELDS:
-- merchant: merchant/store name
-- total: total amount (number)
-- currency: currency code (e.g., "GBP", "USD", "EUR")
-- date: transaction date (format as YYYY-MM-DD, use current date if not visible)
-- category: spending category based on merchant and items (choose from: "groceries", "dining", "transportation", "shopping", "entertainment", "healthcare", "utilities", "travel", "gas", "coffee", "pharmacy", "clothing", "electronics", "home", "other")
-
-DETAILED EXTRACTION:
-- items: array of objects with name, quantity (number), price (number - this is the TOTAL price for this line item, not unit price), category (optional), and description (optional) for each item
-- location: store location/address (full address if visible)
-- subtotal: subtotal amount before tax and service charges (number, if visible)
-- tax: tax amount (number, if visible)
-- serviceCharge: service charge/fees amount (number, if visible)
-- paymentMethod: payment method used (e.g., "Card", "Cash", "Contactless", "Chip & PIN", "Apple Pay", "Google Pay", "Debit", "Credit")
-- receiptNumber: receipt or transaction number
-- merchantType: type of business (e.g., "restaurant", "grocery_store", "gas_station", "pharmacy", "retail", "coffee_shop", "fast_food", "department_store", "convenience_store", "supermarket", "other")
-
-ADDITIONAL DETAILS:
-- tips: tip amount (number, if visible)
-- discount: discount amount (number, if visible)
-- loyaltyNumber: loyalty card or member number
-- tableNumber: table number for restaurants
-- serverName: server or cashier name
-- orderNumber: order number (different from receipt number)
-- phoneNumber: merchant phone number
-- website: merchant website
-- vatNumber: VAT registration number
-- timeOfDay: time of transaction (HH:MM format)
-- customerCount: number of customers/covers (for restaurants)
-- specialOffers: any special offers or promotions mentioned
-- deliveryFee: delivery fee (if applicable)
-- packagingFee: packaging fee (if applicable)
-
-SMART CATEGORIZATION RULES:
-- "groceries": Supermarkets, food stores, grocery chains
-- "dining": Restaurants, cafes, bars, pubs (not coffee shops)
-- "coffee": Coffee shops, cafes focused on coffee/beverages
-- "gas": Gas stations, fuel, automotive
-- "transportation": Parking, transit, taxi, uber, public transport
-- "shopping": Retail stores, clothing, electronics, general merchandise
-- "pharmacy": Pharmacies, drugstores, medical supplies
-- "healthcare": Hospitals, clinics, medical services
-- "entertainment": Movies, games, events, recreation
-- "utilities": Bills, services, subscriptions
-- "travel": Hotels, flights, travel services
-- "home": Home improvement, furniture, household items
-
-Return ONLY valid JSON with all numeric values as numbers (not strings), no additional text.`,
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:${mimeType};base64,${base64Image}`,
-            },
-          },
-        ],
-      },
-    ],
-    max_tokens: 1000,
-    user: userEmail, // Add user email to OpenAI metadata for tracking
-    metadata: {
-      userId: userId,
-      userEmail: userEmail,
-      purpose: "receipt_processing",
-    },
-  });
-
-  // Get token usage
-  const usage = response.usage;
-  
-  submitLogEvent('receipt-process', "OpenAI API usage", null, {
-    promptTokens: usage?.prompt_tokens,
-    completionTokens: usage?.completion_tokens,
-    totalTokens: usage?.total_tokens,
-    model: "gpt-4o",
-    userEmail,
-    userId,
-  });
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error("No response from OpenAI");
-  }
-
-  let jsonContent = content.trim();
-  if (jsonContent.startsWith("```json")) {
-    jsonContent = jsonContent.replace(/^```json\n/, "").replace(/\n```$/, "");
-  } else if (jsonContent.startsWith("```")) {
-    jsonContent = jsonContent.replace(/^```\n/, "").replace(/\n```$/, "");
-  }
-
-  return {
-    data: JSON.parse(jsonContent),
-    usage: {
-      promptTokens: usage?.prompt_tokens || 0,
-      completionTokens: usage?.completion_tokens || 0,
-      totalTokens: usage?.total_tokens || 0,
-    },
-  };
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -172,7 +40,7 @@ export async function POST(req: NextRequest) {
     submitLogEvent('receipt-process', "Processing receipt", null, { imageUrl, userId: user.id, householdId });
 
     // Analyze receipt with OpenAI
-    const { data: ocrData, usage } = await analyzeReceipt(imageUrl, email, user.id);
+    const { data: ocrData, usage } = await analyzeReceiptImage(imageUrl, email, user.id);
 
     submitLogEvent('receipt-process', "Receipt analyzed with enhanced data", null, {
       merchant: ocrData.merchant,
