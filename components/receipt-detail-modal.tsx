@@ -1,7 +1,5 @@
 "use client"
 
-"use client"
-
 import {
   Store,
   Calendar,
@@ -23,6 +21,7 @@ import {
   Info,
   X,
   ExternalLink,
+  TrendingUp,
 } from "lucide-react"
 import { Dialog, DialogContent, DialogTitle, DialogOverlay, DialogPortal } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
@@ -30,8 +29,10 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { ReceiptAssignmentDialog } from "@/components/receipt-assignment-dialog"
+import { ItemAnalysisDialog } from "@/components/item-analysis-dialog"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import { useQuery } from "@tanstack/react-query"
+import { useState } from "react"
 
 interface ReceiptDetailModalProps {
   receipt: any
@@ -74,6 +75,9 @@ export function ReceiptDetailModal({
   open,
   onOpenChange,
 }: ReceiptDetailModalProps) {
+  const [selectedItemForAnalysis, setSelectedItemForAnalysis] = useState<string | null>(null);
+  const [showItemAnalysis, setShowItemAnalysis] = useState(false);
+
   // Fetch household name and user's role if receipt is assigned to one
   const { data: household } = useQuery({
     queryKey: ["household", receipt?.householdId],
@@ -386,43 +390,57 @@ export function ReceiptDetailModal({
                       const totalPrice = parseFloat(item.price) || 0;
                       const unitPrice = quantity > 1 ? totalPrice / quantity : null;
 
+                      console.log({quantity, totalPrice, unitPrice})
+
                       return (
                         <div
                           key={index}
-                          className="flex justify-between items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                          className="flex items-center justify-between gap-3 py-2 px-2 rounded-lg hover:bg-muted/50 transition-colors border-b last:border-0"
                         >
+                          {/* Left: Item details */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-start gap-2">
-                              <p className="font-medium text-sm leading-tight flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-sm truncate">
                                 {item.name}
                               </p>
                               {item.category && (
-                                <Badge variant="outline" className="text-xs px-1 py-0">
+                                <Badge variant="outline" className="text-xs px-1.5 py-0 shrink-0">
                                   {capitalizeText(item.category)}
                                 </Badge>
                               )}
                             </div>
-                            {item.description && (
-                              <p className="text-xs text-muted-foreground mt-0.5 italic">
-                                {item.description}
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                              {item.quantity && (
+                                <span>Qty: {item.quantity}</span>
+                              )}
+                              {unitPrice && quantity > 1 && (
+                                <span>@ {receipt.currency} {unitPrice.toFixed(2)} each</span>
+                              )}
+                              {item.description && (
+                                <span className="italic truncate">{item.description}</span>
+                              )}
+                            </div>                       </div>
+
+                          {/* Right: Price and button */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            {item.price && (
+                              <p className="font-semibold text-sm whitespace-nowrap">
+                                {receipt.currency} {item.price}
                               </p>
                             )}
-                            {item.quantity && (
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                Qty: {item.quantity}
-                                {unitPrice && (
-                                  <span className="ml-2">
-                                    @ {receipt.currency} {unitPrice.toFixed(2)} each
-                                  </span>
-                                )}
-                              </p>
-                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-xs"
+                              onClick={() => {
+                                setSelectedItemForAnalysis(item.name);
+                                setShowItemAnalysis(true);
+                              }}
+                            >
+                              <TrendingUp className="h-3 w-3 mr-1" />
+                              Analyze
+                            </Button>
                           </div>
-                          {item.price && (
-                            <p className="font-semibold text-sm whitespace-nowrap">
-                              {receipt.currency} {item.price}
-                            </p>
-                          )}
                         </div>
                       );
                     })}
@@ -532,6 +550,21 @@ export function ReceiptDetailModal({
         </div>
         </DialogContent>
       </DialogPortal>
+
+      {/* Item Analysis Dialog */}
+      {selectedItemForAnalysis && (
+        <ItemAnalysisDialog
+          itemName={selectedItemForAnalysis}
+          open={showItemAnalysis}
+          onOpenChange={(open) => {
+            setShowItemAnalysis(open);
+            if (!open) {
+              setSelectedItemForAnalysis(null);
+            }
+          }}
+          householdId={receipt.householdId}
+        />
+      )}
     </Dialog>
   )
 }

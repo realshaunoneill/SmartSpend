@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Receipt, CreditCard, Users, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, Receipt, CreditCard, Users, Settings, LogOut, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUser, useClerk } from "@clerk/nextjs"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -19,7 +19,7 @@ import {
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/receipts", label: "Receipts", icon: Receipt },
-  { href: "/bank", label: "Bank Accounts", icon: CreditCard },
+  { href: "/insights", label: "Insights", icon: TrendingUp },
   { href: "/sharing", label: "Sharing", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
 ]

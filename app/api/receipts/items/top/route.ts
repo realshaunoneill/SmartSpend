@@ -1,0 +1,185 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { db } from "@/lib/db";
+import { receipts, receiptItems } from "@/lib/db/schema";
+import { UserService } from "@/lib/services/user-service";
+import { getClerkUserEmail } from "@/lib/auth-helpers";
+import { eq, and, gte, sql, desc } from "drizzle-orm";
+import { submitLogEvent } from "@/lib/logging";
+
+export const runtime = "nodejs";
+
+/**
+ * GET /api/receipts/items/top
+ * Get top purchased items by frequency or spending
+ * Query params:
+ * - householdId: string (optional) - Filter by household
+ * - months: number (optional, default: 12) - Number of months to look back
+ * - limit: number (optional, default: 20) - Number of items to return
+ * - sortBy: 'frequency' | 'spending' (optional, default: 'frequency')
+ */
+export async function GET(req: NextRequest) {
+  try {
+    const { userId: clerkId } = await auth();
+
+    if (!clerkId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get Clerk user email
+    const email = await getClerkUserEmail(clerkId);
+    if (!email) {
+      return NextResponse.json({ error: "User email not found" }, { status: 400 });
+    }
+
+    // Get or create user in database
+    const user = await UserService.getOrCreateUser(clerkId, email);
+
+    const { searchParams } = new URL(req.url);
+    const householdId = searchParams.get("householdId");
+    const months = parseInt(searchParams.get("months") || "12");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const sortBy = searchParams.get("sortBy") || "frequency";
+
+    // Calculate date range
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+
+    submitLogEvent('receipt', "Fetching top items", null, {
+      userId: user.id,
+      householdId,
+      months,
+      sortBy,
+    });
+
+    // Get all receipt items with their receipt details
+    const items = await db
+      .select({
+        itemName: receiptItems.name,
+        quantity: receiptItems.quantity,
+        totalPrice: receiptItems.totalPrice,
+        unitPrice: receiptItems.unitPrice,
+        category: receiptItems.category,
+        merchantName: receipts.merchantName,
+        transactionDate: receipts.transactionDate,
+        currency: receipts.currency,
+      })
+      .from(receiptItems)
+      .innerJoin(receipts, eq(receiptItems.receiptId, receipts.id))
+      .where(
+        and(
+          eq(receipts.userId, user.id),
+          gte(
+            sql`TO_DATE(${receipts.transactionDate}, 'YYYY-MM-DD')`,
+            startDate.toISOString().split('T')[0]
+          ),
+          householdId ? eq(receipts.householdId, householdId) : undefined
+        )
+      )
+      .orderBy(desc(receipts.transactionDate));
+
+    // Aggregate items
+    const itemMap = new Map<string, {
+      name: string;
+      count: number;
+      totalSpent: number;
+      totalQuantity: number;
+      averagePrice: number;
+      category: string | null;
+      merchants: Set<string>;
+      lastPurchased: string;
+      currency: string;
+    }>();
+
+    items.forEach((item) => {
+      const price = parseFloat(item.totalPrice || item.unitPrice || "0");
+      const qty = parseFloat(item.quantity || "1");
+      
+      // Normalize item name (case-insensitive grouping)
+      const normalizedName = item.itemName.toLowerCase().trim();
+      
+      if (!itemMap.has(normalizedName)) {
+        itemMap.set(normalizedName, {
+          name: item.itemName, // Keep original casing
+          count: 0,
+          totalSpent: 0,
+          totalQuantity: 0,
+          averagePrice: 0,
+          category: item.category,
+          merchants: new Set(),
+          lastPurchased: item.transactionDate || new Date().toISOString().split('T')[0],
+          currency: item.currency || "USD",
+        });
+      }
+
+      const itemData = itemMap.get(normalizedName)!;
+      itemData.count += 1;
+      itemData.totalSpent += price;
+      itemData.totalQuantity += qty;
+      itemData.merchants.add(item.merchantName || "Unknown");
+      
+      // Update last purchased if more recent
+      if (item.transactionDate && item.transactionDate > itemData.lastPurchased) {
+        itemData.lastPurchased = item.transactionDate;
+      }
+    });
+
+    // Calculate averages and convert to array
+    const itemsArray = Array.from(itemMap.values()).map((item) => ({
+      name: item.name,
+      count: item.count,
+      totalSpent: parseFloat(item.totalSpent.toFixed(2)),
+      totalQuantity: parseFloat(item.totalQuantity.toFixed(2)),
+      averagePrice: parseFloat((item.totalSpent / item.count).toFixed(2)),
+      category: item.category,
+      merchantCount: item.merchants.size,
+      merchants: Array.from(item.merchants),
+      lastPurchased: item.lastPurchased,
+      currency: item.currency,
+    }));
+
+    // Sort based on preference
+    const sortedItems = itemsArray.sort((a, b) => {
+      if (sortBy === "spending") {
+        return b.totalSpent - a.totalSpent;
+      }
+      return b.count - a.count; // Default: frequency
+    });
+
+    // Limit results
+    const topItems = sortedItems.slice(0, limit);
+
+    // Calculate summary statistics
+    const totalUniqueItems = itemsArray.length;
+    const totalPurchases = itemsArray.reduce((sum, item) => sum + item.count, 0);
+    const totalSpent = itemsArray.reduce((sum, item) => sum + item.totalSpent, 0);
+
+    submitLogEvent('receipt', "Top items fetched successfully", null, {
+      userId: user.id,
+      uniqueItems: totalUniqueItems,
+      totalPurchases,
+    });
+
+    return NextResponse.json({
+      topItems,
+      summary: {
+        totalUniqueItems,
+        totalPurchases,
+        totalSpent: parseFloat(totalSpent.toFixed(2)),
+        currency: topItems[0]?.currency || "USD",
+        period: {
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: new Date().toISOString().split('T')[0],
+          months,
+        },
+      },
+      sortBy,
+    });
+  } catch (error) {
+    submitLogEvent('receipt-error', `Error fetching top items: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
+    return NextResponse.json(
+      { error: "Failed to fetch top items" },
+      { status: 500 }
+    );
+  }
+}
