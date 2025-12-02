@@ -1,27 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
 import { Navigation } from "@/components/navigation";
 import { SpendingSummaryCard } from "@/components/spending-summary-card";
 import { TopItemsList } from "@/components/top-items-list";
 import { ItemSearchAnalysis } from "@/components/item-search-analysis";
 
 export default function InsightsPage() {
-  const { isLoaded, isSignedIn } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push("/sign-in");
-    }
-  }, [isLoaded, isSignedIn, router]);
-
-  if (!isLoaded || !isSignedIn) {
-    return null;
-  }
-
   return (
     <>
       <Navigation />

@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useSpendingSummary } from "@/hooks/use-spending-summary";
 import { Loader2, Sparkles, RefreshCw, TrendingUp, ShoppingBag, Store } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 
 interface SpendingSummaryCardProps {
   householdId?: string;
@@ -110,58 +109,7 @@ export function SpendingSummaryCard({ householdId, autoLoad = false }: SpendingS
               </div>
             </div>
 
-            <Separator />
 
-            {/* AI Summary */}
-            <div className="space-y-4">
-              {summary.summary.split('\n\n').map((paragraph, index) => {
-                // Check if it's a heading
-                if (paragraph.startsWith('###')) {
-                  const text = paragraph.replace(/^###\s*/, '').replace(/\*\*/g, '');
-                  return (
-                    <h3 key={index} className="text-base font-semibold text-foreground mt-4 first:mt-0">
-                      {text}
-                    </h3>
-                  );
-                }
-                
-                // Check if it's a numbered list item
-                if (/^\d+\./.test(paragraph)) {
-                  const items = paragraph.split('\n').filter(line => /^\d+\./.test(line));
-                  return (
-                    <ol key={index} className="list-decimal list-inside space-y-2 text-sm">
-                      {items.map((item, i) => {
-                        const text = item.replace(/^\d+\.\s*/, '').replace(/\*\*/g, '');
-                        return <li key={i}>{text}</li>;
-                      })}
-                    </ol>
-                  );
-                }
-                
-                // Check if it's a bullet list
-                if (paragraph.startsWith('-') || paragraph.startsWith('*')) {
-                  const items = paragraph.split('\n').filter(line => line.startsWith('-') || line.startsWith('*'));
-                  return (
-                    <ul key={index} className="list-disc list-inside space-y-2 text-sm">
-                      {items.map((item, i) => {
-                        const text = item.replace(/^[-*]\s*/, '').replace(/\*\*/g, '');
-                        return <li key={i}>{text}</li>;
-                      })}
-                    </ul>
-                  );
-                }
-                
-                // Regular paragraph
-                const text = paragraph.replace(/\*\*/g, '');
-                return text ? (
-                  <p key={index} className="text-sm leading-relaxed text-muted-foreground">
-                    {text}
-                  </p>
-                ) : null;
-              })}
-            </div>
-
-            <Separator />
 
             {/* Quick Stats */}
             <div className="grid md:grid-cols-3 gap-4">
@@ -218,11 +166,6 @@ export function SpendingSummaryCard({ householdId, autoLoad = false }: SpendingS
                   ))}
                 </div>
               </div>
-            </div>
-
-            {/* Token Usage */}
-            <div className="text-xs text-muted-foreground text-center pt-2">
-              Analysis powered by AI • {summary.usage.totalTokens} tokens used
             </div>
           </div>
         )}

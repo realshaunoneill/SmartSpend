@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { Navigation } from "@/components/navigation"
 import { ReceiptUpload } from "@/components/receipt-upload"
 import { ReceiptList } from "@/components/receipt-list"
@@ -17,9 +16,8 @@ import { useReceipts, useRecentReceipts } from "@/lib/hooks/use-receipts"
 import { useHouseholds } from "@/lib/hooks/use-households"
 
 export default function ReceiptsPage() {
-  const { isLoaded, isSignedIn, user: clerkUser } = useClerkUser()
+  const { user: clerkUser } = useClerkUser()
   const { user } = useUser()
-  const router = useRouter()
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>()
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null)
@@ -33,12 +31,6 @@ export default function ReceiptsPage() {
   
   // Get paginated receipts for the main list
   const { receipts: allReceipts, pagination, isLoading: allLoading, error, refetch: refetchAll } = useReceipts(selectedHouseholdId, currentPage, pageSize)
-
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push("/sign-in")
-    }
-  }, [isLoaded, isSignedIn, router])
 
   // Reset page when household changes
   useEffect(() => {
@@ -64,9 +56,8 @@ export default function ReceiptsPage() {
     setSelectedReceipt(null)
   }
 
-  if (!isLoaded || !isSignedIn || !user) {
-    return null
-  }
+  // Clerk middleware ensures user is authenticated
+  if (!clerkUser) return null
 
   return (
     <>
