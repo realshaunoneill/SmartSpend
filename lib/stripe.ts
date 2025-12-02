@@ -1,6 +1,7 @@
 "use server";
 
 import Stripe from "stripe";
+import { UserService } from "./services/user-service";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-11-17.clover",
@@ -16,14 +17,24 @@ async function createStripeCustomer(
   clerkId: string
 ): Promise<string> {
   try {
+    const { UserService } = await import("@/lib/services/user-service");
+
     // Check if customer already exists in Stripe by email
     const existingCustomer = await stripe.customers.search({
       query: `email:'${email}'`,
     });
     
     if (existingCustomer.data.length > 0) {
-      console.log(`Found existing Stripe customer for ${email}`);
-      return existingCustomer.data[0].id;
+      const customerId = existingCustomer.data[0].id;
+      console.log(`Found existing Stripe customer ${customerId} for ${email}`);
+      
+      // Update user record with the existing Stripe customer ID
+      // This ensures the database stays in sync even if the customer was created elsewhere
+      await UserService.updateStripeCustomerId(userId, customerId);
+
+      console.log(`Updated database with existing Stripe customer ID for user ${userId}`);
+      
+      return customerId;
     }
     
     // Create new Stripe customer with comprehensive metadata
@@ -39,17 +50,7 @@ async function createStripeCustomer(
     console.log(`Created new Stripe customer ${customer.id} for user ${userId}`);
     
     // Update user record with Stripe customer ID
-    const { db } = await import("@/lib/db");
-    const { users } = await import("@/lib/db/schema");
-    const { eq } = await import("drizzle-orm");
-
-    await db
-      .update(users)
-      .set({ 
-        stripeCustomerId: customer.id,
-        updatedAt: new Date() 
-      })
-      .where(eq(users.id, userId));
+    await UserService.updateStripeCustomerId(userId, customer.id);
 
     console.log(`Updated database with Stripe customer ID for user ${userId}`);
     
@@ -156,13 +157,7 @@ export async function syncStripeDataToDatabase(customerId: string) {
     // Get user from database by Stripe customer ID
     const { db } = await import("@/lib/db");
     const { users } = await import("@/lib/db/schema");
-    const { eq } = await import("drizzle-orm");
-
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.stripeCustomerId, customerId))
-      .limit(1);
+    const user = await UserService.getUserByStripeCustomerId(customerId)
 
     if (!user) {
       throw new Error(`User not found for Stripe customer ${customerId}`);
@@ -179,13 +174,7 @@ export async function syncStripeDataToDatabase(customerId: string) {
     // No active subscriptions
     if (subscriptions.data.length === 0) {
       // Update user to not subscribed
-      await db
-        .update(users)
-        .set({ 
-          subscribed: false,
-          updatedAt: new Date() 
-        })
-        .where(eq(users.id, user.id));
+      await UserService.updateSubscriptionStatus(user.id, false);
 
       console.log(`Updated user ${user.id} subscription status to false (no subscriptions)`);
 
@@ -201,13 +190,7 @@ export async function syncStripeDataToDatabase(customerId: string) {
     const isSubscribed = subscription.status === "active" || subscription.status === "trialing";
 
     // Update user subscription status in database
-    await db
-      .update(users)
-      .set({ 
-        subscribed: isSubscribed,
-        updatedAt: new Date() 
-      })
-      .where(eq(users.id, user.id));
+    await UserService.updateSubscriptionStatus(user.id, isSubscribed);
 
     console.log(`Updated user ${user.id} subscription status to ${isSubscribed} (${subscription.status})`);
 
