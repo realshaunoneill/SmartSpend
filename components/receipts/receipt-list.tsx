@@ -5,6 +5,7 @@ import { ReceiptIcon, Calendar, Store, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ReceiptDetailModal } from "@/components/receipts/receipt-detail-modal"
+import { formatCategory } from "@/lib/utils/format-category"
 import type { Receipt } from "@/lib/types"
 
 interface ReceiptListProps {
@@ -106,7 +107,7 @@ export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
                     )}
                     {(receipt as any).category && (
                       <Badge variant="secondary" className={categoryColors[(receipt as any).category] || categoryColors.other}>
-                        {(receipt as any).category}
+                        {formatCategory((receipt as any).category)}
                       </Badge>
                     )}
                     {(receipt as any).paymentMethod && (

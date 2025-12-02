@@ -14,6 +14,7 @@ import { useUser as useClerkUser } from "@clerk/nextjs"
 import { useUser } from "@/lib/hooks/use-user"
 import { useReceipts, useRecentReceipts } from "@/lib/hooks/use-receipts"
 import { useHouseholds } from "@/lib/hooks/use-households"
+import { formatCategory } from "@/lib/utils/format-category"
 
 export default function ReceiptsPage() {
   const { user: clerkUser } = useClerkUser()
@@ -172,7 +173,7 @@ export default function ReceiptsPage() {
                         </div>
                         {receipt.category && (
                           <div className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
-                            {receipt.category}
+                            {formatCategory(receipt.category)}
                           </div>
                         )}
                         {receipt.imageUrl && (

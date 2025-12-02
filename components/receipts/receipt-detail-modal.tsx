@@ -47,6 +47,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { formatCategory, capitalizeText } from "@/lib/utils/format-category"
 
 interface ReceiptDetailModalProps {
   receipt: any
@@ -123,36 +124,6 @@ function DeleteReceiptButton({ receiptId, onDeleted }: DeleteReceiptButtonProps)
       </AlertDialogContent>
     </AlertDialog>
   )
-}
-
-// Utility function to capitalize text properly
-function capitalizeText(text: string): string {
-  if (!text) return text;
-  return text
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
-}
-
-// Utility function to format category with proper capitalization
-function formatCategory(category: string): string {
-  if (!category) return '';
-  const categoryMap: { [key: string]: string } = {
-    'groceries': 'Groceries',
-    'dining': 'Dining',
-    'coffee': 'Coffee',
-    'gas': 'Gas & Fuel',
-    'transportation': 'Transportation',
-    'shopping': 'Shopping',
-    'pharmacy': 'Pharmacy',
-    'healthcare': 'Healthcare',
-    'entertainment': 'Entertainment',
-    'utilities': 'Utilities',
-    'travel': 'Travel',
-    'home': 'Home & Garden',
-    'other': 'Other'
-  };
-  return categoryMap[category.toLowerCase()] || capitalizeText(category);
 }
 
 export function ReceiptDetailModal({
