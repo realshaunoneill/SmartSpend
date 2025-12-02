@@ -123,7 +123,7 @@ export function SubscriptionBanner({ page = "default" }: SubscriptionBannerProps
               variant="ghost"
               size="sm"
               onClick={handleDismiss}
-              className="h-8 w-8 p-0 hover:bg-background/50"
+              className="h-8 w-8 p-0 hover:bg-background/50 dark:hover:bg-muted/50"
             >
               <X className="h-4 w-4" />
               <span className="sr-only">Dismiss</span>
