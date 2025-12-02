@@ -1,18 +1,18 @@
 "use client"
 
 import { useState } from "react"
-import { Navigation } from "@/components/navigation"
-import { QuickStats } from "@/components/quick-stats"
-import { SpendingSummary } from "@/components/spending-summary"
-import { SpendingChart } from "@/components/spending-chart"
-import { ReceiptList } from "@/components/receipt-list"
-import { HouseholdSelector } from "@/components/household-selector"
-import { SubscriptionGate } from "@/components/subscription-gate"
+import { Navigation } from "@/components/layout/navigation"
+import { QuickStats } from "@/components/insights/quick-stats"
+import { SpendingSummary } from "@/components/insights/spending-summary"
+import { SpendingChart } from "@/components/insights/spending-chart"
+import { ReceiptList } from "@/components/receipts/receipt-list"
+import { HouseholdSelector } from "@/components/households/household-selector"
+import { SubscriptionGate } from "@/components/subscriptions/subscription-gate"
 import { useUser } from "@clerk/nextjs"
 import { useDashboardStats } from "@/lib/hooks/use-dashboard-stats"
 import { useHouseholds } from "@/lib/hooks/use-households"
 
-import { SubscriptionBanner } from "@/components/subscription-banner"
+import { SubscriptionBanner } from "@/components/subscriptions/subscription-banner"
 
 export default function DashboardPage() {
   const [period, setPeriod] = useState<"week" | "month" | "year">("month")

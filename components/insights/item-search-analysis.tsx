@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ItemAnalysisDialog } from "@/components/item-analysis-dialog";
+import { ItemAnalysisDialog } from "@/components/insights/item-analysis-dialog";
 import { Search, TrendingUp } from "lucide-react";
 
 interface ItemSearchAnalysisProps {

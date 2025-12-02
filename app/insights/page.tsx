@@ -1,9 +1,9 @@
 "use client";
 
-import { Navigation } from "@/components/navigation";
-import { SpendingSummaryCard } from "@/components/spending-summary-card";
-import { TopItemsList } from "@/components/top-items-list";
-import { ItemSearchAnalysis } from "@/components/item-search-analysis";
+import { Navigation } from "@/components/layout/navigation";
+import { SpendingSummaryCard } from "@/components/insights/spending-summary-card";
+import { TopItemsList } from "@/components/insights/top-items-list";
+import { ItemSearchAnalysis } from "@/components/insights/item-search-analysis";
 
 export default function InsightsPage() {
   return (

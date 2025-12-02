@@ -1,6 +1,6 @@
 "use client"
 
-import { HouseholdCard } from "@/components/household-card"
+import { HouseholdCard } from "@/components/households/household-card"
 import type { Household } from "@/lib/types"
 
 interface HouseholdWithDetails extends Household {

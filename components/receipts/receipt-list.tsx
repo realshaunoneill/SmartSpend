@@ -4,7 +4,7 @@ import { useState } from "react"
 import { ReceiptIcon, Calendar, Store, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ReceiptDetailModal } from "@/components/receipt-detail-modal"
+import { ReceiptDetailModal } from "@/components/receipts/receipt-detail-modal"
 import type { Receipt } from "@/lib/types"
 
 interface ReceiptListProps {

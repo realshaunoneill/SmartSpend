@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { InviteMemberDialog } from "@/components/invite-member-dialog"
+import { InviteMemberDialog } from "@/components/households/invite-member-dialog"
 import type { Household } from "@/lib/types"
 import { leaveHousehold, deleteHousehold } from "@/lib/household-actions"
 

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useTopItems } from "@/hooks/use-top-items";
 import { Loader2, TrendingUp, ShoppingBag, Store, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { ItemAnalysisDialog } from "@/components/item-analysis-dialog";
+import { ItemAnalysisDialog } from "@/components/insights/item-analysis-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TopItemsListProps {

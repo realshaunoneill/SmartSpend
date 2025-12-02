@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation"
 import { LayoutDashboard, Receipt, CreditCard, Users, Settings, LogOut, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUser, useClerk } from "@clerk/nextjs"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { InvitationNotifications } from "@/components/invitation-notifications"
+import { ThemeToggle } from "@/components/layout/theme-toggle"
+import { InvitationNotifications } from "@/components/households/invitation-notifications"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,

@@ -4,8 +4,8 @@ import Link from "next/link"
 import { Receipt, Scan, CreditCard, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { Navigation } from "@/components/navigation"
+import { ThemeToggle } from "@/components/layout/theme-toggle"
+import { Navigation } from "@/components/layout/navigation"
 import { useUser } from "@clerk/nextjs"
 
 const features = [
