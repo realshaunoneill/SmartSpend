@@ -210,7 +210,7 @@ export function ReceiptDetailModal({
               <img
                 src={receipt.imageUrl}
                 alt="Receipt"
-                className="max-w-full h-auto max-h-[60vh] object-contain rounded-lg shadow-lg"
+                className="max-w-full h-auto max-h-[60vh] object-contain rounded-lg shadow-2xl drop-shadow-xl"
               />
             ) : (
               <div className="flex flex-col items-center justify-center text-muted-foreground p-12">
