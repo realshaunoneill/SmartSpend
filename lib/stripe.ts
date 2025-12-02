@@ -2,7 +2,7 @@
 
 import Stripe from "stripe";
 import { UserService } from "./services/user-service";
-import { submitLogEvent } from "@/lib/logging";
+import { CorrelationId, submitLogEvent } from "@/lib/logging";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-11-17.clover",
@@ -147,7 +147,7 @@ export async function createCheckoutSession(
  * Syncs Stripe subscription data to the database for a customer
  * Updates the user's subscription status based on their active Stripe subscription
  */
-export async function syncStripeDataToDatabase(customerId: string) {
+export async function syncStripeDataToDatabase(customerId: string, correlationId: CorrelationId) {
   try {
     // Verify customer exists in Stripe
     const customer = await stripe.customers.retrieve(customerId);
@@ -156,8 +156,6 @@ export async function syncStripeDataToDatabase(customerId: string) {
     }
 
     // Get user from database by Stripe customer ID
-    const { db } = await import("@/lib/db");
-    const { users } = await import("@/lib/db/schema");
     const user = await UserService.getUserByStripeCustomerId(customerId)
 
     if (!user) {
@@ -177,7 +175,7 @@ export async function syncStripeDataToDatabase(customerId: string) {
       // Update user to not subscribed
       await UserService.updateSubscriptionStatus(user.id, false);
 
-      submitLogEvent('subscription', `Updated user ${user.id} subscription status to false (no subscriptions)`, null, { userId: user.id, customerId });
+      submitLogEvent('subscription', `Updated user ${user.id} subscription status to false (no subscriptions)`, correlationId, { userId: user.id, customerId });
 
       const subData = { status: "none" };
       return subData;
@@ -193,7 +191,7 @@ export async function syncStripeDataToDatabase(customerId: string) {
     // Update user subscription status in database
     await UserService.updateSubscriptionStatus(user.id, isSubscribed);
 
-    submitLogEvent('subscription', `Updated user ${user.id} subscription status to ${isSubscribed} (${subscription.status})`, null, { userId: user.id, customerId, subscriptionStatus: subscription.status, isSubscribed });
+    submitLogEvent('subscription', `Updated user ${user.id} subscription status to ${isSubscribed} (${subscription.status})`, correlationId, { userId: user.id, customerId, subscriptionStatus: subscription.status, isSubscribed });
 
     // Store complete subscription state
     const subData = {
@@ -215,7 +213,7 @@ export async function syncStripeDataToDatabase(customerId: string) {
 
     return subData;
   } catch (error) {
-    submitLogEvent('stripe', `Error syncing Stripe data to database: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { customerId }, true);
+    submitLogEvent('stripe', `Error syncing Stripe data to database: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { customerId }, true);
     throw error;
   }
 }

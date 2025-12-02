@@ -10,12 +10,15 @@ import {
   getHttpStatusCode,
   Logger,
 } from '@/lib/errors'
+import { randomUUID } from 'crypto'
+import { CorrelationId } from '@/lib/logging'
 
 /**
  * GET /api/users/me/subscription
  * Get user subscription details from Stripe
  */
 export async function GET(req: Request) {
+  const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   const requestId = generateRequestId()
 
   try {
@@ -73,7 +76,7 @@ export async function GET(req: Request) {
     }
 
     // Get subscription details from Stripe (this also updates the database)
-    const subscriptionData = await syncStripeDataToDatabase(user.stripeCustomerId)
+    const subscriptionData = await syncStripeDataToDatabase(user.stripeCustomerId, correlationId)
 
     // Refetch user to get updated subscription status
     const updatedUser = await UserService.getUserProfile(user.id)
