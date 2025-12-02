@@ -5,6 +5,7 @@ import { receipts, householdUsers } from "@/lib/db/schema";
 import { UserService } from "@/lib/services/user-service";
 import { getClerkUserEmail } from "@/lib/auth-helpers";
 import { eq, and } from "drizzle-orm";
+import { submitLogEvent } from "@/lib/logging";
 
 export const runtime = "nodejs";
 
@@ -110,7 +111,7 @@ export async function PATCH(
 
     return NextResponse.json(updatedReceipt);
   } catch (error) {
-    console.error("Error assigning receipt:", error);
+    submitLogEvent('receipt', `Error assigning receipt: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
     return NextResponse.json(
       { error: "Failed to assign receipt" },
       { status: 500 }

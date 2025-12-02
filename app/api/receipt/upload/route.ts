@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { receipts, receiptItems } from "@/lib/db/schema";
 import { UserService } from "@/lib/services/user-service";
 import OpenAI from "openai";
+import { submitLogEvent } from "@/lib/logging";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -89,7 +90,7 @@ Return ONLY valid JSON, no additional text.`,
     // Parse the JSON response
     return JSON.parse(jsonContent);
   } catch (error) {
-    console.error("Receipt analysis error:", error);
+    submitLogEvent('receipt-error', `Receipt analysis error: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { imageUrl }, true);
     throw error;
   }
 }
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const body = (await request.json()) as HandleUploadBody;
 
-    console.log("Starting receipt upload...");
+    submitLogEvent('receipt-upload', "Starting receipt upload", null, { userId: user.id, clerkId });
 
     const jsonResponse = await handleUpload({
       body,
@@ -158,13 +159,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json(jsonResponse);
     }
 
-    console.log("Upload completed, processing receipt...");
+    submitLogEvent('receipt-upload', "Upload completed, processing receipt", null, { userId: user.id, clerkId });
 
     // For upload completion, just return success
     // The actual processing will happen via webhook or we need a different approach
     return NextResponse.json(jsonResponse);
   } catch (error) {
-    console.error("Receipt upload error:", error);
+    submitLogEvent('receipt-error', `Receipt upload error: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { error: error instanceof Error ? error.stack : undefined }, true);
     return NextResponse.json(
       {
         error: (error as Error).message,

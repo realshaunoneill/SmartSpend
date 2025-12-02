@@ -4,6 +4,7 @@ import { createCheckoutSession } from "@/lib/stripe";
 import { UserService } from "@/lib/services/user-service";
 import { getClerkUserEmail } from "@/lib/auth-helpers";
 import Stripe from "stripe";
+import { submitLogEvent } from "@/lib/logging";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-11-17.clover",
@@ -60,11 +61,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.log(
-        `Creating checkout session for price: ${(price.product as Stripe.Product).name}`
-      );
+      submitLogEvent('checkout', `Creating checkout session for price: ${(price.product as Stripe.Product).name}`, null, { userId: user.id, priceId, email });
     } catch (error) {
-      console.error("Error retrieving price:", error);
+      submitLogEvent('checkout', `Error retrieving price: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { userId: user.id, priceId }, true);
       return NextResponse.json(
         { error: "Invalid price ID" },
         { status: 400 }
@@ -89,9 +88,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("Checkout session created:", {
+    submitLogEvent('checkout', "Checkout session created", null, {
       sessionId: checkoutSession.id,
       userId: user.id,
+      priceId,
     });
 
     return NextResponse.json(
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error creating checkout session:", error);
+    submitLogEvent('checkout', `Error creating checkout session: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { error: error instanceof Error ? error.message : undefined }, true);
     return NextResponse.json(
       {
         error: "Failed to create checkout session",

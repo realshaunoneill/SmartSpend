@@ -6,6 +6,7 @@ import { UserService } from "@/lib/services/user-service";
 import { getClerkUserEmail } from "@/lib/auth-helpers";
 import { eq, and } from "drizzle-orm";
 import { randomBytes } from "crypto";
+import { submitLogEvent } from "@/lib/logging";
 
 export const runtime = "nodejs";
 
@@ -130,7 +131,7 @@ export async function POST(
       expiresAt: invitation.expiresAt,
     });
   } catch (error) {
-    console.error("Error sending invitation:", error);
+    submitLogEvent('invitation', `Error sending invitation: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
     return NextResponse.json(
       { error: "Failed to send invitation" },
       { status: 500 }
@@ -195,7 +196,7 @@ export async function GET(
 
     return NextResponse.json(invitations);
   } catch (error) {
-    console.error("Error fetching invitations:", error);
+    submitLogEvent('invitation', `Error fetching invitations: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
     return NextResponse.json(
       { error: "Failed to fetch invitations" },
       { status: 500 }

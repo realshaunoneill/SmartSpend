@@ -1,6 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export type EventType = 'ratelimit' | 'generate' | 'generate-complete' | 'generate-error' | 'generate-retry' | 'credits' | 'image' | 'image-proxy' | 'image-metadata' | 'users' | 'stripe' | 'purchases' | 'upload';
+export type EventType = 
+  | 'ratelimit' 
+  | 'generate' 
+  | 'generate-complete' 
+  | 'generate-error' 
+  | 'generate-retry' 
+  | 'credits' 
+  | 'image' 
+  | 'image-proxy' 
+  | 'image-metadata' 
+  | 'users' 
+  | 'stripe' 
+  | 'purchases' 
+  | 'upload'
+  | 'receipt'
+  | 'receipt-process'
+  | 'receipt-upload'
+  | 'receipt-error'
+  | 'database'
+  | 'auth'
+  | 'household'
+  | 'invitation'
+  | 'checkout'
+  | 'subscription';
 export type CorrelationId = `${string}-${string}-${string}-${string}-${string}`;
 
 const LOG_TOKEN = process.env.LOG_TOKEN;

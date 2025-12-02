@@ -5,6 +5,7 @@ import { receipts, receiptItems, users } from "@/lib/db/schema";
 import { UserService } from "@/lib/services/user-service";
 import { getClerkUserEmail } from "@/lib/auth-helpers";
 import { eq, desc, count, isNull, and } from "drizzle-orm";
+import { submitLogEvent } from "@/lib/logging";
 
 export const runtime = "nodejs";
 
@@ -122,7 +123,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error fetching receipts:", error);
+    submitLogEvent('receipt', `Error fetching receipts: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
     return NextResponse.json(
       { error: "Failed to fetch receipts" },
       { status: 500 },

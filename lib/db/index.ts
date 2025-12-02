@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
+import { submitLogEvent } from '@/lib/logging';
 
 // Singleton pattern for database connection
 let dbInstance: ReturnType<typeof drizzle> | null = null;
@@ -29,9 +30,9 @@ function getDb() {
       // Initialize Drizzle with the connection and schema
       dbInstance = drizzle(client, { schema });
 
-      console.log('Database connection established successfully');
+      submitLogEvent('database', 'Database connection established successfully', null);
     } catch (error) {
-      console.error('Failed to establish database connection:', error);
+      submitLogEvent('database', `Failed to establish database connection: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
       throw new Error(
         `Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );

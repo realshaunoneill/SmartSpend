@@ -2,6 +2,7 @@
 
 import Stripe from "stripe";
 import { UserService } from "./services/user-service";
+import { submitLogEvent } from "@/lib/logging";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-11-17.clover",
@@ -26,13 +27,13 @@ async function createStripeCustomer(
     
     if (existingCustomer.data.length > 0) {
       const customerId = existingCustomer.data[0].id;
-      console.log(`Found existing Stripe customer ${customerId} for ${email}`);
+      submitLogEvent('stripe', `Found existing Stripe customer ${customerId} for ${email}`, null, { userId, customerId, email });
       
       // Update user record with the existing Stripe customer ID
       // This ensures the database stays in sync even if the customer was created elsewhere
       await UserService.updateStripeCustomerId(userId, customerId);
 
-      console.log(`Updated database with existing Stripe customer ID for user ${userId}`);
+      submitLogEvent('stripe', `Updated database with existing Stripe customer ID for user ${userId}`, null, { userId, customerId });
       
       return customerId;
     }
@@ -47,16 +48,16 @@ async function createStripeCustomer(
       },
     });
     
-    console.log(`Created new Stripe customer ${customer.id} for user ${userId}`);
+    submitLogEvent('stripe', `Created new Stripe customer ${customer.id} for user ${userId}`, null, { userId, customerId: customer.id, email });
     
     // Update user record with Stripe customer ID
     await UserService.updateStripeCustomerId(userId, customer.id);
 
-    console.log(`Updated database with Stripe customer ID for user ${userId}`);
+    submitLogEvent('stripe', `Updated database with Stripe customer ID for user ${userId}`, null, { userId, customerId: customer.id });
     
     return customer.id;
   } catch (error) {
-    console.error("Failed to create Stripe customer:", error);
+    submitLogEvent('stripe', `Failed to create Stripe customer: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { userId, email }, true);
     throw new Error("Failed to create Stripe customer");
   }
 }
@@ -76,18 +77,18 @@ export async function getOrCreateStripeCustomer(
       try {
         const customer = await stripe.customers.retrieve(stripeCustomerId);
         if (!customer.deleted) {
-          console.log(`Using existing Stripe customer ${stripeCustomerId}`);
+          submitLogEvent('stripe', `Using existing Stripe customer ${stripeCustomerId}`, null, { userId, customerId: stripeCustomerId });
           return stripeCustomerId;
         }
       } catch (error) {
-        console.log("Existing Stripe customer not found, creating new one");
+        submitLogEvent('stripe', "Existing Stripe customer not found, creating new one", null, { userId, stripeCustomerId });
       }
     }
 
     // Create customer and update database in one operation
     return await createStripeCustomer(userId, email, clerkId);
   } catch (error) {
-    console.error("Error getting or creating Stripe customer:", error);
+    submitLogEvent('stripe', `Error getting or creating Stripe customer: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { userId, email }, true);
     throw error;
   }
 }
@@ -137,7 +138,7 @@ export async function createCheckoutSession(
 
     return session;
   } catch (error) {
-    console.error("Error creating checkout session:", error);
+    submitLogEvent('checkout', `Error creating checkout session: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { userId, priceId }, true);
     throw error;
   }
 }
@@ -176,7 +177,7 @@ export async function syncStripeDataToDatabase(customerId: string) {
       // Update user to not subscribed
       await UserService.updateSubscriptionStatus(user.id, false);
 
-      console.log(`Updated user ${user.id} subscription status to false (no subscriptions)`);
+      submitLogEvent('subscription', `Updated user ${user.id} subscription status to false (no subscriptions)`, null, { userId: user.id, customerId });
 
       const subData = { status: "none" };
       return subData;
@@ -192,7 +193,7 @@ export async function syncStripeDataToDatabase(customerId: string) {
     // Update user subscription status in database
     await UserService.updateSubscriptionStatus(user.id, isSubscribed);
 
-    console.log(`Updated user ${user.id} subscription status to ${isSubscribed} (${subscription.status})`);
+    submitLogEvent('subscription', `Updated user ${user.id} subscription status to ${isSubscribed} (${subscription.status})`, null, { userId: user.id, customerId, subscriptionStatus: subscription.status, isSubscribed });
 
     // Store complete subscription state
     const subData = {
@@ -214,7 +215,7 @@ export async function syncStripeDataToDatabase(customerId: string) {
 
     return subData;
   } catch (error) {
-    console.error("Error syncing Stripe data to database:", error);
+    submitLogEvent('stripe', `Error syncing Stripe data to database: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { customerId }, true);
     throw error;
   }
 }

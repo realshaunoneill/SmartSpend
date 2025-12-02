@@ -5,6 +5,7 @@ import { receipts, receiptItems } from "@/lib/db/schema";
 import { UserService } from "@/lib/services/user-service";
 import { getClerkUserEmail } from "@/lib/auth-helpers";
 import OpenAI from "openai";
+import { submitLogEvent } from "@/lib/logging";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -14,7 +15,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 async function analyzeReceipt(imageUrl: string, userEmail: string, userId: string) {
-  console.log("Fetching image from:", imageUrl);
+  submitLogEvent('receipt-process', "Fetching image for analysis", null, { imageUrl, userId });
 
   const inputImageRes = await fetch(imageUrl);
   if (!inputImageRes.ok) {
@@ -28,7 +29,7 @@ async function analyzeReceipt(imageUrl: string, userEmail: string, userId: strin
   const base64Image = buffer.toString("base64");
   const mimeType = contentType || "image/png";
 
-  console.log("Calling OpenAI Vision API...");
+  submitLogEvent('receipt-process', "Calling OpenAI Vision API", null, { userId, userEmail });
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -110,12 +111,13 @@ Return ONLY valid JSON with all numeric values as numbers (not strings), no addi
   // Get token usage
   const usage = response.usage;
   
-  console.log("OpenAI API usage:", {
+  submitLogEvent('receipt-process', "OpenAI API usage", null, {
     promptTokens: usage?.prompt_tokens,
     completionTokens: usage?.completion_tokens,
     totalTokens: usage?.total_tokens,
     model: "gpt-4o",
     userEmail,
+    userId,
   });
 
   const content = response.choices[0]?.message?.content;
@@ -167,12 +169,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log("Processing receipt:", imageUrl);
+    submitLogEvent('receipt-process', "Processing receipt", null, { imageUrl, userId: user.id, householdId });
 
     // Analyze receipt with OpenAI
     const { data: ocrData, usage } = await analyzeReceipt(imageUrl, email, user.id);
 
-    console.log("Receipt analyzed with enhanced data:", {
+    submitLogEvent('receipt-process', "Receipt analyzed with enhanced data", null, {
       merchant: ocrData.merchant,
       total: ocrData.total,
       currency: ocrData.currency,
@@ -186,6 +188,7 @@ export async function POST(req: NextRequest) {
       hasDiscount: !!ocrData.discount,
       hasLoyaltyNumber: !!ocrData.loyaltyNumber,
       extractedFields: Object.keys(ocrData).length,
+      userId: user.id,
     });
 
     // Save receipt to database with enhanced data
@@ -229,10 +232,13 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    console.log("Receipt saved to database:", {
+    submitLogEvent('receipt', "Receipt saved to database", null, {
       receiptId: receipt.id,
       tokenUsage: usage,
       userEmail: email,
+      userId: user.id,
+      merchantName: receipt.merchantName,
+      totalAmount: receipt.totalAmount,
     });
 
     // Save receipt items with enhanced data
@@ -255,11 +261,11 @@ export async function POST(req: NextRequest) {
 
       if (itemsToInsert.length > 0) {
         await db.insert(receiptItems).values(itemsToInsert);
-        console.log(`Saved ${itemsToInsert.length} receipt items with enhanced data`);
+        submitLogEvent('receipt', `Saved ${itemsToInsert.length} receipt items with enhanced data`, null, { receiptId: receipt.id, itemCount: itemsToInsert.length, userId: user.id });
       }
     }
 
-    console.log("Receipt processing completed successfully");
+    submitLogEvent('receipt-process', "Receipt processing completed successfully", null, { receiptId: receipt.id, userId: user.id });
 
     // Prepare enhanced response with all extracted data
     const items = ocrData.items && Array.isArray(ocrData.items)
@@ -336,7 +342,7 @@ export async function POST(req: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Receipt processing error:", error);
+    submitLogEvent('receipt-error', `Receipt processing error: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { error: error instanceof Error ? error.stack : undefined }, true);
     return NextResponse.json(
       {
         error: (error as Error).message,

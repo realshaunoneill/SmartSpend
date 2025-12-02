@@ -5,6 +5,7 @@ import { householdUsers, householdInvitations } from "@/lib/db/schema";
 import { UserService } from "@/lib/services/user-service";
 import { getClerkUserEmail } from "@/lib/auth-helpers";
 import { eq, and } from "drizzle-orm";
+import { submitLogEvent } from "@/lib/logging";
 
 export const runtime = "nodejs";
 
@@ -120,7 +121,7 @@ export async function PATCH(
       });
     }
   } catch (error) {
-    console.error("Error processing invitation:", error);
+    submitLogEvent('invitation', `Error processing invitation: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
     return NextResponse.json(
       { error: "Failed to process invitation" },
       { status: 500 }

@@ -5,6 +5,7 @@ import { households, householdUsers, householdInvitations } from "@/lib/db/schem
 import { UserService } from "@/lib/services/user-service";
 import { getClerkUserEmail } from "@/lib/auth-helpers";
 import { eq, and } from "drizzle-orm";
+import { submitLogEvent } from "@/lib/logging";
 
 export const runtime = "nodejs";
 
@@ -53,7 +54,7 @@ export async function GET() {
 
     return NextResponse.json(validInvitations);
   } catch (error) {
-    console.error("Error fetching invitations:", error);
+    submitLogEvent('invitation', `Error fetching invitations: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
     return NextResponse.json(
       { error: "Failed to fetch invitations" },
       { status: 500 }
