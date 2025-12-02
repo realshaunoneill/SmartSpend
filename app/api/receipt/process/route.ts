@@ -40,7 +40,38 @@ export async function POST(req: NextRequest) {
     submitLogEvent('receipt-process', "Processing receipt", null, { imageUrl, userId: user.id, householdId });
 
     // Analyze receipt with OpenAI
-    const { data: ocrData, usage } = await analyzeReceiptWithGPT4o(imageUrl, email, user.id);
+    let ocrData, usage;
+    try {
+      const result = await analyzeReceiptWithGPT4o(imageUrl, email, user.id);
+      ocrData = result.data;
+      usage = result.usage;
+    } catch (error) {
+      // Save failed receipt to database
+      const [failedReceipt] = await db
+        .insert(receipts)
+        .values({
+          userId: user.id,
+          householdId,
+          imageUrl,
+          processingStatus: 'failed',
+          processingError: error instanceof Error ? error.message : 'Unknown error',
+        })
+        .returning();
+
+      submitLogEvent('receipt-error', `Receipt processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { 
+        receiptId: failedReceipt.id,
+        error: error instanceof Error ? error.stack : undefined 
+      }, true);
+
+      return NextResponse.json(
+        {
+          error: "Failed to process receipt",
+          message: error instanceof Error ? error.message : 'Unknown error',
+          receiptId: failedReceipt.id,
+        },
+        { status: 500 },
+      );
+    }
 
     submitLogEvent('receipt-process', "Receipt analyzed with enhanced data", null, {
       merchant: ocrData.merchant,
@@ -77,6 +108,7 @@ export async function POST(req: NextRequest) {
         receiptNumber: ocrData.receiptNumber,
         paymentMethod: ocrData.paymentMethod,
         category: ocrData.category || 'other',
+        processingStatus: 'completed', // Mark as successfully processed
         processingTokens: usage, // Store token usage for cost calculation
         ocrData: {
           ...ocrData,

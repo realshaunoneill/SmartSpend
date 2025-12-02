@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Navigation } from "@/components/layout/navigation"
-import { ReceiptUpload } from "@/components/receipts/receipt-upload"
+import { ReceiptBatchUpload } from "@/components/receipts/receipt-batch-upload"
 import { ReceiptList } from "@/components/receipts/receipt-list"
 import { ReceiptListSkeleton } from "@/components/receipts/receipt-list-skeleton"
 import { HouseholdSelector } from "@/components/households/household-selector"
@@ -10,6 +10,8 @@ import { Pagination } from "@/components/layout/pagination"
 import { ReceiptDetailModal } from "@/components/receipts/receipt-detail-modal"
 import { SubscriptionGate } from "@/components/subscriptions/subscription-gate"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
 import { useUser as useClerkUser } from "@clerk/nextjs"
 import { useUser } from "@/lib/hooks/use-user"
 import { useReceipts, useRecentReceipts } from "@/lib/hooks/use-receipts"
@@ -90,9 +92,9 @@ export default function ReceiptsPage() {
 
         {/* Upload and Recent Receipts Section */}
         <div className="grid gap-8 lg:grid-cols-2">
-          <div>
+          <div className="space-y-4">
             <SubscriptionGate feature="upload">
-              <ReceiptUpload
+              <ReceiptBatchUpload
                 clerkId={clerkUser.id}
                 userEmail={clerkUser.emailAddresses[0]?.emailAddress || ""}
                 householdId={selectedHouseholdId}
@@ -149,46 +151,104 @@ export default function ReceiptsPage() {
           ) : allReceipts.length > 0 ? (
             <>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {allReceipts.map((receipt) => (
-                  <Card 
-                    key={receipt.id} 
-                    className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02] hover:border-primary/20 active:scale-[0.98]"
-                    onClick={() => handleReceiptClick(receipt)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold text-sm truncate">
-                            {receipt.merchantName || "Unknown Merchant"}
-                          </h3>
-                          <span className="text-sm font-medium text-green-600">
-                            ${parseFloat(receipt.totalAmount || "0").toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {receipt.transactionDate 
-                            ? new Date(receipt.transactionDate).toLocaleDateString()
-                            : new Date(receipt.createdAt).toLocaleDateString()
-                          }
-                        </div>
-                        {receipt.category && (
-                          <div className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
-                            {formatCategory(receipt.category)}
+                {allReceipts.map((receipt) => {
+                  const isFailed = receipt.processingStatus === 'failed';
+                  const isProcessing = receipt.processingStatus === 'processing';
+                  
+                  return (
+                    <Card 
+                      key={receipt.id} 
+                      className={`overflow-hidden transition-all duration-200 ${
+                        isFailed 
+                          ? 'bg-destructive/5 border-destructive/20' 
+                          : 'cursor-pointer hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02] hover:border-primary/20 active:scale-[0.98]'
+                      }`}
+                      onClick={() => !isFailed && handleReceiptClick(receipt)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-sm truncate">
+                              {receipt.merchantName || "Unknown Merchant"}
+                            </h3>
+                            {!isFailed && (
+                              <span className="text-sm font-medium text-green-600">
+                                ${parseFloat(receipt.totalAmount || "0").toFixed(2)}
+                              </span>
+                            )}
                           </div>
-                        )}
-                        {receipt.imageUrl && (
-                          <div className="aspect-3/4 overflow-hidden rounded-md bg-muted">
-                            <img
-                              src={receipt.imageUrl}
-                              alt="Receipt"
-                              className="h-full w-full object-cover transition-transform hover:scale-105"
-                            />
+                          <div className="text-xs text-muted-foreground">
+                            {receipt.transactionDate 
+                              ? new Date(receipt.transactionDate).toLocaleDateString()
+                              : new Date(receipt.createdAt).toLocaleDateString()
+                            }
                           </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                          {receipt.category && !isFailed && (
+                            <div className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                              {formatCategory(receipt.category)}
+                            </div>
+                          )}
+                          {receipt.imageUrl && (
+                            <div className="relative aspect-3/4 overflow-hidden rounded-md bg-muted">
+                              <img
+                                src={receipt.imageUrl}
+                                alt="Receipt"
+                                className={`h-full w-full object-cover transition-transform ${
+                                  isFailed ? 'blur-sm' : 'hover:scale-105'
+                                }`}
+                              />
+                              {isFailed && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/20 p-4">
+                                  <div className="text-center space-y-2">
+                                    <div className="text-xs font-medium text-destructive">
+                                      Processing Failed
+                                    </div>
+                                    {receipt.processingError && (
+                                      <div className="text-xs text-destructive/80">
+                                        {receipt.processingError}
+                                      </div>
+                                    )}
+                                    <Button
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        try {
+                                          const response = await fetch(`/api/receipts/${receipt.id}/retry`, {
+                                            method: 'POST',
+                                          });
+                                          if (response.ok) {
+                                            refetchAll();
+                                            refetchRecent();
+                                          }
+                                        } catch (error) {
+                                          console.error('Retry failed:', error);
+                                        }
+                                      }}
+                                      size="sm"
+                                      variant="destructive"
+                                      className="mt-2"
+                                    >
+                                      Retry Processing
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                              {isProcessing && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-primary/20">
+                                  <div className="text-center space-y-2">
+                                    <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
+                                    <div className="text-xs font-medium text-primary">
+                                      Processing...
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
 
               {pagination && pagination.totalPages > 1 && (
