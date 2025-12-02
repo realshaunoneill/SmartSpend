@@ -5,6 +5,8 @@ import { Receipt, Scan, CreditCard, Users, BarChart3, Shield, ArrowRight, CheckC
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { Navigation } from "@/components/navigation"
+import { useUser } from "@clerk/nextjs"
 
 const features = [
   {
@@ -62,25 +64,31 @@ const benefits = [
 ]
 
 export default function LandingPage() {
+  const { isLoaded, isSignedIn } = useUser()
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-lg supports-backdrop-filter:bg-background/60">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
-              <Receipt className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold text-foreground">SmartSpend</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <Link href="/sign-in">
-              <Button className="shadow-lg shadow-primary/20">Login</Button>
+      {isLoaded && isSignedIn ? (
+        <Navigation />
+      ) : (
+        <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-lg supports-backdrop-filter:bg-background/60">
+          <div className="container mx-auto flex h-16 items-center justify-between px-4">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
+                <Receipt className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="text-xl font-bold text-foreground">SmartSpend</span>
             </Link>
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <Link href="/sign-in">
+                <Button className="shadow-lg shadow-primary/20">Login</Button>
+              </Link>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Hero Section */}
       <section className="relative overflow-hidden px-4 py-20 sm:py-28">
@@ -104,16 +112,27 @@ export default function LandingPage() {
             spending habits—all in one beautiful app.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="/sign-up">
-              <Button size="lg" className="gap-2 shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30">
-                Start Tracking Free
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="gap-2 border-border/50 backdrop-blur-sm">
-              <TrendingUp className="h-4 w-4" />
-              See How It Works
-            </Button>
+            {isSignedIn ? (
+              <Link href="/dashboard">
+                <Button size="lg" className="gap-2 shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30">
+                  Go to Dashboard
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/sign-up">
+                  <Button size="lg" className="gap-2 shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30">
+                    Start Tracking Free
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Button size="lg" variant="outline" className="gap-2 border-border/50 backdrop-blur-sm">
+                  <TrendingUp className="h-4 w-4" />
+                  See How It Works
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Stats */}
@@ -207,12 +226,21 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <Link href="/sign-up">
-                <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
-                  Get Started for Free
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
+              {isSignedIn ? (
+                <Link href="/dashboard">
+                  <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
+                    Go to Dashboard
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/sign-up">
+                  <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
+                    Get Started for Free
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              )}
             </div>
             <div className="order-1 lg:order-2">
               <div className="relative">
@@ -369,18 +397,34 @@ export default function LandingPage() {
             Ready to Start Saving?
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-lg text-primary-foreground/90">
-            Join SmartSpend today and start tracking your expenses. Free to get started, no credit card required.
+            {isSignedIn 
+              ? "Start tracking your expenses and take control of your finances today."
+              : "Join SmartSpend today and start tracking your expenses. Free to get started, no credit card required."
+            }
           </p>
-          <Link href="/sign-up">
-            <Button 
-              size="lg" 
-              variant="secondary" 
-              className="gap-2 shadow-xl transition-all hover:scale-105"
-            >
-              Create Free Account
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
+          {isSignedIn ? (
+            <Link href="/dashboard">
+              <Button 
+                size="lg" 
+                variant="secondary" 
+                className="gap-2 shadow-xl transition-all hover:scale-105"
+              >
+                Go to Dashboard
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/sign-up">
+              <Button 
+                size="lg" 
+                variant="secondary" 
+                className="gap-2 shadow-xl transition-all hover:scale-105"
+              >
+                Create Free Account
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          )}
         </div>
       </section>
 

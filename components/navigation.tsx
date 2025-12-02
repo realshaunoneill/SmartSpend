@@ -36,7 +36,7 @@ export function Navigation() {
   return (
     <nav className="border-b bg-card">
       <div className="container mx-auto flex h-16 items-center gap-6 px-4">
-        <Link href="/dashboard" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <Receipt className="h-5 w-5 text-primary-foreground" />
           </div>
