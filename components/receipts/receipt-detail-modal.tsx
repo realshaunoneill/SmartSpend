@@ -205,7 +205,7 @@ export function ReceiptDetailModal({
 
         <div className="flex w-full">
           {/* Left Column - Receipt Image */}
-          <div className="w-[45%] p-2 flex items-start justify-center border-r overflow-auto">
+          <div className="w-[45%] p-2 pt-8 flex items-start justify-center border-r overflow-auto">
             {receipt.imageUrl ? (
               <img
                 src={receipt.imageUrl}
