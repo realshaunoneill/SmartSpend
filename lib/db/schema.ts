@@ -60,6 +60,7 @@ export const receipts = pgTable('receipts', {
   subtotal: text('subtotal'),
   receiptNumber: text('receipt_number'),
   ocrData: jsonb('ocr_data'), // Full OCR response
+  processingTokens: jsonb('processing_tokens'), // OpenAI token usage: { prompt_tokens, completion_tokens, total_tokens }
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

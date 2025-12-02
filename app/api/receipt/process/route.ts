@@ -13,7 +13,7 @@ const openai = new OpenAI({
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-async function analyzeReceipt(imageUrl: string) {
+async function analyzeReceipt(imageUrl: string, userEmail: string, userId: string) {
   console.log("Fetching image from:", imageUrl);
 
   const inputImageRes = await fetch(imageUrl);
@@ -99,6 +99,23 @@ Return ONLY valid JSON with all numeric values as numbers (not strings), no addi
       },
     ],
     max_tokens: 1000,
+    user: userEmail, // Add user email to OpenAI metadata for tracking
+    metadata: {
+      userId: userId,
+      userEmail: userEmail,
+      purpose: "receipt_processing",
+    },
+  });
+
+  // Get token usage
+  const usage = response.usage;
+  
+  console.log("OpenAI API usage:", {
+    promptTokens: usage?.prompt_tokens,
+    completionTokens: usage?.completion_tokens,
+    totalTokens: usage?.total_tokens,
+    model: "gpt-4o",
+    userEmail,
   });
 
   const content = response.choices[0]?.message?.content;
@@ -113,7 +130,14 @@ Return ONLY valid JSON with all numeric values as numbers (not strings), no addi
     jsonContent = jsonContent.replace(/^```\n/, "").replace(/\n```$/, "");
   }
 
-  return JSON.parse(jsonContent);
+  return {
+    data: JSON.parse(jsonContent),
+    usage: {
+      promptTokens: usage?.prompt_tokens || 0,
+      completionTokens: usage?.completion_tokens || 0,
+      totalTokens: usage?.total_tokens || 0,
+    },
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -146,7 +170,7 @@ export async function POST(req: NextRequest) {
     console.log("Processing receipt:", imageUrl);
 
     // Analyze receipt with OpenAI
-    const ocrData = await analyzeReceipt(imageUrl);
+    const { data: ocrData, usage } = await analyzeReceipt(imageUrl, email, user.id);
 
     console.log("Receipt analyzed with enhanced data:", {
       merchant: ocrData.merchant,
@@ -182,6 +206,7 @@ export async function POST(req: NextRequest) {
         receiptNumber: ocrData.receiptNumber,
         paymentMethod: ocrData.paymentMethod,
         category: ocrData.category || 'other',
+        processingTokens: usage, // Store token usage for cost calculation
         ocrData: {
           ...ocrData,
           // Store additional extracted details
@@ -204,7 +229,11 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    console.log("Receipt saved to database:", receipt.id);
+    console.log("Receipt saved to database:", {
+      receiptId: receipt.id,
+      tokenUsage: usage,
+      userEmail: email,
+    });
 
     // Save receipt items with enhanced data
     if (ocrData.items && Array.isArray(ocrData.items)) {
