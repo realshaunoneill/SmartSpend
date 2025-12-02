@@ -6,11 +6,7 @@ import { UserService } from "@/lib/services/user-service";
 import { getClerkUserEmail } from "@/lib/auth-helpers";
 import { eq, and, gte, desc, sql } from "drizzle-orm";
 import { submitLogEvent } from "@/lib/logging";
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { generateSpendingSummary } from "@/lib/openai";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -136,7 +132,7 @@ export async function GET(req: NextRequest) {
       .slice(0, 10)
       .map(([merchant, total]) => ({ merchant, total: parseFloat(total.toFixed(2)) }));
 
-    // Prepare data for OpenAI
+    // Prepare data for AI analysis
     const dataForAI = {
       period: `${months} months`,
       totalItems: items.length,
@@ -147,57 +143,12 @@ export async function GET(req: NextRequest) {
       topMerchants: topMerchants.slice(0, 5),
     };
 
-    submitLogEvent('receipt', "Calling OpenAI for spending summary", null, {
-      userId: user.id,
-      itemCount: items.length,
-      totalSpent,
-    });
-
-    // Call OpenAI for summary
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are a helpful financial advisor analyzing spending patterns. Provide insights, identify trends, and offer actionable advice. Be concise but insightful. Use a friendly, conversational tone.",
-        },
-        {
-          role: "user",
-          content: `Analyze this spending data and provide a summary with insights and recommendations:
-
-Period: ${dataForAI.period}
-Total Items Purchased: ${dataForAI.totalItems}
-Total Spent: ${dataForAI.currency} ${dataForAI.totalSpent}
-
-Top 10 Most Frequently Purchased Items:
-${dataForAI.topItems.map((item, i) => `${i + 1}. ${item.name} (${item.count} times)`).join('\n')}
-
-Top 5 Spending Categories:
-${dataForAI.topCategories.map((cat, i) => `${i + 1}. ${cat.category}: ${dataForAI.currency} ${cat.total}`).join('\n')}
-
-Top 5 Merchants:
-${dataForAI.topMerchants.map((m, i) => `${i + 1}. ${m.merchant}: ${dataForAI.currency} ${m.total}`).join('\n')}
-
-Please provide:
-1. A brief overview of spending patterns
-2. Key insights about purchasing habits
-3. Potential areas for savings
-4. Any notable trends or patterns
-5. 2-3 actionable recommendations
-
-Keep the response under 300 words and format it in a friendly, easy-to-read way.`,
-        },
-      ],
-      max_tokens: 500,
-      temperature: 0.7,
-    });
-
-    const aiSummary = response.choices[0]?.message?.content || "Unable to generate summary.";
-
-    submitLogEvent('receipt', "AI spending summary generated", null, {
-      userId: user.id,
-      tokensUsed: response.usage?.total_tokens,
-    });
+    // Generate AI summary using OpenAI lib
+    const { summary: aiSummary, usage: aiUsage } = await generateSpendingSummary(
+      dataForAI,
+      email,
+      user.id
+    );
 
     return NextResponse.json({
       summary: aiSummary,
@@ -217,11 +168,7 @@ Keep the response under 300 words and format it in a friendly, easy-to-read way.
         topCategories,
         topMerchants,
       },
-      usage: {
-        promptTokens: response.usage?.prompt_tokens || 0,
-        completionTokens: response.usage?.completion_tokens || 0,
-        totalTokens: response.usage?.total_tokens || 0,
-      },
+      usage: aiUsage,
     });
   } catch (error) {
     submitLogEvent('receipt-error', `Error generating spending summary: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);

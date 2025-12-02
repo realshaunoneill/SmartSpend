@@ -62,9 +62,10 @@ export interface SpendingInsight {
 }
 
 /**
- * Process receipt image using GPT-4.1 Vision API to extract basic receipt data
+ * Analyze receipt image using GPT-4o (for /api/receipt/process)
+ * This is the main receipt processing function with full extraction
  */
-export async function processReceiptImage(
+export async function analyzeReceiptWithGPT4o(
   imageUrl: string,
   userEmail: string,
   userId: string
@@ -83,10 +84,10 @@ export async function processReceiptImage(
   const base64Image = buffer.toString("base64");
   const mimeType = contentType || "image/png";
 
-  submitLogEvent('receipt-process', "Calling OpenAI Vision API with GPT-4.1", null, { userId, userEmail });
+  submitLogEvent('receipt-process', "Calling OpenAI Vision API", null, { userId, userEmail });
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4-turbo", // GPT-4.1 for image processing
+    model: "gpt-4o",
     messages: [
       {
         role: "user",
@@ -103,7 +104,7 @@ REQUIRED FIELDS:
 - category: spending category based on merchant and items (choose from: "groceries", "dining", "transportation", "shopping", "entertainment", "healthcare", "utilities", "travel", "gas", "coffee", "pharmacy", "clothing", "electronics", "home", "other")
 
 DETAILED EXTRACTION:
-- rawItems: array of raw line items with name and price (number - total price for line item) as they appear on receipt
+- items: array of objects with name, quantity (number), price (number - this is the TOTAL price for this line item, not unit price), category (optional), and description (optional) for each item
 - location: store location/address (full address if visible)
 - subtotal: subtotal amount before tax and service charges (number, if visible)
 - tax: tax amount (number, if visible)
@@ -158,17 +159,17 @@ Return ONLY valid JSON with all numeric values as numbers (not strings), no addi
     metadata: {
       userId: userId,
       userEmail: userEmail,
-      purpose: "receipt_image_processing",
+      purpose: "receipt_processing",
     },
   });
 
   const usage = response.usage;
   
-  submitLogEvent('receipt-process', "GPT-4.1 image processing completed", null, {
+  submitLogEvent('receipt-process', "OpenAI API usage", null, {
     promptTokens: usage?.prompt_tokens,
     completionTokens: usage?.completion_tokens,
     totalTokens: usage?.total_tokens,
-    model: "gpt-4-turbo",
+    model: "gpt-4o",
     userEmail,
     userId,
   });
@@ -189,211 +190,124 @@ Return ONLY valid JSON with all numeric values as numbers (not strings), no addi
 }
 
 /**
- * Process line items using GPT-4o to enhance and categorize items
+ * Simple receipt analysis for upload route (basic extraction)
  */
-export async function processLineItems(
-  rawItems: Array<{ name: string; price: number }>,
-  merchantType: string,
-  category: string,
-  userEmail: string,
-  userId: string
-): Promise<{ items: ReceiptData['items']; usage: TokenUsage }> {
-  if (!rawItems || rawItems.length === 0) {
-    return { 
-      items: [], 
-      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 } 
-    };
+export async function analyzeReceiptSimple(imageUrl: string): Promise<any> {
+  try {
+    const inputImageRes = await fetch(imageUrl);
+    if (!inputImageRes.ok) {
+      throw new Error(`Failed to download image: ${inputImageRes.statusText}`);
+    }
+
+    const contentType = inputImageRes.headers.get("content-type");
+    const inputImageBuffer = await inputImageRes.arrayBuffer();
+
+    const buffer = Buffer.from(inputImageBuffer);
+    const base64Image = buffer.toString("base64");
+    const mimeType = contentType || "image/png";
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Analyze this receipt image and extract the following information in JSON format:
+- items: array of objects with name, quantity, and price for each item
+- location: store location/address
+- merchant: merchant/store name
+- date: transaction date (if visible)
+- subtotal: subtotal amount before tax and service charges (if visible)
+- tax: tax amount (if visible)
+- serviceCharge: service charge amount (if visible)
+- total: total amount
+- currency: currency code (e.g., "GBP", "USD", "EUR")
+- paymentMethod: payment method used (if visible, e.g., "Card", "Cash")
+- receiptNumber: receipt or transaction number (if visible)
+
+Return ONLY valid JSON, no additional text.`,
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:${mimeType};base64,${base64Image}`,
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 1000,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("No response from OpenAI");
+    }
+
+    return cleanJsonResponse(content);
+  } catch (error) {
+    submitLogEvent('receipt-error', `Receipt analysis error: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { imageUrl }, true);
+    throw error;
   }
-
-  submitLogEvent('receipt-process', "Processing line items with GPT-4o", null, { 
-    userId, 
-    userEmail, 
-    itemCount: rawItems.length,
-    merchantType,
-    category 
-  });
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o", // GPT-4o for line item processing
-    messages: [
-      {
-        role: "system",
-        content: `You are an expert at analyzing receipt line items. Your job is to enhance raw receipt items with detailed information including quantity, category, and description.
-
-Merchant Type: ${merchantType}
-Receipt Category: ${category}
-
-For each item, provide:
-- name: cleaned/standardized item name
-- quantity: estimated quantity (default 1 if not clear)
-- price: total price for this line item (number)
-- category: specific item category (e.g., "produce", "dairy", "meat", "beverages", "snacks", "household", "personal_care", "frozen", "bakery", "deli", "seafood", "condiments", "spices", "alcohol", "tobacco", "pharmacy", "electronics", "clothing", "books", "toys", "automotive", "garden", "pet_supplies", "office", "other")
-- description: brief description or additional details about the item (optional)
-
-Return ONLY valid JSON array with enhanced items.`
-      },
-      {
-        role: "user",
-        content: `Enhance these receipt items:
-
-${rawItems.map((item, index) => `${index + 1}. ${item.name} - $${item.price}`).join('\n')}
-
-Return as JSON array with enhanced item details.`
-      },
-    ],
-    max_tokens: 800,
-    temperature: 0.3,
-    user: userEmail,
-    metadata: {
-      userId: userId,
-      userEmail: userEmail,
-      purpose: "line_item_processing",
-    },
-  });
-
-  const usage = response.usage;
-  
-  submitLogEvent('receipt-process', "GPT-4o line item processing completed", null, {
-    promptTokens: usage?.prompt_tokens,
-    completionTokens: usage?.completion_tokens,
-    totalTokens: usage?.total_tokens,
-    model: "gpt-4o",
-    userEmail,
-    userId,
-    processedItems: rawItems.length,
-  });
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error("No line items response from OpenAI");
-  }
-
-  const enhancedItems = cleanJsonResponse(content);
-
-  return {
-    items: Array.isArray(enhancedItems) ? enhancedItems : [],
-    usage: {
-      promptTokens: usage?.prompt_tokens || 0,
-      completionTokens: usage?.completion_tokens || 0,
-      totalTokens: usage?.total_tokens || 0,
-    },
-  };
 }
 
 /**
- * Analyze receipt image using both GPT-4.1 and GPT-4o (legacy function for backward compatibility)
+ * Generate spending summary using GPT-4o Mini
  */
-export async function analyzeReceiptImage(
-  imageUrl: string,
-  userEmail: string,
-  userId: string
-): Promise<ReceiptAnalysisResult> {
-  // First, process the image with GPT-4.1
-  const imageResult = await processReceiptImage(imageUrl, userEmail, userId);
-  
-  // Then, enhance line items with GPT-4o if raw items exist
-  let enhancedItems: ReceiptData['items'] = [];
-  let itemsUsage: TokenUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
-  
-  if (imageResult.data.rawItems && imageResult.data.rawItems.length > 0) {
-    const itemsResult = await processLineItems(
-      imageResult.data.rawItems,
-      imageResult.data.merchantType || 'other',
-      imageResult.data.category || 'other',
-      userEmail,
-      userId
-    );
-    enhancedItems = itemsResult.items;
-    itemsUsage = itemsResult.usage;
-  }
-
-  // Combine results
-  const combinedData = {
-    ...imageResult.data,
-    items: enhancedItems,
-  };
-
-  // Remove rawItems from final result
-  delete combinedData.rawItems;
-
-  return {
-    data: combinedData,
-    usage: {
-      promptTokens: imageResult.usage.promptTokens + itemsUsage.promptTokens,
-      completionTokens: imageResult.usage.completionTokens + itemsUsage.completionTokens,
-      totalTokens: imageResult.usage.totalTokens + itemsUsage.totalTokens,
-    },
-  };
-}
-
-/**
- * Generate spending insights using GPT-4o
- */
-export async function generateSpendingInsights(
+export async function generateSpendingSummary(
   aggregatedData: {
-    period: { startDate: string; endDate: string; months: number };
-    statistics: {
-      totalItems: number;
-      totalSpent: number;
-      currency: string;
-      averagePerItem: number;
-    };
-    topItems: Array<{ name: string; count: number; totalSpent: number }>;
-    topCategories: Array<{ category: string; count: number; totalSpent: number }>;
-    topMerchants: Array<{ merchant: string; count: number; totalSpent: number }>;
+    period: string;
+    totalItems: number;
+    totalSpent: string;
+    currency: string;
+    topItems: Array<{ name: string; count: number }>;
+    topCategories: Array<{ category: string; total: number }>;
+    topMerchants: Array<{ merchant: string; total: number }>;
   },
   userEmail: string,
   userId: string
 ): Promise<SpendingInsight> {
-  submitLogEvent('receipt', "Generating AI spending insights", null, {
+  submitLogEvent('receipt', "Generating AI spending summary", null, {
     userId,
     userEmail,
-    months: aggregatedData.period.months,
-    totalItems: aggregatedData.statistics.totalItems,
-    totalSpent: aggregatedData.statistics.totalSpent,
+    totalItems: aggregatedData.totalItems,
+    totalSpent: aggregatedData.totalSpent,
   });
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o", // Using GPT-4o for text analysis
+    model: "gpt-4o-mini",
     messages: [
       {
         role: "system",
-        content: "You are a financial advisor analyzing spending patterns. Provide insights, identify trends, and suggest savings opportunities based on the data provided. Be specific, actionable, and helpful.",
+        content: "You are a helpful financial advisor analyzing spending patterns. Provide insights, identify trends, and offer actionable advice. Be concise but insightful. Use a friendly, conversational tone.",
       },
       {
         role: "user",
-        content: `Analyze this spending data and provide insights:
+        content: `Analyze this spending data and provide a summary with insights and recommendations:
 
-SPENDING PERIOD: ${aggregatedData.period.months} months (${aggregatedData.period.startDate} to ${aggregatedData.period.endDate})
+Period: ${aggregatedData.period}
+Total Items Purchased: ${aggregatedData.totalItems}
+Total Spent: ${aggregatedData.currency} ${aggregatedData.totalSpent}
 
-OVERALL STATISTICS:
-- Total items purchased: ${aggregatedData.statistics.totalItems}
-- Total spent: ${aggregatedData.statistics.currency} ${aggregatedData.statistics.totalSpent}
-- Average per item: ${aggregatedData.statistics.currency} ${aggregatedData.statistics.averagePerItem}
+Top 10 Most Frequently Purchased Items:
+${aggregatedData.topItems.map((item, i) => `${i + 1}. ${item.name} (${item.count} times)`).join('\n')}
 
-TOP ITEMS (by frequency):
-${aggregatedData.topItems.slice(0, 10).map(item => 
-  `- ${item.name}: ${item.count} purchases, ${aggregatedData.statistics.currency} ${item.totalSpent} total`
-).join('\n')}
+Top 5 Spending Categories:
+${aggregatedData.topCategories.map((cat, i) => `${i + 1}. ${cat.category}: ${aggregatedData.currency} ${cat.total}`).join('\n')}
 
-TOP CATEGORIES (by spending):
-${aggregatedData.topCategories.slice(0, 5).map(cat => 
-  `- ${cat.category}: ${cat.count} items, ${aggregatedData.statistics.currency} ${cat.totalSpent} spent`
-).join('\n')}
-
-TOP MERCHANTS (by frequency):
-${aggregatedData.topMerchants.slice(0, 5).map(merchant => 
-  `- ${merchant.merchant}: ${merchant.count} visits, ${aggregatedData.statistics.currency} ${merchant.totalSpent} spent`
-).join('\n')}
+Top 5 Merchants:
+${aggregatedData.topMerchants.map((m, i) => `${i + 1}. ${m.merchant}: ${aggregatedData.currency} ${m.total}`).join('\n')}
 
 Please provide:
 1. A brief overview of spending patterns
-2. Key insights about habits and preferences
-3. Potential savings opportunities
-4. Notable trends or patterns
-5. Actionable recommendations
+2. Key insights about purchasing habits
+3. Potential areas for savings
+4. Any notable trends or patterns
+5. 2-3 actionable recommendations
 
-Keep the response concise but informative (300-400 words).`,
+Keep the response under 300 words and format it in a friendly, easy-to-read way.`,
       },
     ],
     max_tokens: 500,
@@ -402,24 +316,24 @@ Keep the response concise but informative (300-400 words).`,
     metadata: {
       userId: userId,
       userEmail: userEmail,
-      purpose: "spending_insights",
+      purpose: "spending_summary",
     },
   });
 
   const usage = response.usage;
   
-  submitLogEvent('receipt', "AI insights generated", null, {
+  submitLogEvent('receipt', "AI spending summary generated", null, {
     promptTokens: usage?.prompt_tokens,
     completionTokens: usage?.completion_tokens,
     totalTokens: usage?.total_tokens,
-    model: "gpt-4o",
+    model: "gpt-4o-mini",
     userEmail,
     userId,
   });
 
   const content = response.choices[0]?.message?.content;
   if (!content) {
-    throw new Error("No insights generated from OpenAI");
+    throw new Error("No summary generated from OpenAI");
   }
 
   return {
