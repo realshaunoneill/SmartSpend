@@ -148,7 +148,7 @@ export function ReceiptDetailModal({
   });
 
   // Get current user data to check permissions
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isLoading: isLoadingUser } = useQuery({
     queryKey: ["current-user"],
     queryFn: async () => {
       const response = await fetch("/api/users/me");
@@ -170,6 +170,9 @@ export function ReceiptDetailModal({
 
   // Check if user is the receipt owner
   const isReceiptOwner = currentUser && receipt && receipt.userId === currentUser.id;
+  
+  // Check if we're still loading permissions
+  const isLoadingPermissions = isLoadingUser || (receipt?.householdId && !household && open);
 
   if (!receipt) return null
 
@@ -274,35 +277,43 @@ export function ReceiptDetailModal({
                   </div>
                 )}
 
-                {/* Assignment and Delete Buttons - Only show if user has permission */}
-                {canModifyReceipt && (
-                  <div className="mt-4 flex gap-2">
-                    <ReceiptAssignmentDialog
-                      receiptId={receipt.id}
-                      currentHouseholdId={receipt.householdId}
-                      isOwner={isReceiptOwner}
-                      canRemoveOnly={!isReceiptOwner && receipt.householdId}
-                    >
-                      <Button variant="secondary" size="sm" className="flex-1">
-                        <Users className="h-4 w-4 mr-2" />
-                        {!isReceiptOwner && receipt.householdId 
-                          ? "Remove from Household" 
-                          : receipt.householdId 
-                            ? "Change Household" 
-                            : "Assign to Household"
-                        }
-                      </Button>
-                    </ReceiptAssignmentDialog>
-                    
-                    {/* Delete Button - Only for receipt owner */}
-                    {isReceiptOwner && (
-                      <DeleteReceiptButton 
+                {/* Assignment and Delete Buttons - Show loading state or buttons */}
+                <div className="mt-4">
+                  {isLoadingPermissions ? (
+                    // Loading skeleton for action buttons
+                    <div className="flex gap-2">
+                      <div className="h-9 flex-1 bg-muted animate-pulse rounded-md" />
+                      <div className="h-9 w-24 bg-muted animate-pulse rounded-md" />
+                    </div>
+                  ) : canModifyReceipt ? (
+                    <div className="flex gap-2">
+                      <ReceiptAssignmentDialog
                         receiptId={receipt.id}
-                        onDeleted={() => onOpenChange(false)}
-                      />
-                    )}
-                  </div>
-                )}
+                        currentHouseholdId={receipt.householdId}
+                        isOwner={isReceiptOwner}
+                        canRemoveOnly={!isReceiptOwner && receipt.householdId}
+                      >
+                        <Button variant="secondary" size="sm" className="flex-1">
+                          <Users className="h-4 w-4 mr-2" />
+                          {!isReceiptOwner && receipt.householdId 
+                            ? "Remove from Household" 
+                            : receipt.householdId 
+                              ? "Change Household" 
+                              : "Assign to Household"
+                          }
+                        </Button>
+                      </ReceiptAssignmentDialog>
+                      
+                      {/* Delete Button - Only for receipt owner */}
+                      {isReceiptOwner && (
+                        <DeleteReceiptButton 
+                          receiptId={receipt.id}
+                          onDeleted={() => onOpenChange(false)}
+                        />
+                      )}
+                    </div>
+                  ) : null}
+                </div>
 
                 {/* Meta Info */}
                 <div className="flex flex-wrap gap-3 mt-4">
