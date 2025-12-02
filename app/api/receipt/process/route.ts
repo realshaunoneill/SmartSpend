@@ -49,7 +49,7 @@ REQUIRED FIELDS:
 - category: spending category based on merchant and items (choose from: "groceries", "dining", "transportation", "shopping", "entertainment", "healthcare", "utilities", "travel", "gas", "coffee", "pharmacy", "clothing", "electronics", "home", "other")
 
 DETAILED EXTRACTION:
-- items: array of objects with name, quantity (number), price (number), category (optional), and description (optional) for each item
+- items: array of objects with name, quantity (number), price (number - this is the TOTAL price for this line item, not unit price), category (optional), and description (optional) for each item
 - location: store location/address (full address if visible)
 - subtotal: subtotal amount before tax and service charges (number, if visible)
 - tax: tax amount (number, if visible)
@@ -245,15 +245,16 @@ export async function POST(req: NextRequest) {
     if (ocrData.items && Array.isArray(ocrData.items)) {
       const itemsToInsert = ocrData.items.map((item: any) => {
         const quantity = item.quantity || 1;
-        const unitPrice = item.price || 0;
-        const totalPrice = unitPrice * quantity;
+        const totalPrice = item.price || 0; // This is the total price for the line item
+        const unitPrice = quantity > 0 ? totalPrice / quantity : totalPrice;
         
         return {
           receiptId: receipt.id,
           name: item.name || 'Unknown Item',
-          quantity: quantity,
+          quantity: quantity.toString(),
           unitPrice: unitPrice.toString(),
           totalPrice: totalPrice.toString(),
+          price: totalPrice.toString(), // For backward compatibility with UI
           category: item.category || null,
           description: item.description || null,
         };
