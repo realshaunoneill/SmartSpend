@@ -1,8 +1,7 @@
 "use client"
 
-import { X } from "lucide-react"
+import { X, Eye, EyeOff } from "lucide-react"
 import { Dialog, DialogContent, DialogTitle, DialogOverlay, DialogPortal } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { ItemAnalysisDialog } from "@/components/insights/item-analysis-dialog"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
@@ -29,6 +28,7 @@ export function ReceiptDetailModal({
 }: ReceiptDetailModalProps) {
   const [selectedItemForAnalysis, setSelectedItemForAnalysis] = useState<string | null>(null);
   const [showItemAnalysis, setShowItemAnalysis] = useState(false);
+  const [hideImageOnMobile, setHideImageOnMobile] = useState(false);
 
   // Fetch household name and user's role if receipt is assigned to one
   const { data: household } = useQuery({
@@ -77,36 +77,58 @@ export function ReceiptDetailModal({
       <DialogPortal>
         <DialogOverlay className="backdrop-blur-sm bg-black/60" />
         <DialogContent 
-          className="p-0 overflow-hidden border-0"
-          showCloseButton={false}
+          className="p-0 gap-0 h-[95vh]"
           style={{
-            maxWidth: "1200px",
-            width: "90vw",
-            maxHeight: "90vh",
-            height: "90vh",
+            width: '98vw',
+            maxWidth: '1600px',
+            maxHeight: '95vh'
           }}
+          showCloseButton={false}
         >
-        <VisuallyHidden>
-          <DialogTitle>Receipt Details - {receipt.merchantName}</DialogTitle>
-        </VisuallyHidden>
+          <VisuallyHidden>
+            <DialogTitle>Receipt Details - {receipt.merchantName}</DialogTitle>
+          </VisuallyHidden>
 
-        {/* Close Button */}
-        <button
-          onClick={() => onOpenChange(false)}
-          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-background dark:hover:bg-muted transition-colors"
-        >
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
-        </button>
+          {/* Close Button */}
+          <button
+            onClick={() => onOpenChange(false)}
+            className="absolute top-4 right-4 z-50 p-2 rounded-full bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-background dark:hover:bg-muted transition-colors"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
 
-        <div className="flex w-full h-full">
-          {/* Left Column - Receipt Image */}
-          <ReceiptImage imageUrl={receipt.imageUrl} />
+          <div className="grid md:grid-cols-2 h-full overflow-hidden">
+            {/* Left Column - Receipt Image */}
+            <div className={`relative ${hideImageOnMobile ? 'hidden md:block' : 'block'} overflow-auto bg-muted/30`}>
+              <ReceiptImage imageUrl={receipt.imageUrl} />
+            </div>
 
-          {/* Right Column - Receipt Details */}
-          <div className="w-[55%] shrink-0 flex flex-col h-full">
-            <ScrollArea className="flex-1 overflow-auto">
-              <div className="p-8 pb-4 space-y-6">
+            {/* Right Column - Receipt Details */}
+            <div className="flex flex-col h-full overflow-hidden">
+              {/* Mobile toggle button */}
+              <div className="md:hidden flex justify-end p-2 border-b">
+                <button
+                  onClick={() => setHideImageOnMobile(!hideImageOnMobile)}
+                  className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-md border bg-background hover:bg-muted transition-colors"
+                  aria-label={hideImageOnMobile ? 'Show receipt image' : 'Hide receipt image'}
+                >
+                  {hideImageOnMobile ? (
+                    <>
+                      <Eye className="h-3 w-3" />
+                      Show Image
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff className="h-3 w-3" />
+                      Hide Image
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Header Section */}
+              <div className="px-6 pt-6 pb-4 border-b">
                 <ReceiptHeader
                   receipt={receipt}
                   household={household}
@@ -115,14 +137,21 @@ export function ReceiptDetailModal({
                   isReceiptOwner={isReceiptOwner}
                   onDeleted={() => onOpenChange(false)}
                 />
+              </div>
+
+              {/* Scrollable Details Section */}
+              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+                <ReceiptBusinessDetails ocrData={receipt.ocrData} />
 
                 <Separator />
 
-                <ReceiptBusinessDetails ocrData={receipt.ocrData} />
-
                 <ReceiptServiceDetails ocrData={receipt.ocrData} />
 
+                <Separator />
+
                 <ReceiptLoyaltyDetails ocrData={receipt.ocrData} />
+
+                <Separator />
 
                 <ReceiptItemsList
                   items={receipt.items}
@@ -133,12 +162,13 @@ export function ReceiptDetailModal({
                   }}
                 />
               </div>
-            </ScrollArea>
 
-            {/* Enhanced Financial Breakdown - Sticky at bottom */}
-            <ReceiptFinancialBreakdown receipt={receipt} />
+              {/* Financial Breakdown - Sticky Footer */}
+              <div className="border-t">
+                <ReceiptFinancialBreakdown receipt={receipt} />
+              </div>
+            </div>
           </div>
-        </div>
         </DialogContent>
       </DialogPortal>
 
