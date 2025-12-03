@@ -160,6 +160,7 @@ export async function POST(
           price: totalPrice.toString(),
           category: item.category || null,
           description: item.description || null,
+          modifiers: item.modifiers || null, // Store modifiers
         };
       });
 

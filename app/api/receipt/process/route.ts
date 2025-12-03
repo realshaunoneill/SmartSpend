@@ -157,6 +157,7 @@ export async function POST(req: NextRequest) {
           price: totalPrice.toString(), // For backward compatibility with UI
           category: item.category || null,
           description: item.description || null,
+          modifiers: item.modifiers || null, // Store modifiers (deposits, fees, discounts, etc.)
         };
       });
 

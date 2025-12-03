@@ -203,9 +203,9 @@ export function ReceiptDetailModal({
           <span className="sr-only">Close</span>
         </button>
 
-        <div className="flex w-full">
+        <div className="flex w-full h-full">
           {/* Left Column - Receipt Image */}
-          <div className="w-[45%] p-2 pt-8 flex items-start justify-center border-r overflow-auto">
+          <div className="w-[45%] p-2 pt-8 flex items-start justify-center border-r overflow-auto h-full">
             {receipt.imageUrl ? (
               <img
                 src={receipt.imageUrl}
@@ -221,8 +221,9 @@ export function ReceiptDetailModal({
           </div>
 
           {/* Right Column - Receipt Details */}
-          <ScrollArea className="w-[55%] shrink-0">
-            <div className="p-8 space-y-6">
+          <div className="w-[55%] shrink-0 flex flex-col h-full">
+            <ScrollArea className="flex-1 overflow-auto">
+              <div className="p-8 pb-4 space-y-6">
               {/* Header */}
               <div>
                 <div className="flex items-start justify-between mb-2">
@@ -459,63 +460,106 @@ export function ReceiptDetailModal({
                     <ShoppingBag className="h-4 w-4" />
                     Items ({receipt.items.length})
                   </div>
-                  <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2">
+                  <div className="space-y-1 pr-2">
                     {receipt.items.map((item: any, index: number) => {
                       const quantity = parseFloat(item.quantity) || 1;
                       const totalPrice = parseFloat(item.price) || 0;
                       const unitPrice = quantity > 1 ? totalPrice / quantity : null;
-
-                      console.log({quantity, totalPrice, unitPrice})
+                      const hasModifiers = item.modifiers && Array.isArray(item.modifiers) && item.modifiers.length > 0;
 
                       return (
                         <div
                           key={index}
-                          className="flex items-center justify-between gap-3 py-2 px-2 rounded-lg hover:bg-muted/50 transition-colors border-b last:border-0"
+                          className="py-2 px-2 rounded-lg hover:bg-muted/50 transition-colors border-b last:border-0"
                         >
-                          {/* Left: Item details */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium text-sm truncate">
-                                {item.name}
-                              </p>
-                              {item.category && (
-                                <Badge variant="outline" className="text-xs px-1.5 py-0 shrink-0">
-                                  {capitalizeText(item.category)}
-                                </Badge>
-                              )}
+                          <div className="flex items-center justify-between gap-3">
+                            {/* Left: Item details */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start gap-2">
+                                <p className="font-medium text-sm wrap-break-word">
+                                  {item.name}
+                                </p>
+                                {item.category && (
+                                  <Badge variant="outline" className="text-xs px-1.5 py-0 shrink-0">
+                                    {capitalizeText(item.category)}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-0.5">
+                                {item.quantity && (
+                                  <span className="whitespace-nowrap">Qty: {item.quantity}</span>
+                                )}
+                                {unitPrice && quantity > 1 && (
+                                  <span className="whitespace-nowrap">@ {receipt.currency} {unitPrice.toFixed(2)} each</span>
+                                )}
+                                {item.description && (
+                                  <span className="italic wrap-break-word">{item.description}</span>
+                                )}
+                              </div>
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-                              {item.quantity && (
-                                <span>Qty: {item.quantity}</span>
-                              )}
-                              {unitPrice && quantity > 1 && (
-                                <span>@ {receipt.currency} {unitPrice.toFixed(2)} each</span>
-                              )}
-                              {item.description && (
-                                <span className="italic truncate">{item.description}</span>
-                              )}
-                            </div>                       </div>
 
-                          {/* Right: Price and button */}
-                          <div className="flex items-center gap-2 shrink-0">
-                            {item.price && (
-                              <p className="font-semibold text-sm whitespace-nowrap">
-                                {receipt.currency} {item.price}
-                              </p>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 px-2 text-xs"
-                              onClick={() => {
-                                setSelectedItemForAnalysis(item.name);
-                                setShowItemAnalysis(true);
-                              }}
-                            >
-                              <TrendingUp className="h-3 w-3 mr-1" />
-                              Analyze
-                            </Button>
+                            {/* Right: Price and button */}
+                            <div className="flex items-center gap-2 shrink-0">
+                              {item.price && (
+                                <p className="font-semibold text-sm whitespace-nowrap">
+                                  {receipt.currency} {item.price}
+                                </p>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => {
+                                  setSelectedItemForAnalysis(item.name);
+                                  setShowItemAnalysis(true);
+                                }}
+                              >
+                                <TrendingUp className="h-3 w-3 mr-1" />
+                                Analyze
+                              </Button>
+                            </div>
                           </div>
+
+                          {/* Modifiers/Sub-items */}
+                          {hasModifiers && (
+                            <div className="mt-2 ml-4 space-y-1 border-l-2 border-muted pl-3">
+                              {item.modifiers.map((modifier: any, modIndex: number) => {
+                                const isDiscount = modifier.type === 'discount' || modifier.price < 0;
+                                const isDeposit = modifier.type === 'deposit';
+                                const isFee = modifier.type === 'fee';
+                                
+                                return (
+                                  <div
+                                    key={modIndex}
+                                    className="flex items-center justify-between text-xs"
+                                  >
+                                    <div className="flex items-center gap-1.5">
+                                      {isDiscount && <Percent className="h-3 w-3 text-green-600" />}
+                                      {isDeposit && <Tag className="h-3 w-3 text-blue-600" />}
+                                      {isFee && <Info className="h-3 w-3 text-orange-600" />}
+                                      <span className={`${isDiscount ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                        {modifier.name}
+                                      </span>
+                                      <Badge 
+                                        variant="outline" 
+                                        className={`text-[10px] px-1 py-0 h-4 ${
+                                          isDiscount ? 'border-green-600/30 text-green-600' :
+                                          isDeposit ? 'border-blue-600/30 text-blue-600' :
+                                          isFee ? 'border-orange-600/30 text-orange-600' :
+                                          'border-muted-foreground/30'
+                                        }`}
+                                      >
+                                        {capitalizeText(modifier.type)}
+                                      </Badge>
+                                    </div>
+                                    <span className={`font-medium ${isDiscount ? 'text-green-600' : ''}`}>
+                                      {modifier.price >= 0 ? '+' : ''}{receipt.currency} {Math.abs(modifier.price).toFixed(2)}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -523,105 +567,105 @@ export function ReceiptDetailModal({
                 </div>
               )}
 
-              <Separator />
+              </div>
+            </ScrollArea>
 
-              {/* Enhanced Financial Breakdown */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  <CreditCard className="h-4 w-4" />
-                  Financial Breakdown
-                </div>
-                
-                {/* Base Amount Section */}
-                <div className="space-y-3 p-4 rounded-lg bg-muted/30">
-                  {receipt.subtotal && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Subtotal</span>
-                      <span className="text-sm font-semibold">
-                        {receipt.currency} {receipt.subtotal}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Charges Section */}
-                  {(receipt.tax || receipt.serviceCharge || receipt.ocrData?.tips || receipt.ocrData?.deliveryFee || receipt.ocrData?.packagingFee) && (
-                    <>
-                      <Separator className="my-2" />
-                      <div className="space-y-2">
-                        {receipt.tax && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Tax</span>
-                            <span className="text-sm font-medium">
-                              +{receipt.currency} {receipt.tax}
-                            </span>
-                          </div>
-                        )}
-
-                        {receipt.serviceCharge && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Service Charge</span>
-                            <span className="text-sm font-medium">
-                              +{receipt.currency} {receipt.serviceCharge}
-                            </span>
-                          </div>
-                        )}
-
-                        {receipt.ocrData?.tips && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Tips</span>
-                            <span className="text-sm font-medium">
-                              +{receipt.currency} {receipt.ocrData.tips}
-                            </span>
-                          </div>
-                        )}
-
-                        {receipt.ocrData?.deliveryFee && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Delivery Fee</span>
-                            <span className="text-sm font-medium">
-                              +{receipt.currency} {receipt.ocrData.deliveryFee}
-                            </span>
-                          </div>
-                        )}
-
-                        {receipt.ocrData?.packagingFee && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Packaging Fee</span>
-                            <span className="text-sm font-medium">
-                              +{receipt.currency} {receipt.ocrData.packagingFee}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                  {/* Discounts Section */}
-                  {receipt.ocrData?.discount && (
-                    <>
-                      <Separator className="my-2" />
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Discount</span>
-                        <span className="text-sm font-medium text-green-600">
-                          -{receipt.currency} {receipt.ocrData.discount}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Total Section */}
-                <div className="p-4 rounded-lg bg-primary/10 border-2 border-primary/30">
+            {/* Enhanced Financial Breakdown - Sticky at bottom */}
+            <div className="border-t bg-background p-6 space-y-4 shrink-0">
+              <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                <CreditCard className="h-4 w-4" />
+                Financial Breakdown
+              </div>
+              
+              {/* Base Amount Section */}
+              <div className="space-y-3 p-4 rounded-lg bg-muted/30">
+                {receipt.subtotal && (
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-primary">Total Amount</span>
-                    <span className="text-2xl font-bold text-primary">
-                      {receipt.currency} {receipt.totalAmount}
+                    <span className="text-sm font-medium">Subtotal</span>
+                    <span className="text-sm font-semibold">
+                      {receipt.currency} {receipt.subtotal}
                     </span>
                   </div>
+                )}
+
+                {/* Charges Section */}
+                {(receipt.tax || receipt.serviceCharge || receipt.ocrData?.tips || receipt.ocrData?.deliveryFee || receipt.ocrData?.packagingFee) && (
+                  <>
+                    <Separator className="my-2" />
+                    <div className="space-y-2">
+                      {receipt.tax && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Tax</span>
+                          <span className="text-sm font-medium">
+                            +{receipt.currency} {receipt.tax}
+                          </span>
+                        </div>
+                      )}
+
+                      {receipt.serviceCharge && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Service Charge</span>
+                          <span className="text-sm font-medium">
+                            +{receipt.currency} {receipt.serviceCharge}
+                          </span>
+                        </div>
+                      )}
+
+                      {receipt.ocrData?.tips && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Tips</span>
+                          <span className="text-sm font-medium">
+                            +{receipt.currency} {receipt.ocrData.tips}
+                          </span>
+                        </div>
+                      )}
+
+                      {receipt.ocrData?.deliveryFee && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Delivery Fee</span>
+                          <span className="text-sm font-medium">
+                            +{receipt.currency} {receipt.ocrData.deliveryFee}
+                          </span>
+                        </div>
+                      )}
+
+                      {receipt.ocrData?.packagingFee && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Packaging Fee</span>
+                          <span className="text-sm font-medium">
+                            +{receipt.currency} {receipt.ocrData.packagingFee}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* Discounts Section */}
+                {receipt.ocrData?.discount && (
+                  <>
+                    <Separator className="my-2" />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Discount</span>
+                      <span className="text-sm font-medium text-green-600">
+                        -{receipt.currency} {receipt.ocrData.discount}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Total Section */}
+              <div className="p-4 rounded-lg bg-primary/10 border-2 border-primary/30">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-bold text-primary">Total Amount</span>
+                  <span className="text-2xl font-bold text-primary">
+                    {receipt.currency} {receipt.totalAmount}
+                  </span>
                 </div>
               </div>
             </div>
-          </ScrollArea>
+          </div>
         </div>
         </DialogContent>
       </DialogPortal>

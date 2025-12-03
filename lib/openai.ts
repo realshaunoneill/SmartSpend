@@ -5,6 +5,12 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+export interface ItemModifier {
+  name: string;
+  price: number;
+  type: "fee" | "deposit" | "discount" | "addon" | "modifier";
+}
+
 export interface ReceiptData {
   merchant?: string;
   total?: number;
@@ -17,6 +23,7 @@ export interface ReceiptData {
     price: number;
     category?: string;
     description?: string;
+    modifiers?: ItemModifier[];
   }>;
   rawItems?: Array<{
     name: string;
@@ -104,7 +111,24 @@ REQUIRED FIELDS:
 - category: spending category based on merchant and items (choose from: "groceries", "dining", "transportation", "shopping", "entertainment", "healthcare", "utilities", "travel", "gas", "coffee", "pharmacy", "clothing", "electronics", "home", "other")
 
 DETAILED EXTRACTION:
-- items: array of objects with name, quantity (number), price (number - this is the TOTAL price for this line item, not unit price), category (optional), and description (optional) for each item
+- items: array of objects with:
+  * name: item name
+  * quantity: quantity (number, default 1)
+  * price: TOTAL price for this line item (number)
+  * category: item category (optional)
+  * description: brief description (optional)
+  * modifiers: array of sub-items/modifiers (optional), each with:
+    - name: modifier name (e.g., "Deposit", "Extra Cheese", "Discount")
+    - price: modifier price (number, can be negative for discounts)
+    - type: "fee" | "deposit" | "discount" | "addon" | "modifier"
+  
+  IMPORTANT: Handle indented sub-items correctly:
+  - Deposit fees (e.g., "Deposit 15¢" under a beverage item)
+  - Item-specific discounts (e.g., "-$2.00 Sale" under an item)
+  - Modifiers/add-ons (e.g., "Extra Cheese $1.50" under a sandwich)
+  - The main item price should be the final price INCLUDING all modifiers
+  - List modifiers separately in the modifiers array for transparency
+
 - location: store location/address (full address if visible)
 - subtotal: subtotal amount before tax and service charges (number, if visible)
 - tax: tax amount (number, if visible)

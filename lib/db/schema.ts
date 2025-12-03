@@ -79,6 +79,7 @@ export const receiptItems = pgTable('receipt_items', {
   price: text('price'), // Keep for backward compatibility
   category: text('category'),
   description: text('description'),
+  modifiers: jsonb('modifiers'), // Array of { name, price, type }
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
