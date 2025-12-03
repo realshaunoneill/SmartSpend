@@ -8,12 +8,12 @@ interface ReceiptImageProps {
 
 export function ReceiptImage({ imageUrl }: ReceiptImageProps) {
   return (
-    <div className="w-[45%] p-2 pt-8 flex items-start justify-center border-r overflow-auto h-full">
+    <div className="w-full h-full p-6 flex items-center justify-center overflow-auto bg-linear-to-br from-muted/20 to-muted/40">
       {imageUrl ? (
         <img
           src={imageUrl}
           alt="Receipt"
-          className="max-w-full h-auto max-h-[60vh] object-contain rounded-lg shadow-2xl drop-shadow-xl"
+          className="max-w-full max-h-[85vh] h-auto object-contain rounded-xl shadow-lg border border-border/50 bg-white dark:bg-gray-900"
         />
       ) : (
         <div className="flex flex-col items-center justify-center text-muted-foreground p-12">

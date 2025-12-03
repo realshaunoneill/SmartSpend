@@ -79,8 +79,8 @@ export function ReceiptDetailModal({
         <DialogContent 
           className="p-0 gap-0 h-[95vh]"
           style={{
-            width: '98vw',
-            maxWidth: '1600px',
+            width: '90vw',
+            maxWidth: '1400px',
             maxHeight: '95vh'
           }}
           showCloseButton={false}
