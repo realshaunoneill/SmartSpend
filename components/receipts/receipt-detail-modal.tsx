@@ -143,15 +143,15 @@ export function ReceiptDetailModal({
               <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
                 <ReceiptBusinessDetails ocrData={receipt.ocrData} />
 
-                <Separator />
+                {receipt.ocrData?.phoneNumber || receipt.ocrData?.website || receipt.ocrData?.vatNumber ? <Separator /> : null}
 
                 <ReceiptServiceDetails ocrData={receipt.ocrData} />
 
-                <Separator />
+                {receipt.ocrData?.tableNumber || receipt.ocrData?.serverName || receipt.ocrData?.customerCount ? <Separator /> : null}
 
                 <ReceiptLoyaltyDetails ocrData={receipt.ocrData} />
 
-                <Separator />
+                {receipt.ocrData?.loyaltyNumber || receipt.ocrData?.specialOffers ? <Separator /> : null}
 
                 <ReceiptItemsList
                   items={receipt.items}
