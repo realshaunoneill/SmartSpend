@@ -36,6 +36,13 @@
       "when": 1764692526040,
       "tag": "0004_bright_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1764844975318,
+      "tag": "0005_yielding_master_mold",
+      "breakpoints": true
     }
   ]
 }

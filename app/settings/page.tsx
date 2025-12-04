@@ -1,22 +1,68 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Navigation } from "@/components/layout/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useUser } from "@clerk/nextjs"
 import { useUser as useUserData } from "@/lib/hooks/use-user"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
 
 export default function SettingsPage() {
   const { user: clerkUser, isLoaded } = useUser()
   const { user: userData, isLoading: userDataLoading } = useUserData()
   const [isUpdating, setIsUpdating] = useState(false)
+  const [selectedHousehold, setSelectedHousehold] = useState<string>("none")
   const queryClient = useQueryClient()
+
+  // Update selected household when userData loads
+  useEffect(() => {
+    if (userData?.defaultHouseholdId) {
+      setSelectedHousehold(userData.defaultHouseholdId)
+    }
+  }, [userData?.defaultHouseholdId])
+
+  // Fetch user's households
+  const { data: households = [], isLoading: householdsLoading } = useQuery({
+    queryKey: ["households"],
+    queryFn: async () => {
+      const response = await fetch("/api/households")
+      if (!response.ok) throw new Error("Failed to fetch households")
+      const data = await response.json()
+      return data.households || []
+    },
+  })
+
+  // Update default household mutation
+  const updateDefaultHousehold = useMutation({
+    mutationFn: async (householdId: string | null) => {
+      const response = await fetch("/api/users/default-household", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ householdId }),
+      })
+      if (!response.ok) throw new Error("Failed to update default household")
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] })
+      toast.success("Default household updated successfully")
+    },
+    onError: (error) => {
+      console.error("Error updating default household:", error)
+      toast.error("Failed to update default household")
+    },
+  })
+
+  const handleSaveDefaultHousehold = () => {
+    const householdId = selectedHousehold === "none" ? null : selectedHousehold
+    updateDefaultHousehold.mutate(householdId)
+  }
 
   const handleUpgrade = async () => {
     setIsUpdating(true)
@@ -225,6 +271,49 @@ export default function SettingsPage() {
                 </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Default Household</CardTitle>
+            <CardDescription>
+              Set a default household for automatic receipt uploads
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="default-household">Default Household</Label>
+              <Select
+                value={selectedHousehold}
+                onValueChange={setSelectedHousehold}
+                disabled={householdsLoading || households.length === 0}
+              >
+                <SelectTrigger id="default-household">
+                  <SelectValue placeholder="Select a household" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None (Personal receipts only)</SelectItem>
+                  {households.map((household: any) => (
+                    <SelectItem key={household.id} value={household.id}>
+                      {household.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                When set, newly uploaded receipts will automatically be assigned to this household
+              </p>
+            </div>
+            <Button
+              onClick={handleSaveDefaultHousehold}
+              disabled={
+                updateDefaultHousehold.isPending ||
+                selectedHousehold === (userData?.defaultHouseholdId || "none")
+              }
+            >
+              {updateDefaultHousehold.isPending ? "Saving..." : "Save Default Household"}
+            </Button>
           </CardContent>
         </Card>
 

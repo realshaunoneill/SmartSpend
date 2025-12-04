@@ -28,13 +28,21 @@ export async function POST(req: NextRequest) {
     const user = await UserService.getOrCreateUser(clerkId, email);
 
     const body = await req.json();
-    const { imageUrl, householdId } = body;
+    let { imageUrl, householdId } = body;
 
     if (!imageUrl) {
       return NextResponse.json(
         { error: "Image URL is required" },
         { status: 400 },
       );
+    }
+
+    // If no householdId provided, use the user's default household (if set)
+    if (!householdId && user.defaultHouseholdId) {
+      householdId = user.defaultHouseholdId;
+      submitLogEvent('receipt-process', "Using default household for receipt", null, { 
+        defaultHouseholdId: user.defaultHouseholdId 
+      });
     }
 
     submitLogEvent('receipt-process', "Processing receipt", null, { imageUrl, userId: user.id, householdId });
