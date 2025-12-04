@@ -127,8 +127,8 @@ export function ReceiptDetailModal({
                 </button>
               </div>
 
-              {/* Header Section */}
-              <div className="px-6 pt-6 pb-4 border-b">
+              {/* Header Section - Fixed */}
+              <div className="shrink-0 px-6 pt-6 pb-4 border-b">
                 <ReceiptHeader
                   receipt={receipt}
                   household={household}
@@ -139,8 +139,8 @@ export function ReceiptDetailModal({
                 />
               </div>
 
-              {/* Scrollable Details Section */}
-              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+              {/* Fixed Details Section - Business/Service/Loyalty */}
+              <div className="shrink-0 px-6 py-4 space-y-4 border-b bg-muted/20">
                 <ReceiptBusinessDetails ocrData={receipt.ocrData} />
 
                 <Separator />
@@ -150,9 +150,10 @@ export function ReceiptDetailModal({
                 <Separator />
 
                 <ReceiptLoyaltyDetails ocrData={receipt.ocrData} />
+              </div>
 
-                <Separator />
-
+              {/* Scrollable Items Section */}
+              <div className="flex-1 overflow-y-auto px-6 py-4">
                 <ReceiptItemsList
                   items={receipt.items}
                   currency={receipt.currency}
@@ -163,8 +164,8 @@ export function ReceiptDetailModal({
                 />
               </div>
 
-              {/* Financial Breakdown - Sticky Footer */}
-              <div className="border-t">
+              {/* Financial Breakdown - Enlarged Footer */}
+              <div className="shrink-0 border-t">
                 <ReceiptFinancialBreakdown receipt={receipt} />
               </div>
             </div>

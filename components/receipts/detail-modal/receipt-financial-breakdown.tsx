@@ -9,18 +9,18 @@ interface ReceiptFinancialBreakdownProps {
 
 export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdownProps) {
   return (
-    <div className="border-t bg-background p-6 space-y-4 shrink-0">
-      <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-        <CreditCard className="h-4 w-4" />
+    <div className="bg-background p-6 space-y-5 shrink-0">
+      <div className="flex items-center gap-2 text-base font-semibold text-muted-foreground uppercase tracking-wide">
+        <CreditCard className="h-5 w-5" />
         Financial Breakdown
       </div>
       
       {/* Base Amount Section */}
-      <div className="space-y-3 p-4 rounded-lg bg-muted/30">
+      <div className="space-y-3 p-5 rounded-lg bg-muted/30">
         {receipt.subtotal && (
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Subtotal</span>
-            <span className="text-sm font-semibold">
+            <span className="text-base font-medium">Subtotal</span>
+            <span className="text-base font-semibold">
               {receipt.currency} {receipt.subtotal}
             </span>
           </div>
@@ -30,11 +30,11 @@ export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdown
         {(receipt.tax || receipt.serviceCharge || receipt.ocrData?.tips || receipt.ocrData?.deliveryFee || receipt.ocrData?.packagingFee) && (
           <>
             <Separator className="my-2" />
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {receipt.tax && (
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Tax</span>
-                  <span className="text-sm font-medium">
+                  <span className="text-base text-muted-foreground">Tax</span>
+                  <span className="text-base font-medium">
                     +{receipt.currency} {receipt.tax}
                   </span>
                 </div>
@@ -42,8 +42,8 @@ export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdown
 
               {receipt.serviceCharge && (
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Service Charge</span>
-                  <span className="text-sm font-medium">
+                  <span className="text-base text-muted-foreground">Service Charge</span>
+                  <span className="text-base font-medium">
                     +{receipt.currency} {receipt.serviceCharge}
                   </span>
                 </div>
@@ -51,8 +51,8 @@ export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdown
 
               {receipt.ocrData?.tips && (
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Tips</span>
-                  <span className="text-sm font-medium">
+                  <span className="text-base text-muted-foreground">Tips</span>
+                  <span className="text-base font-medium">
                     +{receipt.currency} {receipt.ocrData.tips}
                   </span>
                 </div>
@@ -60,8 +60,8 @@ export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdown
 
               {receipt.ocrData?.deliveryFee && (
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Delivery Fee</span>
-                  <span className="text-sm font-medium">
+                  <span className="text-base text-muted-foreground">Delivery Fee</span>
+                  <span className="text-base font-medium">
                     +{receipt.currency} {receipt.ocrData.deliveryFee}
                   </span>
                 </div>
@@ -69,8 +69,8 @@ export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdown
 
               {receipt.ocrData?.packagingFee && (
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Packaging Fee</span>
-                  <span className="text-sm font-medium">
+                  <span className="text-base text-muted-foreground">Packaging Fee</span>
+                  <span className="text-base font-medium">
                     +{receipt.currency} {receipt.ocrData.packagingFee}
                   </span>
                 </div>
@@ -84,8 +84,8 @@ export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdown
           <>
             <Separator className="my-2" />
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Discount</span>
-              <span className="text-sm font-medium text-green-600">
+              <span className="text-base text-muted-foreground">Discount</span>
+              <span className="text-base font-medium text-green-600">
                 -{receipt.currency} {receipt.ocrData.discount}
               </span>
             </div>
@@ -94,10 +94,10 @@ export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdown
       </div>
 
       {/* Total Section */}
-      <div className="p-4 rounded-lg bg-primary/10 border-2 border-primary/30">
+      <div className="p-5 rounded-lg bg-primary/10 border-2 border-primary/30">
         <div className="flex justify-between items-center">
-          <span className="text-lg font-bold text-primary">Total Amount</span>
-          <span className="text-2xl font-bold text-primary">
+          <span className="text-xl font-bold text-primary">Total Amount</span>
+          <span className="text-3xl font-bold text-primary">
             {receipt.currency} {receipt.totalAmount}
           </span>
         </div>
