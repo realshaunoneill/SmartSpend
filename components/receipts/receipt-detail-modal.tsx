@@ -139,8 +139,8 @@ export function ReceiptDetailModal({
                 />
               </div>
 
-              {/* Fixed Details Section - Business/Service/Loyalty */}
-              <div className="shrink-0 px-6 py-4 space-y-4 border-b bg-muted/20">
+              {/* Scrollable Content Section - All details and items */}
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
                 <ReceiptBusinessDetails ocrData={receipt.ocrData} />
 
                 <Separator />
@@ -150,10 +150,9 @@ export function ReceiptDetailModal({
                 <Separator />
 
                 <ReceiptLoyaltyDetails ocrData={receipt.ocrData} />
-              </div>
 
-              {/* Scrollable Items Section */}
-              <div className="flex-1 overflow-y-auto px-6 py-4">
+                <Separator />
+
                 <ReceiptItemsList
                   items={receipt.items}
                   currency={receipt.currency}
