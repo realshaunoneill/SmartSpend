@@ -1,12 +1,15 @@
 "use client"
 
-import { X } from "lucide-react"
+import { X, Crown } from "lucide-react"
 import { Dialog, DialogContent, DialogTitle, DialogOverlay, DialogPortal } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import { ItemAnalysisDialog } from "@/components/insights/item-analysis-dialog"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { ReceiptHeader } from "./detail-modal/receipt-header"
 import { ReceiptBusinessDetails } from "./detail-modal/receipt-business-details"
 import { ReceiptServiceDetails } from "./detail-modal/receipt-service-details"
@@ -26,6 +29,7 @@ export function ReceiptDetailModal({
   open,
   onOpenChange,
 }: ReceiptDetailModalProps) {
+  const router = useRouter();
   const [selectedItemForAnalysis, setSelectedItemForAnalysis] = useState<string | null>(null);
   const [showItemAnalysis, setShowItemAnalysis] = useState(false);
 
@@ -66,8 +70,15 @@ export function ReceiptDetailModal({
   // Check if user is the receipt owner
   const isReceiptOwner = currentUser && receipt && receipt.userId === currentUser.id;
   
+  // Check subscription status
+  const isSubscribed = currentUser?.subscribed === true;
+  
   // Check if we're still loading permissions
   const isLoadingPermissions = isLoadingUser || (receipt?.householdId && !household && open);
+
+  const handleUpgrade = () => {
+    router.push('/settings');
+  };
 
   if (!receipt) return null
 
@@ -121,24 +132,54 @@ export function ReceiptDetailModal({
               <div className="flex-1 md:overflow-y-auto px-4 py-3 space-y-3 sm:px-6 sm:py-4 sm:space-y-4">
                 <ReceiptBusinessDetails ocrData={receipt.ocrData} />
 
-                {receipt.ocrData?.phoneNumber || receipt.ocrData?.website || receipt.ocrData?.vatNumber ? <Separator /> : null}
+                {!isSubscribed && (
+                  <Alert className="border-primary/50 bg-primary/5">
+                    <Crown className="h-4 w-4 text-primary" />
+                    <AlertTitle className="text-primary">Upgrade to Premium</AlertTitle>
+                    <AlertDescription className="space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        Subscribe to unlock detailed receipt information including:
+                      </p>
+                      <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>Itemized purchase details</li>
+                        <li>Service information (table, server, etc.)</li>
+                        <li>Loyalty program details</li>
+                        <li>Item spending analysis</li>
+                      </ul>
+                      <Button 
+                        onClick={handleUpgrade}
+                        size="sm" 
+                        className="w-full sm:w-auto gap-2"
+                      >
+                        <Crown className="h-4 w-4" />
+                        Upgrade Now
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
 
-                <ReceiptServiceDetails ocrData={receipt.ocrData} />
+                {isSubscribed && (
+                  <>
+                    {receipt.ocrData?.phoneNumber || receipt.ocrData?.website || receipt.ocrData?.vatNumber ? <Separator /> : null}
 
-                {receipt.ocrData?.tableNumber || receipt.ocrData?.serverName || receipt.ocrData?.customerCount ? <Separator /> : null}
+                    <ReceiptServiceDetails ocrData={receipt.ocrData} />
 
-                <ReceiptLoyaltyDetails ocrData={receipt.ocrData} />
+                    {receipt.ocrData?.tableNumber || receipt.ocrData?.serverName || receipt.ocrData?.customerCount ? <Separator /> : null}
 
-                {receipt.ocrData?.loyaltyNumber || receipt.ocrData?.specialOffers ? <Separator /> : null}
+                    <ReceiptLoyaltyDetails ocrData={receipt.ocrData} />
 
-                <ReceiptItemsList
-                  items={receipt.items}
-                  currency={receipt.currency}
-                  onAnalyzeItem={(itemName) => {
-                    setSelectedItemForAnalysis(itemName)
-                    setShowItemAnalysis(true)
-                  }}
-                />
+                    {receipt.ocrData?.loyaltyNumber || receipt.ocrData?.specialOffers ? <Separator /> : null}
+
+                    <ReceiptItemsList
+                      items={receipt.items}
+                      currency={receipt.currency}
+                      onAnalyzeItem={(itemName) => {
+                        setSelectedItemForAnalysis(itemName)
+                        setShowItemAnalysis(true)
+                      }}
+                    />
+                  </>
+                )}
               </div>
 
               {/* Financial Breakdown - Footer, scrolls on mobile, fixed on desktop */}
