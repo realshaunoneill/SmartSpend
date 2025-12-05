@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { receipts, receiptItems } from "@/lib/db/schema";
-import { getAuthenticatedUser } from "@/lib/auth-helpers";
+import { getAuthenticatedUser, requireSubscription } from "@/lib/auth-helpers";
 import { eq, and, gte, desc, sql } from "drizzle-orm";
 import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { generateSpendingSummary } from "@/lib/openai";
@@ -23,6 +23,10 @@ export async function GET(request: NextRequest) {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user, email } = authResult;
+
+    // Check if a user is subscribed
+    const subCheck = await requireSubscription(user);
+    if (subCheck) return subCheck;
 
     const { searchParams } = new URL(request.url);
     const householdId = searchParams.get("householdId");
