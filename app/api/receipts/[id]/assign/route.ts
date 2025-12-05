@@ -3,22 +3,24 @@ import { db } from "@/lib/db";
 import { receipts, householdUsers } from "@/lib/db/schema";
 import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { eq, and } from "drizzle-orm";
-import { submitLogEvent } from "@/lib/logging";
+import { CorrelationId, submitLogEvent } from "@/lib/logging";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 
 // Assign receipt to household
 export async function PATCH(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
     const { id: receiptId } = await params;
-    const { householdId } = await req.json();
+    const { householdId } = await request.json();
 
     // Get the receipt
     const [receipt] = await db
@@ -99,7 +101,7 @@ export async function PATCH(
 
     return NextResponse.json(updatedReceipt);
   } catch (error) {
-    submitLogEvent('receipt', `Error assigning receipt: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
+    submitLogEvent('receipt', `Error assigning receipt: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: "Failed to assign receipt" },
       { status: 500 }

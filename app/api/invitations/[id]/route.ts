@@ -3,7 +3,8 @@ import { db } from "@/lib/db";
 import { householdUsers, householdInvitations } from "@/lib/db/schema";
 import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { eq, and } from "drizzle-orm";
-import { submitLogEvent } from "@/lib/logging";
+import { CorrelationId, submitLogEvent } from "@/lib/logging";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 
@@ -12,8 +13,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
@@ -109,7 +111,7 @@ export async function PATCH(
       });
     }
   } catch (error) {
-    submitLogEvent('invitation', `Error processing invitation: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
+    submitLogEvent('invitation', `Error processing invitation: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: "Failed to process invitation" },
       { status: 500 }

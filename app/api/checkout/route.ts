@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createCheckoutSession } from "@/lib/stripe";
 import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import Stripe from "stripe";
-import { submitLogEvent } from "@/lib/logging";
+import { CorrelationId, submitLogEvent } from "@/lib/logging";
+import { randomUUID } from "crypto";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-11-17.clover",
@@ -16,8 +17,9 @@ export const maxDuration = 30;
  * Create a Stripe checkout session for subscription
  */
 export async function POST(request: NextRequest) {
+  const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
@@ -45,9 +47,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      submitLogEvent('checkout', `Creating checkout session for price: ${(price.product as Stripe.Product).name}`, null, { userId: user.id, priceId, email: user.email });
+      submitLogEvent('checkout', `Creating checkout session for price: ${(price.product as Stripe.Product).name}`, correlationId, { userId: user.id, priceId, email: user.email });
     } catch (error) {
-      submitLogEvent('checkout', `Error retrieving price: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { userId: user.id, priceId }, true);
+      submitLogEvent('checkout', `Error retrieving price: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { userId: user.id, priceId }, true);
       return NextResponse.json(
         { error: "Invalid price ID" },
         { status: 400 }
@@ -62,7 +64,8 @@ export async function POST(request: NextRequest) {
       priceId,
       user.stripeCustomerId,
       body.successUrl,
-      body.cancelUrl
+      body.cancelUrl,
+      correlationId
     );
 
     if (!checkoutSession || !checkoutSession.url) {
@@ -72,7 +75,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    submitLogEvent('checkout', "Checkout session created", null, {
+    submitLogEvent('checkout', "Checkout session created", correlationId, {
       sessionId: checkoutSession.id,
       userId: user.id,
       priceId,
@@ -86,7 +89,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    submitLogEvent('checkout', `Error creating checkout session: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { error: error instanceof Error ? error.message : undefined }, true);
+    submitLogEvent('checkout', `Error creating checkout session: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { error: error instanceof Error ? error.message : undefined }, true);
     return NextResponse.json(
       {
         error: "Failed to create checkout session",

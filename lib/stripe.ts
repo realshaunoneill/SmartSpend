@@ -15,7 +15,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 async function createStripeCustomer(
   userId: string, 
   email: string, 
-  clerkId: string
+  clerkId: string,
+  correlationId: CorrelationId
 ): Promise<string> {
   try {
     const { UserService } = await import("@/lib/services/user-service");
@@ -27,13 +28,13 @@ async function createStripeCustomer(
     
     if (existingCustomer.data.length > 0) {
       const customerId = existingCustomer.data[0].id;
-      submitLogEvent('stripe', `Found existing Stripe customer ${customerId} for ${email}`, null, { userId, customerId, email });
+      submitLogEvent('stripe', `Found existing Stripe customer ${customerId} for ${email}`, correlationId, { userId, customerId, email });
       
       // Update user record with the existing Stripe customer ID
       // This ensures the database stays in sync even if the customer was created elsewhere
       await UserService.updateStripeCustomerId(userId, customerId);
 
-      submitLogEvent('stripe', `Updated database with existing Stripe customer ID for user ${userId}`, null, { userId, customerId });
+      submitLogEvent('stripe', `Updated database with existing Stripe customer ID for user ${userId}`, correlationId, { userId, customerId });
       
       return customerId;
     }
@@ -48,16 +49,16 @@ async function createStripeCustomer(
       },
     });
     
-    submitLogEvent('stripe', `Created new Stripe customer ${customer.id} for user ${userId}`, null, { userId, customerId: customer.id, email });
+    submitLogEvent('stripe', `Created new Stripe customer ${customer.id} for user ${userId}`, correlationId, { userId, customerId: customer.id, email });
     
     // Update user record with Stripe customer ID
     await UserService.updateStripeCustomerId(userId, customer.id);
 
-    submitLogEvent('stripe', `Updated database with Stripe customer ID for user ${userId}`, null, { userId, customerId: customer.id });
+    submitLogEvent('stripe', `Updated database with Stripe customer ID for user ${userId}`, correlationId, { userId, customerId: customer.id });
     
     return customer.id;
   } catch (error) {
-    submitLogEvent('stripe', `Failed to create Stripe customer: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { userId, email }, true);
+    submitLogEvent('stripe', `Failed to create Stripe customer: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { userId, email }, true);
     throw new Error("Failed to create Stripe customer");
   }
 }
@@ -69,7 +70,8 @@ export async function getOrCreateStripeCustomer(
   userId: string,
   email: string,
   clerkId: string,
-  stripeCustomerId?: string | null
+  stripeCustomerId: string | null | undefined,
+  correlationId: CorrelationId
 ): Promise<string> {
   try {
     // If user already has a Stripe customer ID, verify it exists
@@ -77,18 +79,18 @@ export async function getOrCreateStripeCustomer(
       try {
         const customer = await stripe.customers.retrieve(stripeCustomerId);
         if (!customer.deleted) {
-          submitLogEvent('stripe', `Using existing Stripe customer ${stripeCustomerId}`, null, { userId, customerId: stripeCustomerId });
+          submitLogEvent('stripe', `Using existing Stripe customer ${stripeCustomerId}`, correlationId, { userId, customerId: stripeCustomerId });
           return stripeCustomerId;
         }
       } catch (error) {
-        submitLogEvent('stripe', "Existing Stripe customer not found, creating new one", null, { userId, stripeCustomerId });
+        submitLogEvent('stripe', "Existing Stripe customer not found, creating new one", correlationId, { userId, stripeCustomerId });
       }
     }
 
     // Create customer and update database in one operation
-    return await createStripeCustomer(userId, email, clerkId);
+    return await createStripeCustomer(userId, email, clerkId, correlationId);
   } catch (error) {
-    submitLogEvent('stripe', `Error getting or creating Stripe customer: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { userId, email }, true);
+    submitLogEvent('stripe', `Error getting or creating Stripe customer: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { userId, email }, true);
     throw error;
   }
 }
@@ -102,9 +104,10 @@ export async function createCheckoutSession(
   email: string,
   clerkId: string,
   priceId: string,
-  stripeCustomerId?: string | null,
-  successUrl?: string,
-  cancelUrl?: string
+  stripeCustomerId: string | null | undefined,
+  successUrl: string | undefined,
+  cancelUrl: string | undefined,
+  correlationId: CorrelationId
 ) {
   try {
     // Get or create Stripe customer
@@ -112,7 +115,8 @@ export async function createCheckoutSession(
       userId,
       email,
       clerkId,
-      stripeCustomerId
+      stripeCustomerId,
+      correlationId
     );
 
     // Create checkout session with the customer
@@ -138,7 +142,7 @@ export async function createCheckoutSession(
 
     return session;
   } catch (error) {
-    submitLogEvent('checkout', `Error creating checkout session: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { userId, priceId }, true);
+    submitLogEvent('checkout', `Error creating checkout session: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { userId, priceId }, true);
     throw error;
   }
 }

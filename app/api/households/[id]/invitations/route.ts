@@ -5,7 +5,8 @@ import { UserService } from "@/lib/services/user-service";
 import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { eq, and } from "drizzle-orm";
 import { randomBytes } from "crypto";
-import { submitLogEvent } from "@/lib/logging";
+import { CorrelationId, submitLogEvent } from "@/lib/logging";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 
@@ -14,8 +15,9 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
@@ -120,7 +122,7 @@ export async function POST(
       expiresAt: invitation.expiresAt,
     });
   } catch (error) {
-    submitLogEvent('invitation', `Error sending invitation: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
+    submitLogEvent('invitation', `Error sending invitation: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: "Failed to send invitation" },
       { status: 500 }
@@ -133,8 +135,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
@@ -175,7 +178,7 @@ export async function GET(
 
     return NextResponse.json(invitations);
   } catch (error) {
-    submitLogEvent('invitation', `Error fetching invitations: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
+    submitLogEvent('invitation', `Error fetching invitations: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: "Failed to fetch invitations" },
       { status: 500 }

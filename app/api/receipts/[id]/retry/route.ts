@@ -3,8 +3,9 @@ import { db } from "@/lib/db";
 import { receipts, receiptItems } from "@/lib/db/schema";
 import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { analyzeReceiptWithGPT4o } from "@/lib/openai";
-import { submitLogEvent } from "@/lib/logging";
+import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { eq, and, isNull } from "drizzle-orm";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -17,8 +18,9 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user, email } = authResult;
 
@@ -43,7 +45,7 @@ export async function POST(
       return NextResponse.json({ error: "Receipt already processed" }, { status: 400 });
     }
 
-    submitLogEvent('receipt', "Retrying receipt processing", null, { 
+    submitLogEvent('receipt', "Retrying receipt processing", correlationId, { 
       receiptId: receipt.id, 
       userId: user.id 
     });
@@ -61,7 +63,7 @@ export async function POST(
     // Analyze receipt with OpenAI
     let ocrData, usage;
     try {
-      const result = await analyzeReceiptWithGPT4o(receipt.imageUrl, email, user.id);
+      const result = await analyzeReceiptWithGPT4o(receipt.imageUrl, email, user.id, correlationId);
       ocrData = result.data;
       usage = result.usage;
     } catch (error) {
@@ -75,7 +77,7 @@ export async function POST(
         })
         .where(eq(receipts.id, params.id));
 
-      submitLogEvent('receipt-error', `Receipt retry failed: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { 
+      submitLogEvent('receipt-error', `Receipt retry failed: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { 
         receiptId: receipt.id,
         error: error instanceof Error ? error.stack : undefined 
       }, true);
@@ -158,7 +160,7 @@ export async function POST(
       }
     }
 
-    submitLogEvent('receipt', "Receipt retry successful", null, { 
+    submitLogEvent('receipt', "Receipt retry successful", correlationId, { 
       receiptId: receipt.id, 
       userId: user.id 
     });
@@ -168,7 +170,7 @@ export async function POST(
       receipt: updatedReceipt,
     });
   } catch (error) {
-    submitLogEvent('receipt-error', `Receipt retry error: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { 
+    submitLogEvent('receipt-error', `Receipt retry error: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { 
       error: error instanceof Error ? error.stack : undefined 
     }, true);
     

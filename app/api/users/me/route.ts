@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import {
   createErrorResponse,
   ErrorCode,
@@ -7,16 +7,19 @@ import {
   Logger,
 } from '@/lib/errors'
 import { getAuthenticatedUser } from '@/lib/auth-helpers'
+import { randomUUID } from 'crypto'
+import { CorrelationId } from '@/lib/logging'
 
 /**
  * GET /api/users/me
  * Get current user profile (creates user if doesn't exist)
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const requestId = generateRequestId()
+  const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
 
   try {
-    const authResult = await getAuthenticatedUser()
+    const authResult = await getAuthenticatedUser(correlationId)
 
     if (authResult instanceof NextResponse) {
       Logger.warn('Unauthenticated request to /api/users/me', { requestId })
@@ -48,11 +51,12 @@ export async function GET() {
  * PATCH /api/users/me
  * Update user profile
  */
-export async function PATCH(req: Request) {
+export async function PATCH(req: NextRequest) {
   const requestId = generateRequestId()
+  const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
 
   try {
-    const authResult = await getAuthenticatedUser()
+    const authResult = await getAuthenticatedUser(correlationId)
 
     if (authResult instanceof NextResponse) {
       Logger.warn('Unauthenticated request to PATCH /api/users/me', { requestId })

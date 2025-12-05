@@ -1,7 +1,8 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse, NextRequest } from "next/server";
 import { getAuthenticatedUser, requireSubscription } from "@/lib/auth-helpers";
-import { submitLogEvent } from "@/lib/logging";
+import { CorrelationId, submitLogEvent } from "@/lib/logging";
+import { randomUUID } from "crypto";
 
 // Route configuration
 export const runtime = "nodejs";
@@ -14,8 +15,9 @@ const MAX_UPLOAD_SIZE_MB = parseInt(
 );
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user, clerkId } = authResult;
 
@@ -25,7 +27,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const body = (await request.json()) as HandleUploadBody;
 
-    submitLogEvent('receipt-upload', "Starting receipt upload", null, { userId: user.id, clerkId });
+    submitLogEvent('receipt-upload', "Starting receipt upload", correlationId, { userId: user.id, clerkId });
 
     const jsonResponse = await handleUpload({
       body,
@@ -55,13 +57,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json(jsonResponse);
     }
 
-    submitLogEvent('receipt-upload', "Upload completed, processing receipt", null, { userId: user.id, clerkId });
+    submitLogEvent('receipt-upload', "Upload completed, processing receipt", correlationId, { userId: user.id, clerkId });
 
     // For upload completion, just return success
     // The actual processing will happen via webhook or we need a different approach
     return NextResponse.json(jsonResponse);
   } catch (error) {
-    submitLogEvent('receipt-error', `Receipt upload error: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { error: error instanceof Error ? error.stack : undefined }, true);
+    submitLogEvent('receipt-error', `Receipt upload error: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { error: error instanceof Error ? error.stack : undefined }, true);
     return NextResponse.json(
       {
         error: (error as Error).message,

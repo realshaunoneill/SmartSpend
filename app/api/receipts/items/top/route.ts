@@ -3,7 +3,8 @@ import { db } from "@/lib/db";
 import { receipts, receiptItems } from "@/lib/db/schema";
 import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { eq, and, gte, sql, desc } from "drizzle-orm";
-import { submitLogEvent } from "@/lib/logging";
+import { CorrelationId, submitLogEvent } from "@/lib/logging";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 
@@ -16,9 +17,10 @@ export const runtime = "nodejs";
  * - limit: number (optional, default: 20) - Number of items to return
  * - sortBy: 'frequency' | 'spending' (optional, default: 'frequency')
  */
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
+  const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
@@ -32,7 +34,7 @@ export async function GET(req: NextRequest) {
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - months);
 
-    submitLogEvent('receipt', "Fetching top items", null, {
+    submitLogEvent('receipt', "Fetching top items", correlationId, {
       userId: user.id,
       householdId,
       months,
@@ -142,7 +144,7 @@ export async function GET(req: NextRequest) {
     const totalPurchases = itemsArray.reduce((sum, item) => sum + item.count, 0);
     const totalSpent = itemsArray.reduce((sum, item) => sum + item.totalSpent, 0);
 
-    submitLogEvent('receipt', "Top items fetched successfully", null, {
+    submitLogEvent('receipt', "Top items fetched successfully", correlationId, {
       userId: user.id,
       uniqueItems: totalUniqueItems,
       totalPurchases,
@@ -164,7 +166,7 @@ export async function GET(req: NextRequest) {
       sortBy,
     });
   } catch (error) {
-    submitLogEvent('receipt-error', `Error fetching top items: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
+    submitLogEvent('receipt-error', `Error fetching top items: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: "Failed to fetch top items" },
       { status: 500 }

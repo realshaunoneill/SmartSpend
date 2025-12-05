@@ -3,8 +3,9 @@ import { db } from "@/lib/db";
 import { receipts, receiptItems } from "@/lib/db/schema";
 import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { eq, and, gte, desc, sql } from "drizzle-orm";
-import { submitLogEvent } from "@/lib/logging";
+import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { generateSpendingSummary } from "@/lib/openai";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -16,9 +17,10 @@ export const maxDuration = 30;
  * - householdId: string (optional) - Filter by household
  * - months: number (optional, default: 3) - Number of months to analyze
  */
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
+  const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user, email } = authResult;
 
@@ -30,7 +32,7 @@ export async function GET(req: NextRequest) {
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - months);
 
-    submitLogEvent('receipt', "Generating AI spending summary", null, {
+    submitLogEvent('receipt', "Generating AI spending summary", correlationId, {
       userId: user.id,
       householdId,
       months,
@@ -134,7 +136,8 @@ export async function GET(req: NextRequest) {
     const { summary: aiSummary, usage: aiUsage } = await generateSpendingSummary(
       dataForAI,
       email,
-      user.id
+      user.id,
+      correlationId
     );
 
     return NextResponse.json({
@@ -158,7 +161,7 @@ export async function GET(req: NextRequest) {
       usage: aiUsage,
     });
   } catch (error) {
-    submitLogEvent('receipt-error', `Error generating spending summary: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
+    submitLogEvent('receipt-error', `Error generating spending summary: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: "Failed to generate spending summary" },
       { status: 500 }

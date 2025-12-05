@@ -1,18 +1,19 @@
 import { auth, clerkClient } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
-import { submitLogEvent } from '@/lib/logging'
+import { CorrelationId, submitLogEvent } from '@/lib/logging'
 import { UserService } from '@/lib/services/user-service'
+import { randomUUID } from 'crypto'
 
 /**
  * Get user email from Clerk
  */
-export async function getClerkUserEmail(clerkId: string): Promise<string | null> {
+export async function getClerkUserEmail(clerkId: string, correlationId?: CorrelationId): Promise<string | null> {
   try {
     const client = await clerkClient()
     const user = await client.users.getUser(clerkId)
     return user.emailAddresses[0]?.emailAddress ?? null
   } catch (error) {
-    submitLogEvent('auth', `Error fetching Clerk user: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { clerkId }, true)
+    submitLogEvent('auth', `Error fetching Clerk user: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId || randomUUID() as CorrelationId, { clerkId }, true)
     return null
   }
 }
@@ -21,23 +22,24 @@ export async function getClerkUserEmail(clerkId: string): Promise<string | null>
  * Get or create authenticated user from database
  * Returns user object or NextResponse error
  */
-export async function getAuthenticatedUser() {
+export async function getAuthenticatedUser(correlationId?: CorrelationId) {
+  const cid = correlationId || randomUUID() as CorrelationId
   const { userId: clerkId } = await auth()
 
   if (!clerkId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const email = await getClerkUserEmail(clerkId)
+  const email = await getClerkUserEmail(clerkId, cid)
   if (!email) {
     return NextResponse.json({ error: "User email not found" }, { status: 400 })
   }
 
   try {
     const user = await UserService.getOrCreateUser(clerkId, email)
-    return { user, clerkId }
+    return { user, clerkId, email, correlationId: cid }
   } catch (error) {
-    submitLogEvent('auth', `Error getting/creating user: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { clerkId }, true)
+    submitLogEvent('auth', `Error getting/creating user: ${error instanceof Error ? error.message : 'Unknown error'}`, cid, { clerkId }, true)
     return NextResponse.json({ error: "Failed to authenticate user" }, { status: 500 })
   }
 }

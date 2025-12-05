@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { submitLogEvent } from "@/lib/logging";
+import { CorrelationId, submitLogEvent } from "@/lib/logging";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -75,9 +75,10 @@ export interface SpendingInsight {
 export async function analyzeReceiptWithGPT4o(
   imageUrl: string,
   userEmail: string,
-  userId: string
+  userId: string,
+  correlationId: CorrelationId
 ): Promise<ReceiptAnalysisResult> {
-  submitLogEvent('receipt-process', "Fetching image for analysis", null, { imageUrl, userId });
+  submitLogEvent('receipt-process', "Fetching image for analysis", correlationId, { imageUrl, userId });
 
   const inputImageRes = await fetch(imageUrl);
   if (!inputImageRes.ok) {
@@ -91,7 +92,7 @@ export async function analyzeReceiptWithGPT4o(
   const base64Image = buffer.toString("base64");
   const mimeType = contentType || "image/png";
 
-  submitLogEvent('receipt-process', "Calling OpenAI Vision API", null, { userId, userEmail });
+  submitLogEvent('receipt-process', "Calling OpenAI Vision API", correlationId, { userId, userEmail });
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -189,7 +190,7 @@ Return ONLY valid JSON with all numeric values as numbers (not strings), no addi
 
   const usage = response.usage;
   
-  submitLogEvent('receipt-process', "OpenAI API usage", null, {
+  submitLogEvent('receipt-process', "OpenAI API usage", correlationId, {
     promptTokens: usage?.prompt_tokens,
     completionTokens: usage?.completion_tokens,
     totalTokens: usage?.total_tokens,
@@ -216,7 +217,7 @@ Return ONLY valid JSON with all numeric values as numbers (not strings), no addi
 /**
  * Simple receipt analysis for upload route (basic extraction)
  */
-export async function analyzeReceiptSimple(imageUrl: string): Promise<any> {
+export async function analyzeReceiptSimple(imageUrl: string, correlationId: CorrelationId): Promise<any> {
   try {
     const inputImageRes = await fetch(imageUrl);
     if (!inputImageRes.ok) {
@@ -272,7 +273,7 @@ Return ONLY valid JSON, no additional text.`,
 
     return cleanJsonResponse(content);
   } catch (error) {
-    submitLogEvent('receipt-error', `Receipt analysis error: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { imageUrl }, true);
+    submitLogEvent('receipt-error', `Receipt analysis error: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { imageUrl }, true);
     throw error;
   }
 }
@@ -291,9 +292,10 @@ export async function generateSpendingSummary(
     topMerchants: Array<{ merchant: string; total: number }>;
   },
   userEmail: string,
-  userId: string
+  userId: string,
+  correlationId: CorrelationId
 ): Promise<SpendingInsight> {
-  submitLogEvent('receipt', "Generating AI spending summary", null, {
+  submitLogEvent('receipt', "Generating AI spending summary", correlationId, {
     userId,
     userEmail,
     totalItems: aggregatedData.totalItems,
@@ -346,7 +348,7 @@ Keep the response under 300 words and format it in a friendly, easy-to-read way.
 
   const usage = response.usage;
   
-  submitLogEvent('receipt', "AI spending summary generated", null, {
+  submitLogEvent('receipt', "AI spending summary generated", correlationId, {
     promptTokens: usage?.prompt_tokens,
     completionTokens: usage?.completion_tokens,
     totalTokens: usage?.total_tokens,

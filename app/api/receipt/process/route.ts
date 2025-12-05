@@ -3,14 +3,16 @@ import { db } from "@/lib/db";
 import { receipts, receiptItems } from "@/lib/db/schema";
 import { getAuthenticatedUser, requireSubscription } from "@/lib/auth-helpers";
 import { analyzeReceiptWithGPT4o } from "@/lib/openai";
-import { submitLogEvent } from "@/lib/logging";
+import { CorrelationId, submitLogEvent } from "@/lib/logging";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+  const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
@@ -31,17 +33,17 @@ export async function POST(req: NextRequest) {
     // If no householdId provided, use the user's default household (if set)
     if (!householdId && user.defaultHouseholdId) {
       householdId = user.defaultHouseholdId;
-      submitLogEvent('receipt-process', "Using default household for receipt", null, { 
+      submitLogEvent('receipt-process', "Using default household for receipt", correlationId, { 
         defaultHouseholdId: user.defaultHouseholdId 
       });
     }
 
-    submitLogEvent('receipt-process', "Processing receipt", null, { imageUrl, userId: user.id, householdId });
+    submitLogEvent('receipt-process', "Processing receipt", correlationId, { imageUrl, userId: user.id, householdId });
 
     // Analyze receipt with OpenAI
     let ocrData, usage;
     try {
-      const result = await analyzeReceiptWithGPT4o(imageUrl, user.email, user.id);
+      const result = await analyzeReceiptWithGPT4o(imageUrl, user.email, user.id, correlationId);
       ocrData = result.data;
       usage = result.usage;
     } catch (error) {
@@ -57,7 +59,7 @@ export async function POST(req: NextRequest) {
         })
         .returning();
 
-      submitLogEvent('receipt-error', `Receipt processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { 
+      submitLogEvent('receipt-error', `Receipt processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { 
         receiptId: failedReceipt.id,
         error: error instanceof Error ? error.stack : undefined 
       }, true);
@@ -72,7 +74,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    submitLogEvent('receipt-process', "Receipt analyzed with enhanced data", null, {
+    submitLogEvent('receipt-process', "Receipt analyzed with enhanced data", correlationId, {
       merchant: ocrData.merchant,
       total: ocrData.total,
       currency: ocrData.currency,
@@ -131,7 +133,7 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    submitLogEvent('receipt', "Receipt saved to database", null, {
+    submitLogEvent('receipt', "Receipt saved to database", correlationId, {
       receiptId: receipt.id,
       tokenUsage: usage,
       userEmail: user.email,
@@ -162,11 +164,11 @@ export async function POST(req: NextRequest) {
 
       if (itemsToInsert.length > 0) {
         await db.insert(receiptItems).values(itemsToInsert);
-        submitLogEvent('receipt', `Saved ${itemsToInsert.length} receipt items with enhanced data`, null, { receiptId: receipt.id, itemCount: itemsToInsert.length, userId: user.id });
+        submitLogEvent('receipt', `Saved ${itemsToInsert.length} receipt items with enhanced data`, correlationId, { receiptId: receipt.id, itemCount: itemsToInsert.length, userId: user.id });
       }
     }
 
-    submitLogEvent('receipt-process', "Receipt processing completed successfully", null, { receiptId: receipt.id, userId: user.id });
+    submitLogEvent('receipt-process', "Receipt processing completed successfully", correlationId, { receiptId: receipt.id, userId: user.id });
 
     // Prepare enhanced response with all extracted data
     const items = ocrData.items && Array.isArray(ocrData.items)
@@ -243,7 +245,7 @@ export async function POST(req: NextRequest) {
       }
     });
   } catch (error) {
-    submitLogEvent('receipt-error', `Receipt processing error: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { error: error instanceof Error ? error.stack : undefined }, true);
+    submitLogEvent('receipt-error', `Receipt processing error: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { error: error instanceof Error ? error.stack : undefined }, true);
     return NextResponse.json(
       {
         error: (error as Error).message,

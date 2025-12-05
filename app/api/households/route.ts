@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { HouseholdService } from '@/lib/services/household-service'
 import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers'
 import {
@@ -8,17 +8,20 @@ import {
   getHttpStatusCode,
   Logger,
 } from '@/lib/errors'
+import { randomUUID } from 'crypto'
+import { CorrelationId } from '@/lib/logging'
 
 /**
  * GET /api/households
  * List all households the current user belongs to
  * Validates: Requirements 3.6
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const requestId = generateRequestId()
+  const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
 
   try {
-    const authResult = await getAuthenticatedUser()
+    const authResult = await getAuthenticatedUser(correlationId)
 
     if (authResult instanceof NextResponse) {
       Logger.warn('Unauthenticated request to GET /api/households', { requestId })
@@ -55,11 +58,12 @@ export async function GET() {
  * Create a new household
  * Validates: Requirements 3.1, 3.2
  */
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const requestId = generateRequestId()
+  const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
 
   try {
-    const authResult = await getAuthenticatedUser()
+    const authResult = await getAuthenticatedUser(correlationId)
 
     if (authResult instanceof NextResponse) {
       Logger.warn('Unauthenticated request to POST /api/households', { requestId })

@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth-helpers";
-import { submitLogEvent } from "@/lib/logging";
+import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { getReceiptById, deleteReceipt } from "@/lib/receipt-scanner";
+import { randomUUID } from "crypto";
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
@@ -47,7 +49,7 @@ export async function DELETE(
     submitLogEvent(
       "receipt",
       "Receipt soft deleted",
-      null,
+      correlationId,
       {
         receiptId,
         userId: user.id,
@@ -69,7 +71,7 @@ export async function DELETE(
     submitLogEvent(
       "receipt-error",
       "Failed to delete receipt",
-      null,
+      correlationId,
       {
         error: error instanceof Error ? error.message : "Unknown error",
         receiptId,

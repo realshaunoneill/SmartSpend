@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { HouseholdService } from '@/lib/services/household-service'
 import { getAuthenticatedUser } from '@/lib/auth-helpers'
 import {
@@ -8,6 +8,8 @@ import {
   getHttpStatusCode,
   Logger,
 } from '@/lib/errors'
+import { randomUUID } from 'crypto'
+import { CorrelationId } from '@/lib/logging'
 
 /**
  * DELETE /api/households/:id/members/:userId
@@ -15,13 +17,14 @@ import {
  * Validates: Requirements 3.5
  */
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string; userId: string }> }
 ) {
   const requestId = generateRequestId()
+  const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
 
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 

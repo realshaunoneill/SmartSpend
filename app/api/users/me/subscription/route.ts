@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { UserService } from '@/lib/services/user-service'
 import { getAuthenticatedUser } from '@/lib/auth-helpers'
 import { syncStripeDataToDatabase } from '@/lib/stripe'
@@ -16,12 +16,12 @@ import { CorrelationId } from '@/lib/logging'
  * GET /api/users/me/subscription
  * Get user subscription details from Stripe
  */
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   const requestId = generateRequestId()
 
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
@@ -84,11 +84,12 @@ export async function GET(req: Request) {
  * PATCH /api/users/me/subscription
  * Update user subscription status
  */
-export async function PATCH(req: Request) {
+export async function PATCH(req: NextRequest) {
   const requestId = generateRequestId()
+  const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
 
   try {
-    const authResult = await getAuthenticatedUser();
+    const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
