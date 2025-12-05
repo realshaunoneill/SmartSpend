@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useItemAnalysis, type ItemAnalysis } from "@/hooks/use-item-analysis";
-import { Loader2, TrendingUp, ShoppingCart, Calendar, Store, ShoppingBag } from "lucide-react";
+import { Loader2, TrendingUp, ShoppingCart, Calendar, Store, ShoppingBag, AlertCircle, RefreshCcw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ItemAnalysisDialogProps {
@@ -68,9 +68,53 @@ export function ItemAnalysisDialog({
           )}
 
           {error && (
-            <div className="rounded-lg bg-destructive/10 p-4 text-destructive">
-              {error.message || "An error occurred"}
-            </div>
+            <Card className="border-destructive/50 bg-destructive/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <AlertCircle className="h-5 w-5" />
+                  Unable to Load Analysis
+                </CardTitle>
+                <CardDescription>
+                  We couldn't retrieve spending data for this item
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-md bg-background/50 p-4 space-y-2">
+                  <p className="text-sm font-medium">Error Details:</p>
+                  <p className="text-sm text-muted-foreground">
+                    {error.message || "An unexpected error occurred"}
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Possible reasons:</p>
+                  <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                    <li>This item hasn't been purchased in the selected time period</li>
+                    <li>The item name doesn't match any records in your receipts</li>
+                    <li>There may be a temporary connection issue</li>
+                  </ul>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleRefresh} 
+                    variant="outline" 
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <RefreshCcw className="h-4 w-4" />
+                    Try Again
+                  </Button>
+                  <Button 
+                    onClick={() => onOpenChange(false)} 
+                    variant="secondary" 
+                    size="sm"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {analysis && !isLoading && (

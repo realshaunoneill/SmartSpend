@@ -73,18 +73,25 @@ async function analyzeItem(
       const data = await response.json();
       
       // Find all related items (case-insensitive, partial match)
-      // Extract the core search term (e.g., "coke" from "Coke Zero")
       const normalizedSearchName = itemName.toLowerCase().trim();
-      const searchTerms = normalizedSearchName.split(/\s+/);
-      const coreSearchTerm = searchTerms[0]; // Use first word as core term
       
-      const matchedItems = data.topItems.filter((item: any) => {
-        const itemNameLower = item.name.toLowerCase();
-        // Match if item contains the search term or search term contains item name
-        return itemNameLower.includes(coreSearchTerm) || 
-               coreSearchTerm.includes(itemNameLower) ||
-               searchTerms.some(term => itemNameLower.includes(term));
+      // Try exact match first
+      let matchedItems = data.topItems.filter((item: any) => {
+        return item.name.toLowerCase().trim() === normalizedSearchName;
       });
+
+      // If no exact match, try partial matching with all words
+      if (matchedItems.length === 0) {
+        const searchTerms = normalizedSearchName.split(/\s+/).filter(w => w.length > 0);
+        
+        matchedItems = data.topItems.filter((item: any) => {
+          const itemNameLower = item.name.toLowerCase().trim();
+          // Match if item contains all search words or search term contains the item name
+          return searchTerms.every(term => itemNameLower.includes(term)) ||
+                 itemNameLower.includes(normalizedSearchName) ||
+                 normalizedSearchName.includes(itemNameLower);
+        });
+      }
 
       if (matchedItems.length === 0) {
         throw new Error(`No data found for "${itemName}"`);
