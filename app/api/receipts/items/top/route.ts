@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const householdId = searchParams.get("householdId");
     const months = parseInt(searchParams.get("months") || "12");
     const limit = parseInt(searchParams.get("limit") || "20");
