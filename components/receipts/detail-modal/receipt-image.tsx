@@ -73,7 +73,7 @@ export function ReceiptImage({ imageUrl }: ReceiptImageProps) {
 
   return (
     <>
-      <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-linear-to-br from-muted/20 to-muted/40">
+      <div className="sticky top-0 md:static w-full h-full flex items-center justify-center overflow-hidden bg-linear-to-br from-muted/20 to-muted/40">
         {imageUrl ? (
           <>
             {/* Image container */}
