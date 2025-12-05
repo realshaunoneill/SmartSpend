@@ -1,15 +1,13 @@
 "use client"
 
-import { X, Crown } from "lucide-react"
+import { X } from "lucide-react"
 import { Dialog, DialogContent, DialogTitle, DialogOverlay, DialogPortal } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
 import { ItemAnalysisDialog } from "@/components/insights/item-analysis-dialog"
+import { SubscriptionUpsell } from "@/components/subscriptions/subscription-upsell"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { ReceiptHeader } from "./detail-modal/receipt-header"
 import { ReceiptBusinessDetails } from "./detail-modal/receipt-business-details"
 import { ReceiptServiceDetails } from "./detail-modal/receipt-service-details"
@@ -29,7 +27,6 @@ export function ReceiptDetailModal({
   open,
   onOpenChange,
 }: ReceiptDetailModalProps) {
-  const router = useRouter();
   const [selectedItemForAnalysis, setSelectedItemForAnalysis] = useState<string | null>(null);
   const [showItemAnalysis, setShowItemAnalysis] = useState(false);
 
@@ -75,10 +72,6 @@ export function ReceiptDetailModal({
   
   // Check if we're still loading permissions
   const isLoadingPermissions = isLoadingUser || (receipt?.householdId && !household && open);
-
-  const handleUpgrade = () => {
-    router.push('/settings');
-  };
 
   if (!receipt) return null
 
@@ -133,29 +126,16 @@ export function ReceiptDetailModal({
                 <ReceiptBusinessDetails ocrData={receipt.ocrData} />
 
                 {!isSubscribed && (
-                  <Alert className="border-primary/50 bg-primary/5">
-                    <Crown className="h-4 w-4 text-primary" />
-                    <AlertTitle className="text-primary">Upgrade to Premium</AlertTitle>
-                    <AlertDescription className="space-y-3">
-                      <p className="text-sm text-muted-foreground">
-                        Subscribe to unlock detailed receipt information including:
-                      </p>
-                      <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                        <li>Itemized purchase details</li>
-                        <li>Service information (table, server, etc.)</li>
-                        <li>Loyalty program details</li>
-                        <li>Item spending analysis</li>
-                      </ul>
-                      <Button 
-                        onClick={handleUpgrade}
-                        size="sm" 
-                        className="w-full sm:w-auto gap-2"
-                      >
-                        <Crown className="h-4 w-4" />
-                        Upgrade Now
-                      </Button>
-                    </AlertDescription>
-                  </Alert>
+                  <SubscriptionUpsell
+                    title="Upgrade to Premium"
+                    description="Subscribe to unlock detailed receipt information including:"
+                    features={[
+                      "Itemized purchase details",
+                      "Service information (table, server, etc.)",
+                      "Loyalty program details",
+                      "Item spending analysis"
+                    ]}
+                  />
                 )}
 
                 {isSubscribed && (

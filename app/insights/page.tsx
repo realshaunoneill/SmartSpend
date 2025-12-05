@@ -4,8 +4,23 @@ import { Navigation } from "@/components/layout/navigation";
 import { SpendingSummaryCard } from "@/components/insights/spending-summary-card";
 import { TopItemsList } from "@/components/insights/top-items-list";
 import { ItemSearchAnalysis } from "@/components/insights/item-search-analysis";
+import { SubscriptionUpsell } from "@/components/subscriptions/subscription-upsell";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 export default function InsightsPage() {
+  // Get current user data to check subscription
+  const { data: currentUser, isLoading } = useQuery({
+    queryKey: ["current-user"],
+    queryFn: async () => {
+      const response = await fetch("/api/users/me");
+      if (!response.ok) throw new Error("Failed to fetch user");
+      return response.json();
+    },
+  });
+
+  const isSubscribed = currentUser?.subscribed === true;
+
   return (
     <>
       <Navigation />
@@ -19,22 +34,40 @@ export default function InsightsPage() {
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* AI Summary */}
-          <div className="lg:col-span-2">
-            <SpendingSummaryCard autoLoad />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
+        ) : !isSubscribed ? (
+          <SubscriptionUpsell
+            title="Premium Insights Locked"
+            description="Upgrade to Premium to unlock powerful spending insights:"
+            features={[
+              "AI-powered spending summaries",
+              "Top items and purchase trends",
+              "Advanced item search and analysis",
+              "Custom time period comparisons",
+              "Export capabilities"
+            ]}
+          />
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* AI Summary */}
+            <div className="lg:col-span-2">
+              <SpendingSummaryCard autoLoad />
+            </div>
 
-          {/* Top Items */}
-          <div className="lg:col-span-2">
-            <TopItemsList autoLoad />
-          </div>
+            {/* Top Items */}
+            <div className="lg:col-span-2">
+              <TopItemsList autoLoad />
+            </div>
 
-          {/* Item Search */}
-          <div className="lg:col-span-2">
-            <ItemSearchAnalysis />
+            {/* Item Search */}
+            <div className="lg:col-span-2">
+              <ItemSearchAnalysis />
+            </div>
           </div>
-        </div>
+        )}
       </main>
     </>
   );
