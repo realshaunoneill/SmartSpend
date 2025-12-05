@@ -77,11 +77,10 @@ export function ReceiptDetailModal({
       <DialogPortal>
         <DialogOverlay className="backdrop-blur-sm bg-black/60" />
         <DialogContent 
-          className="p-0 gap-0 h-[95vh]"
+          className="p-0 gap-0 h-[95vh] max-h-[95vh]"
           style={{
-            width: '90vw',
+            width: '95vw',
             maxWidth: '1400px',
-            maxHeight: '95vh'
           }}
           showCloseButton={false}
         >
@@ -100,14 +99,15 @@ export function ReceiptDetailModal({
 
           <div className="grid md:grid-cols-2 h-full overflow-hidden">
             {/* Left Column - Receipt Image */}
-            <div className={`relative ${hideImageOnMobile ? 'hidden md:block' : 'block'} overflow-auto bg-muted/30`}>
+            <div className={`relative ${hideImageOnMobile ? 'hidden md:block' : 'block md:block'} overflow-hidden bg-muted/30`}>
               <ReceiptImage imageUrl={receipt.imageUrl} />
             </div>
 
             {/* Right Column - Receipt Details */}
             <div className="flex flex-col h-full overflow-hidden">
               {/* Mobile toggle button */}
-              <div className="md:hidden flex justify-end p-2 border-b">
+              <div className="md:hidden flex justify-between items-center p-3 border-b bg-background/50 backdrop-blur-sm">
+                <span className="text-sm font-medium text-muted-foreground">Receipt Details</span>
                 <button
                   onClick={() => setHideImageOnMobile(!hideImageOnMobile)}
                   className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-md border bg-background hover:bg-muted transition-colors"
@@ -115,20 +115,20 @@ export function ReceiptDetailModal({
                 >
                   {hideImageOnMobile ? (
                     <>
-                      <Eye className="h-3 w-3" />
-                      Show Image
+                      <Eye className="h-3.5 w-3.5" />
+                      <span>Show Image</span>
                     </>
                   ) : (
                     <>
-                      <EyeOff className="h-3 w-3" />
-                      Hide Image
+                      <EyeOff className="h-3.5 w-3.5" />
+                      <span>Hide Image</span>
                     </>
                   )}
                 </button>
               </div>
 
               {/* Header Section - Fixed */}
-              <div className="shrink-0 px-6 pt-6 pb-4 border-b">
+              <div className="shrink-0 px-4 pt-4 pb-3 border-b sm:px-6 sm:pt-6 sm:pb-4">
                 <ReceiptHeader
                   receipt={receipt}
                   household={household}
@@ -140,7 +140,7 @@ export function ReceiptDetailModal({
               </div>
 
               {/* Scrollable Content Section - All details and items */}
-              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 sm:px-6 sm:py-4 sm:space-y-4">
                 <ReceiptBusinessDetails ocrData={receipt.ocrData} />
 
                 {receipt.ocrData?.phoneNumber || receipt.ocrData?.website || receipt.ocrData?.vatNumber ? <Separator /> : null}
