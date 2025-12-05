@@ -35,15 +35,15 @@ export function Navigation() {
 
   return (
     <nav className="border-b bg-card">
-      <div className="container mx-auto flex h-16 items-center gap-6 px-4">
+      <div className="container mx-auto flex h-16 items-center gap-2 px-3 sm:gap-4 sm:px-4">
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <Receipt className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold text-foreground">SmartSpend</span>
+          <span className="hidden text-xl font-bold text-foreground sm:inline">SmartSpend</span>
         </Link>
 
-        <div className="flex flex-1 items-center gap-1">
+        <div className="flex flex-1 items-center gap-0.5 sm:gap-1">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
@@ -52,7 +52,7 @@ export function Navigation() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium transition-colors sm:px-3",
                   isActive
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",

@@ -24,13 +24,13 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
     return (
       <Card>
         <CardHeader>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle className="text-2xl">Total Spending</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl">Total Spending</CardTitle>
               <CardDescription>{periodLabels[period]}</CardDescription>
             </div>
             <Tabs value={period} onValueChange={(v) => onPeriodChange(v as any)}>
-              <TabsList>
+              <TabsList className="grid w-full grid-cols-3 sm:w-auto">
                 <TabsTrigger value="week">Week</TabsTrigger>
                 <TabsTrigger value="month">Month</TabsTrigger>
                 <TabsTrigger value="year">Year</TabsTrigger>
@@ -54,13 +54,13 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
     return (
       <Card>
         <CardHeader>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle className="text-2xl">Total Spending</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl">Total Spending</CardTitle>
               <CardDescription>{periodLabels[period]}</CardDescription>
             </div>
             <Tabs value={period} onValueChange={(v) => onPeriodChange(v as any)}>
-              <TabsList>
+              <TabsList className="grid w-full grid-cols-3 sm:w-auto">
                 <TabsTrigger value="week">Week</TabsTrigger>
                 <TabsTrigger value="month">Month</TabsTrigger>
                 <TabsTrigger value="year">Year</TabsTrigger>
@@ -83,13 +83,13 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
     return (
       <Card>
         <CardHeader>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle className="text-2xl">Total Spending</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl">Total Spending</CardTitle>
               <CardDescription>{periodLabels[period]}</CardDescription>
             </div>
             <Tabs value={period} onValueChange={(v) => onPeriodChange(v as any)}>
-              <TabsList>
+              <TabsList className="grid w-full grid-cols-3 sm:w-auto">
                 <TabsTrigger value="week">Week</TabsTrigger>
                 <TabsTrigger value="month">Month</TabsTrigger>
                 <TabsTrigger value="year">Year</TabsTrigger>
@@ -119,13 +119,13 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle className="text-2xl">Total Spending</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">Total Spending</CardTitle>
             <CardDescription>{periodLabels[period]}</CardDescription>
           </div>
           <Tabs value={period} onValueChange={(v) => onPeriodChange(v as any)}>
-            <TabsList>
+            <TabsList className="grid w-full grid-cols-3 sm:w-auto">
               <TabsTrigger value="week">Week</TabsTrigger>
               <TabsTrigger value="month">Month</TabsTrigger>
               <TabsTrigger value="year">Year</TabsTrigger>

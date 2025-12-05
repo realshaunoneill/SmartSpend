@@ -65,7 +65,7 @@ export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
               <div
                 key={receipt.id}
                 onClick={() => handleReceiptClick(receipt)}
-                className="flex items-center gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-muted/50 cursor-pointer"
+                className="flex flex-col gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50 cursor-pointer sm:flex-row sm:items-center sm:gap-4 sm:p-4"
               >
                 {/* Receipt Image Thumbnail */}
                 <div className="shrink-0">
@@ -86,23 +86,24 @@ export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
 
                 {/* Receipt Details */}
                 <div className="flex-1 space-y-1">
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
                     <div className="flex items-center gap-2">
                       <Store className="h-4 w-4 text-muted-foreground" />
                       <span className="font-semibold text-foreground">
                         {(receipt as any).merchantName || "Unknown Merchant"}
                       </span>
                     </div>
-                    <span className="whitespace-nowrap text-lg font-bold text-foreground">
+                    <span className="text-lg font-bold text-foreground sm:whitespace-nowrap">
                       {(receipt as any).currency || "$"} {(receipt as any).totalAmount || "0.00"}
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground sm:gap-3">
                     {(receipt as any).transactionDate && (
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {(receipt as any).transactionDate}
+                        <span className="hidden sm:inline">{(receipt as any).transactionDate}</span>
+                        <span className="sm:hidden">{formatDate((receipt as any).transactionDate)}</span>
                       </div>
                     )}
                     {(receipt as any).category && (

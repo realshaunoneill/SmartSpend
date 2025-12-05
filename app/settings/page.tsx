@@ -110,7 +110,7 @@ export default function SettingsPage() {
     return (
       <>
         <Navigation />
-        <main className="container mx-auto max-w-4xl space-y-8 p-6">
+        <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
           <div className="flex min-h-[400px] items-center justify-center">
             <div className="text-center">
               <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -131,10 +131,10 @@ export default function SettingsPage() {
   return (
     <>
       <Navigation />
-      <main className="container mx-auto max-w-4xl space-y-8 p-6">
+      <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
-          <p className="mt-2 text-muted-foreground">Manage your account and preferences</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Settings</h1>
+          <p className="mt-1 text-sm text-muted-foreground sm:mt-2">Manage your account and preferences</p>
         </div>
 
         <Card>

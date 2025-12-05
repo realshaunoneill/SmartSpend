@@ -87,7 +87,7 @@ export default function SharingPage() {
     return (
       <>
         <Navigation />
-        <main className="container mx-auto max-w-6xl space-y-8 p-6">
+        <main className="container mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
           <div className="text-center">
             <p className="text-muted-foreground">
               {!isLoaded ? "Loading..." : "Please sign in to manage households"}
@@ -101,11 +101,11 @@ export default function SharingPage() {
   return (
     <>
       <Navigation />
-      <main className="container mx-auto max-w-6xl space-y-8 p-6">
-        <div className="flex items-center justify-between">
+      <main className="container mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Sharing</h1>
-            <p className="mt-2 text-muted-foreground">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Sharing</h1>
+            <p className="mt-1 text-sm text-muted-foreground sm:mt-2">
               {isSubscribed 
                 ? "Manage households and share receipts with family or roommates"
                 : "View your households and shared receipts"

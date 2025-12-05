@@ -9,17 +9,17 @@ export default function InsightsPage() {
   return (
     <>
       <Navigation />
-      <main className="container mx-auto max-w-7xl space-y-8 p-6">
+      <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Spending Insights
           </h1>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground sm:mt-2">
             AI-powered analysis of your spending patterns and top purchases
           </p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
           {/* AI Summary */}
           <div className="lg:col-span-2">
             <SpendingSummaryCard autoLoad />

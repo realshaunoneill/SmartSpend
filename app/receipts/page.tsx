@@ -65,13 +65,13 @@ export default function ReceiptsPage() {
   return (
     <>
       <Navigation />
-      <main className="container mx-auto max-w-7xl space-y-8 p-6">
-        <div className="flex items-center justify-between">
+      <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Receipts
             </h1>
-            <p className="mt-2 text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground sm:mt-2">
               Upload and manage your receipts with automatic scanning
             </p>
           </div>
@@ -91,7 +91,7 @@ export default function ReceiptsPage() {
         </div>
 
         {/* Upload and Recent Receipts Section */}
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-4">
             <SubscriptionGate feature="upload">
               <ReceiptBatchUpload
