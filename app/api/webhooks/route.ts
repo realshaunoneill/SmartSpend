@@ -93,9 +93,3 @@ async function processEvent(event: Stripe.Event, correlationId: CorrelationId) {
   
     return kvData;
   }
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
