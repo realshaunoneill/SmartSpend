@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Receipt, CreditCard, Users, Settings, LogOut, TrendingUp } from "lucide-react"
+import { LayoutDashboard, Receipt, CreditCard, Users, Settings, LogOut, TrendingUp, Menu } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUser, useClerk } from "@clerk/nextjs"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
@@ -36,12 +36,45 @@ export function Navigation() {
   return (
     <nav className="border-b bg-card">
       <div className="container mx-auto flex h-16 items-center gap-2 px-3 sm:gap-4 sm:px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <img src="/logo.png" alt="ReceiptWise" className="h-8 w-auto" />
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <img src="/logo.png" alt="ReceiptWise" className="h-6 w-auto sm:h-8" />
           <span className="hidden text-xl font-bold text-foreground sm:inline">ReceiptWise</span>
         </Link>
 
-        <div className="flex flex-1 items-center gap-0.5 sm:gap-1">
+        {/* Mobile Navigation Dropdown */}
+        <div className="flex flex-1 items-center justify-start md:hidden">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2">
+                <Menu className="h-4 w-4" />
+                <span className="text-sm">Menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              {navItems.map((item) => {
+                const Icon = item.icon
+                const isActive = pathname === item.href
+                return (
+                  <DropdownMenuItem key={item.href} asChild>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-2",
+                        isActive && "bg-primary/10 text-primary"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                )
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Desktop Navigation */}
+        <div className="hidden flex-1 items-center gap-0.5 md:flex sm:gap-1">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
@@ -50,7 +83,7 @@ export function Navigation() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium transition-colors sm:px-3",
+                  "flex shrink-0 items-center gap-2 rounded-md px-2 py-2 text-sm font-medium transition-colors sm:px-3",
                   isActive
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -63,7 +96,7 @@ export function Navigation() {
           })}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <InvitationNotifications />
           <ThemeToggle />
           <DropdownMenu>
