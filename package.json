@@ -1,9 +1,9 @@
 {
-  "name": "my-v0-project",
+  "name": "smart-spend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "npm run db:push:prod && next build",
+    "build": "npm run db:push && next build",
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",
@@ -58,7 +58,7 @@
     "immer": "latest",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
-    "next": "16.0.3",
+    "next": "16.0.7",
     "next-themes": "latest",
     "openai": "^6.9.1",
     "postgres": "^3.4.7",
