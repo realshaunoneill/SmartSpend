@@ -37,10 +37,8 @@ export function Navigation() {
     <nav className="border-b bg-card">
       <div className="container mx-auto flex h-16 items-center gap-2 px-3 sm:gap-4 sm:px-4">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Receipt className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="hidden text-xl font-bold text-foreground sm:inline">SmartSpend</span>
+          <img src="/logo.png" alt="ReceiptWise" className="h-8 w-auto" />
+          <span className="hidden text-xl font-bold text-foreground sm:inline">ReceiptWise</span>
         </Link>
 
         <div className="flex flex-1 items-center gap-0.5 sm:gap-1">

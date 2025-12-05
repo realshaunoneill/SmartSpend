@@ -75,10 +75,8 @@ export default function LandingPage() {
         <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-lg supports-backdrop-filter:bg-background/60">
           <div className="container mx-auto flex h-16 items-center justify-between px-4">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
-                <Receipt className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold text-foreground">SmartSpend</span>
+              <img src="/logo.png" alt="ReceiptWise" className="h-8 w-auto" />
+              <span className="text-xl font-bold text-foreground">ReceiptWise</span>
             </Link>
             <div className="flex items-center gap-4">
               <ThemeToggle />
@@ -108,7 +106,7 @@ export default function LandingPage() {
             </span>
           </h1>
           <p className="mx-auto mb-10 max-w-2xl text-pretty text-lg text-muted-foreground sm:text-xl">
-            SmartSpend makes expense tracking simple. Snap receipts, connect your bank, and get insights into your
+            ReceiptWise makes expense tracking simple. Snap receipts, connect your bank, and get insights into your
             spending habits—all in one beautiful app.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -213,7 +211,7 @@ export default function LandingPage() {
                 Take Control of Your Finances
               </h2>
               <p className="mb-8 text-lg text-muted-foreground">
-                Join thousands of users who have simplified their expense tracking with SmartSpend. No more lost
+                Join thousands of users who have simplified their expense tracking with ReceiptWise. No more lost
                 receipts, no more guessing where your money went.
               </p>
               <ul className="mb-8 grid gap-3 sm:grid-cols-2">
@@ -305,7 +303,7 @@ export default function LandingPage() {
                   Coming Soon
                 </div>
                 <h2 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
-                  SmartSpend Mobile App
+                  ReceiptWise Mobile App
                 </h2>
                 <p className="mb-6 text-lg text-muted-foreground">
                   Track expenses on the go with our upcoming mobile app. Snap receipts instantly, view your spending in real-time, and manage your finances from anywhere.
@@ -373,7 +371,7 @@ export default function LandingPage() {
                         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
                           <Receipt className="h-10 w-10 text-primary" />
                         </div>
-                        <h3 className="mb-2 text-center text-lg font-semibold text-foreground">SmartSpend</h3>
+                        <h3 className="mb-2 text-center text-lg font-semibold text-foreground">ReceiptWise</h3>
                         <p className="text-center text-sm text-muted-foreground">Mobile App</p>
                         <div className="mt-8 flex gap-2">
                           <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
@@ -399,7 +397,7 @@ export default function LandingPage() {
           <p className="mx-auto mb-8 max-w-2xl text-lg text-primary-foreground/90">
             {isSignedIn 
               ? "Start tracking your expenses and take control of your finances today."
-              : "Join SmartSpend today and start tracking your expenses. Free to get started, no credit card required."
+              : "Join ReceiptWise today and start tracking your expenses. Free to get started, no credit card required."
             }
           </p>
           {isSignedIn ? (
@@ -433,10 +431,8 @@ export default function LandingPage() {
         <div className="container mx-auto">
           <div className="mb-8 flex flex-col items-center justify-between gap-8 sm:flex-row">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
-                <Receipt className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold text-foreground">SmartSpend</span>
+              <img src="/logo.png" alt="ReceiptWise" className="h-8 w-auto" />
+              <span className="text-xl font-bold text-foreground">ReceiptWise</span>
             </div>
             <div className="flex gap-6 text-sm text-muted-foreground">
               <Link href="#" className="transition-colors hover:text-foreground">Privacy</Link>
@@ -446,7 +442,7 @@ export default function LandingPage() {
           </div>
           <div className="border-t border-border/50 pt-8 text-center">
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} SmartSpend. All rights reserved.
+              &copy; {new Date().getFullYear()} ReceiptWise. All rights reserved.
             </p>
           </div>
         </div>

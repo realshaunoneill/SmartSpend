@@ -11,25 +11,16 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "SmartSpend - Receipt & Expense Tracker",
+  title: "ReceiptWise - Receipt & Expense Tracker",
   description: "Track receipts, manage spending, and sync your bank accounts in one place",
   generator: "v0.app",
   icons: {
     icon: [
       {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
+        url: "/logo.png",
       },
     ],
-    apple: "/apple-icon.png",
+    apple: "/logo.png",
   },
 }
 
