@@ -1,6 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
-import { UserService } from '@/lib/services/user-service'
 import {
   createErrorResponse,
   ErrorCode,
@@ -8,7 +6,7 @@ import {
   getHttpStatusCode,
   Logger,
 } from '@/lib/errors'
-import { getClerkUserEmail } from '@/lib/auth-helpers'
+import { getAuthenticatedUser } from '@/lib/auth-helpers'
 
 /**
  * GET /api/users/me
@@ -18,44 +16,14 @@ export async function GET() {
   const requestId = generateRequestId()
 
   try {
-    const { userId: clerkId } = await auth()
+    const authResult = await getAuthenticatedUser()
 
-    if (!clerkId) {
+    if (authResult instanceof NextResponse) {
       Logger.warn('Unauthenticated request to /api/users/me', { requestId })
-      const errorResponse = createErrorResponse(
-        ErrorCode.UNAUTHORIZED,
-        'Authentication required',
-        undefined,
-        requestId
-      )
-      return NextResponse.json(errorResponse, {
-        status: getHttpStatusCode(ErrorCode.UNAUTHORIZED),
-      })
+      return authResult
     }
 
-    // Get Clerk user to access email
-    // Get Clerk user email
-    const email = await getClerkUserEmail(clerkId)
-    
-
-    if (!email) {
-      Logger.warn('User has no email address', {
-        requestId,
-        context: { clerkId },
-      })
-      const errorResponse = createErrorResponse(
-        ErrorCode.BAD_REQUEST,
-        'User email not found',
-        undefined,
-        requestId
-      )
-      return NextResponse.json(errorResponse, {
-        status: getHttpStatusCode(ErrorCode.BAD_REQUEST),
-      })
-    }
-
-    // Get or create user in database
-    const user = await UserService.getOrCreateUser(clerkId, email)
+    const { user } = authResult
 
     Logger.info('User profile fetched successfully', {
       requestId,
@@ -84,42 +52,14 @@ export async function PATCH(req: Request) {
   const requestId = generateRequestId()
 
   try {
-    const { userId: clerkId } = await auth()
+    const authResult = await getAuthenticatedUser()
 
-    if (!clerkId) {
+    if (authResult instanceof NextResponse) {
       Logger.warn('Unauthenticated request to PATCH /api/users/me', { requestId })
-      const errorResponse = createErrorResponse(
-        ErrorCode.UNAUTHORIZED,
-        'Authentication required',
-        undefined,
-        requestId
-      )
-      return NextResponse.json(errorResponse, {
-        status: getHttpStatusCode(ErrorCode.UNAUTHORIZED),
-      })
+      return authResult
     }
 
-    // Get Clerk user email
-    const email = await getClerkUserEmail(clerkId)
-
-    if (!email) {
-      Logger.warn('User has no email address', {
-        requestId,
-        context: { clerkId },
-      })
-      const errorResponse = createErrorResponse(
-        ErrorCode.BAD_REQUEST,
-        'User email not found',
-        undefined,
-        requestId
-      )
-      return NextResponse.json(errorResponse, {
-        status: getHttpStatusCode(ErrorCode.BAD_REQUEST),
-      })
-    }
-
-    // Get or create user in database
-    const user = await UserService.getOrCreateUser(clerkId, email)
+    const { user } = authResult
 
     const body = await req.json()
 

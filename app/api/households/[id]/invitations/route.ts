@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { households, householdUsers, householdInvitations, users } from "@/lib/db/schema";
 import { UserService } from "@/lib/services/user-service";
-import { getClerkUserEmail } from "@/lib/auth-helpers";
+import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { eq, and } from "drizzle-orm";
 import { randomBytes } from "crypto";
 import { submitLogEvent } from "@/lib/logging";
@@ -16,19 +15,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId: clerkId } = await auth();
-    if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Get Clerk user email
-    const userEmail = await getClerkUserEmail(clerkId);
-    if (!userEmail) {
-      return NextResponse.json({ error: "User email not found" }, { status: 400 });
-    }
-
-    // Get or create user in database
-    const user = await UserService.getOrCreateUser(clerkId, userEmail);
+    const authResult = await getAuthenticatedUser();
+    if (authResult instanceof NextResponse) return authResult;
+    const { user } = authResult;
 
     const { id: householdId } = await params;
     const { email } = await req.json();
@@ -145,19 +134,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId: clerkId } = await auth();
-    if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Get Clerk user email
-    const userEmail = await getClerkUserEmail(clerkId);
-    if (!userEmail) {
-      return NextResponse.json({ error: "User email not found" }, { status: 400 });
-    }
-
-    // Get or create user in database
-    const user = await UserService.getOrCreateUser(clerkId, userEmail);
+    const authResult = await getAuthenticatedUser();
+    if (authResult instanceof NextResponse) return authResult;
+    const { user } = authResult;
 
     const { id: householdId } = await params;
 

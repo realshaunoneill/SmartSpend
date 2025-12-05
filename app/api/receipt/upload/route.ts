@@ -1,10 +1,6 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse, NextRequest } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { db } from "@/lib/db";
-import { receipts, receiptItems } from "@/lib/db/schema";
-import { UserService } from "@/lib/services/user-service";
-import { analyzeReceiptSimple } from "@/lib/openai";
+import { getAuthenticatedUser, requireSubscription } from "@/lib/auth-helpers";
 import { submitLogEvent } from "@/lib/logging";
 
 // Route configuration
@@ -19,35 +15,13 @@ const MAX_UPLOAD_SIZE_MB = parseInt(
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const { userId: clerkId } = await auth();
+    const authResult = await getAuthenticatedUser();
+    if (authResult instanceof NextResponse) return authResult;
+    const { user, clerkId } = authResult;
 
-    if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Get Clerk user to get email
-    const clerkUser = await currentUser();
-    if (!clerkUser?.emailAddresses?.[0]?.emailAddress) {
-      return NextResponse.json(
-        { error: "User email not found" },
-        { status: 400 },
-      );
-    }
-
-    const email = clerkUser.emailAddresses[0].emailAddress;
-
-    // Get or create user in database
-    const user = await UserService.getOrCreateUser(clerkId, email);
-
-    // Check subscription (skip in development if SKIP_SUBSCRIPTION_CHECK is set)
-    const skipSubscriptionCheck =
-      process.env.SKIP_SUBSCRIPTION_CHECK === "true";
-    if (!skipSubscriptionCheck && !user.subscribed) {
-      return NextResponse.json(
-        { error: "Subscription required to upload receipts" },
-        { status: 403 },
-      );
-    }
+    // Check subscription for receipt upload
+    const subCheck = await requireSubscription(user);
+    if (subCheck) return subCheck;
 
     const body = (await request.json()) as HandleUploadBody;
 

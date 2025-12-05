@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { createCheckoutSession } from "@/lib/stripe";
-import { UserService } from "@/lib/services/user-service";
-import { getClerkUserEmail } from "@/lib/auth-helpers";
+import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import Stripe from "stripe";
 import { submitLogEvent } from "@/lib/logging";
 
@@ -19,27 +17,11 @@ export const maxDuration = 30;
  */
 export async function POST(request: NextRequest) {
   try {
-    const { userId: clerkId } = await auth();
+    const authResult = await getAuthenticatedUser();
+    if (authResult instanceof NextResponse) return authResult;
+    const { user } = authResult;
 
-    if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Get Clerk user email
-    const email = await getClerkUserEmail(clerkId);
-    if (!email) {
-      return NextResponse.json(
-        { error: "User email not found" },
-        { status: 400 }
-      );
-    }
-
-    // Get or create user in database
-    const user = await UserService.getOrCreateUser(clerkId, email);
-
-    // Get the price ID from request body (optional - you can hardcode if there's only one plan)
-    const body = await request.json();
-    const priceId = body.priceId || process.env.STRIPE_PRICE_ID;
+    const priceId = process.env.STRIPE_PRICE_ID;
 
     if (!priceId) {
       return NextResponse.json(
@@ -47,6 +29,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const body = await request.json();
 
     // Verify the price exists and is active
     try {
@@ -61,7 +45,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      submitLogEvent('checkout', `Creating checkout session for price: ${(price.product as Stripe.Product).name}`, null, { userId: user.id, priceId, email });
+      submitLogEvent('checkout', `Creating checkout session for price: ${(price.product as Stripe.Product).name}`, null, { userId: user.id, priceId, email: user.email });
     } catch (error) {
       submitLogEvent('checkout', `Error retrieving price: ${error instanceof Error ? error.message : 'Unknown error'}`, null, { userId: user.id, priceId }, true);
       return NextResponse.json(
@@ -73,8 +57,8 @@ export async function POST(request: NextRequest) {
     // Create checkout session (handles customer creation automatically)
     const checkoutSession = await createCheckoutSession(
       user.id,
-      email,
-      clerkId,
+      user.email,
+      user.clerkId,
       priceId,
       user.stripeCustomerId,
       body.successUrl,

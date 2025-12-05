@@ -1,8 +1,6 @@
-import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { HouseholdService } from '@/lib/services/household-service'
-import { UserService } from '@/lib/services/user-service'
-import { getClerkUserEmail } from '@/lib/auth-helpers'
+import { getAuthenticatedUser } from '@/lib/auth-helpers'
 import {
   createErrorResponse,
   ErrorCode,
@@ -23,47 +21,9 @@ export async function DELETE(
   const requestId = generateRequestId()
 
   try {
-    const { userId: clerkId } = await auth()
-
-    if (!clerkId) {
-      Logger.warn(
-        'Unauthenticated request to DELETE /api/households/:id/members/:userId',
-        { requestId }
-      )
-      const errorResponse = createErrorResponse(
-        ErrorCode.UNAUTHORIZED,
-        'Authentication required',
-        undefined,
-        requestId
-      )
-      return NextResponse.json(errorResponse, {
-        status: getHttpStatusCode(ErrorCode.UNAUTHORIZED),
-      })
-    }
-
-    // Get Clerk user to access email
-    // Get Clerk user email
-    const email = await getClerkUserEmail(clerkId)
-    
-
-    if (!email) {
-      Logger.warn('User has no email address', {
-        requestId,
-        context: { clerkId },
-      })
-      const errorResponse = createErrorResponse(
-        ErrorCode.BAD_REQUEST,
-        'User email not found',
-        undefined,
-        requestId
-      )
-      return NextResponse.json(errorResponse, {
-        status: getHttpStatusCode(ErrorCode.BAD_REQUEST),
-      })
-    }
-
-    // Get or create user in database
-    const user = await UserService.getOrCreateUser(clerkId, email)
+    const authResult = await getAuthenticatedUser();
+    if (authResult instanceof NextResponse) return authResult;
+    const { user } = authResult;
 
     const { id: householdId, userId: memberUserId } = await params
 

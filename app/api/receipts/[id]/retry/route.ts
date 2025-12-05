@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { receipts, receiptItems } from "@/lib/db/schema";
-import { UserService } from "@/lib/services/user-service";
-import { getClerkUserEmail } from "@/lib/auth-helpers";
+import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { analyzeReceiptWithGPT4o } from "@/lib/openai";
 import { submitLogEvent } from "@/lib/logging";
 import { eq, and, isNull } from "drizzle-orm";
@@ -20,18 +18,9 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { userId: clerkId } = await auth();
-
-    if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const email = await getClerkUserEmail(clerkId);
-    if (!email) {
-      return NextResponse.json({ error: "User email not found" }, { status: 400 });
-    }
-
-    const user = await UserService.getOrCreateUser(clerkId, email);
+    const authResult = await getAuthenticatedUser();
+    if (authResult instanceof NextResponse) return authResult;
+    const { user, email } = authResult;
 
     // Get the receipt
     const [receipt] = await db

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { receipts, receiptItems } from "@/lib/db/schema";
-import { UserService } from "@/lib/services/user-service";
-import { getClerkUserEmail } from "@/lib/auth-helpers";
+import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { eq, and, gte, desc, sql } from "drizzle-orm";
 import { submitLogEvent } from "@/lib/logging";
 import { generateSpendingSummary } from "@/lib/openai";
@@ -20,20 +18,9 @@ export const maxDuration = 30;
  */
 export async function GET(req: NextRequest) {
   try {
-    const { userId: clerkId } = await auth();
-
-    if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Get Clerk user email
-    const email = await getClerkUserEmail(clerkId);
-    if (!email) {
-      return NextResponse.json({ error: "User email not found" }, { status: 400 });
-    }
-
-    // Get or create user in database
-    const user = await UserService.getOrCreateUser(clerkId, email);
+    const authResult = await getAuthenticatedUser();
+    if (authResult instanceof NextResponse) return authResult;
+    const { user, email } = authResult;
 
     const { searchParams } = new URL(req.url);
     const householdId = searchParams.get("householdId");

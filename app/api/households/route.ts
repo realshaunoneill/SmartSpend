@@ -1,8 +1,6 @@
-import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { HouseholdService } from '@/lib/services/household-service'
-import { UserService } from '@/lib/services/user-service'
-import { getClerkUserEmail } from '@/lib/auth-helpers'
+import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers'
 import {
   createErrorResponse,
   ErrorCode,
@@ -20,42 +18,14 @@ export async function GET() {
   const requestId = generateRequestId()
 
   try {
-    const { userId: clerkId } = await auth()
+    const authResult = await getAuthenticatedUser()
 
-    if (!clerkId) {
+    if (authResult instanceof NextResponse) {
       Logger.warn('Unauthenticated request to GET /api/households', { requestId })
-      const errorResponse = createErrorResponse(
-        ErrorCode.UNAUTHORIZED,
-        'Authentication required',
-        undefined,
-        requestId
-      )
-      return NextResponse.json(errorResponse, {
-        status: getHttpStatusCode(ErrorCode.UNAUTHORIZED),
-      })
+      return authResult
     }
 
-    // Get Clerk user email
-    const email = await getClerkUserEmail(clerkId)
-
-    if (!email) {
-      Logger.warn('User has no email address', {
-        requestId,
-        context: { clerkId },
-      })
-      const errorResponse = createErrorResponse(
-        ErrorCode.BAD_REQUEST,
-        'User email not found',
-        undefined,
-        requestId
-      )
-      return NextResponse.json(errorResponse, {
-        status: getHttpStatusCode(ErrorCode.BAD_REQUEST),
-      })
-    }
-
-    // Get or create user in database
-    const user = await UserService.getOrCreateUser(clerkId, email)
+    const { user } = authResult
 
     // Get all households for the user
     const households = await HouseholdService.getHouseholdsByUser(user.id)
@@ -89,42 +59,24 @@ export async function POST(req: Request) {
   const requestId = generateRequestId()
 
   try {
-    const { userId: clerkId } = await auth()
+    const authResult = await getAuthenticatedUser()
 
-    if (!clerkId) {
+    if (authResult instanceof NextResponse) {
       Logger.warn('Unauthenticated request to POST /api/households', { requestId })
-      const errorResponse = createErrorResponse(
-        ErrorCode.UNAUTHORIZED,
-        'Authentication required',
-        undefined,
-        requestId
-      )
-      return NextResponse.json(errorResponse, {
-        status: getHttpStatusCode(ErrorCode.UNAUTHORIZED),
-      })
+      return authResult
     }
 
-    // Get Clerk user email
-    const email = await getClerkUserEmail(clerkId)
+    const { user } = authResult
 
-    if (!email) {
-      Logger.warn('User has no email address', {
+    // Check subscription for household creation
+    const subCheck = await requireSubscription(user)
+    if (subCheck) {
+      Logger.warn('Subscription required for household creation', {
         requestId,
-        context: { clerkId },
+        userId: user.id,
       })
-      const errorResponse = createErrorResponse(
-        ErrorCode.BAD_REQUEST,
-        'User email not found',
-        undefined,
-        requestId
-      )
-      return NextResponse.json(errorResponse, {
-        status: getHttpStatusCode(ErrorCode.BAD_REQUEST),
-      })
+      return subCheck
     }
-
-    // Get or create user in database
-    const user = await UserService.getOrCreateUser(clerkId, email)
 
     const body = await req.json()
 
