@@ -4,13 +4,17 @@ import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { CorrelationId } from "@/lib/logging";
 
 export async function POST(request: NextRequest) {
-  const correlationId: CorrelationId = {
-    id: crypto.randomUUID(),
-    source: 'billing-portal',
-  };
+  const correlationId = crypto.randomUUID() as CorrelationId;
 
   try {
-    const user = await getAuthenticatedUser();
+    const result = await getAuthenticatedUser();
+    
+    // Check if result is an error response
+    if (result instanceof NextResponse) {
+      return result;
+    }
+
+    const { user } = result;
 
     if (!user.stripeCustomerId) {
       return NextResponse.json(

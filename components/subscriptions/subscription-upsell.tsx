@@ -1,7 +1,7 @@
 "use client"
 
 import { Crown } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 
@@ -30,27 +30,33 @@ export function SubscriptionUpsell({
   }
 
   return (
-    <Alert className={`border-primary/50 bg-primary/5 ${className}`}>
-      <Crown className="h-4 w-4 text-primary" />
-      <AlertTitle className="text-primary">{title}</AlertTitle>
-      <AlertDescription className="space-y-3">
-        <p className="text-sm text-muted-foreground">
+    <Card className={`border-primary/50 bg-primary/5 ${className}`}>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-primary">
+          <Crown className="h-5 w-5" />
+          {title}
+        </CardTitle>
+        <CardDescription className="text-muted-foreground">
           {description}
-        </p>
-        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <ul className="space-y-2 text-sm text-muted-foreground">
           {features.map((feature, index) => (
-            <li key={index}>{feature}</li>
+            <li key={index} className="flex items-center gap-2">
+              <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+              {feature}
+            </li>
           ))}
         </ul>
         <Button 
           onClick={handleUpgrade}
-          size="sm" 
           className="w-full sm:w-auto gap-2"
         >
           <Crown className="h-4 w-4" />
           Upgrade Now
         </Button>
-      </AlertDescription>
-    </Alert>
+      </CardContent>
+    </Card>
   )
 }
