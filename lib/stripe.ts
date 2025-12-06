@@ -221,3 +221,26 @@ export async function syncStripeDataToDatabase(customerId: string, correlationId
     throw error;
   }
 }
+
+/**
+ * Creates a Stripe billing portal session for a customer to manage their subscription
+ */
+export async function createBillingPortalSession(
+  customerId: string,
+  returnUrl: string,
+  correlationId: CorrelationId
+): Promise<string> {
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: returnUrl,
+    });
+
+    submitLogEvent('stripe', `Created billing portal session for customer ${customerId}`, correlationId, { customerId });
+    
+    return session.url;
+  } catch (error) {
+    submitLogEvent('stripe', `Error creating billing portal session: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { customerId }, true);
+    throw error;
+  }
+}

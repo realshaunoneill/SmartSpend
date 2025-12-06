@@ -92,18 +92,31 @@ export default function SettingsPage() {
     }
   }
 
-  const handleManageSubscription = async () => {
-    setIsUpdating(true)
-    try {
-      // TODO: Implement Stripe Customer Portal
-      // For now, show a message
-      toast.info("Subscription management coming soon! Contact support to manage your subscription.")
-      setIsUpdating(false)
-    } catch (error) {
+  // Billing portal mutation
+  const billingPortalMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/billing-portal", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      if (!response.ok) throw new Error("Failed to create billing portal session")
+      return response.json()
+    },
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url
+      }
+    },
+    onError: (error) => {
       console.error("Error managing subscription:", error)
       toast.error("Failed to open subscription management.")
-      setIsUpdating(false)
-    }
+    },
+  })
+
+  const handleManageSubscription = () => {
+    billingPortalMutation.mutate()
   }
 
   if (!isLoaded || userDataLoading) {
@@ -212,9 +225,9 @@ export default function SettingsPage() {
                     <Button 
                       variant="outline"
                       onClick={handleManageSubscription}
-                      disabled={isUpdating}
+                      disabled={billingPortalMutation.isPending}
                     >
-                      Manage Subscription
+                      {billingPortalMutation.isPending ? "Loading..." : "Manage Subscription"}
                     </Button>
                   )}
                 </div>
