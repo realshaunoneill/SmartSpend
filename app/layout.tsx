@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ClerkProvider } from "@clerk/nextjs"
 import { ThemeProvider } from "@/components/layout/theme-provider"
+import { Footer } from "@/components/layout/footer"
 import { QueryProvider } from "@/lib/providers/query-provider"
 import { Toaster } from "sonner"
 import "./globals.css"
@@ -35,7 +36,10 @@ export default function RootLayout({
         <body className={`${inter.className} antialiased`}>
           <QueryProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-              {children}
+              <div className="flex min-h-screen flex-col">
+                <div className="flex-1">{children}</div>
+                <Footer />
+              </div>
               <Toaster />
             </ThemeProvider>
           </QueryProvider>
