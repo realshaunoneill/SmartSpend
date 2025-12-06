@@ -31,18 +31,6 @@ export const householdUsers = pgTable('household_users', {
   uniqueHouseholdUser: unique().on(table.householdId, table.userId),
 }));
 
-// Bank Connections Table
-export const bankConnections = pgTable('bank_connections', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  bankName: text('bank_name').notNull(),
-  status: text('status').notNull(), // 'active' | 'inactive' | 'error'
-  credentials: jsonb('credentials').notNull(), // Encrypted credentials
-  lastSyncedAt: timestamp('last_synced_at'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
-
 // Receipts Table
 export const receipts = pgTable('receipts', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -106,9 +94,6 @@ export type NewHousehold = typeof households.$inferInsert;
 
 export type HouseholdUser = typeof householdUsers.$inferSelect;
 export type NewHouseholdUser = typeof householdUsers.$inferInsert;
-
-export type BankConnection = typeof bankConnections.$inferSelect;
-export type NewBankConnection = typeof bankConnections.$inferInsert;
 
 export type Receipt = typeof receipts.$inferSelect;
 export type NewReceipt = typeof receipts.$inferInsert;

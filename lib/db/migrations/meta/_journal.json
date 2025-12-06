@@ -43,6 +43,13 @@
       "when": 1764844975318,
       "tag": "0005_yielding_master_mold",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1764983004386,
+      "tag": "0006_heavy_killmonger",
+      "breakpoints": true
     }
   ]
 }
