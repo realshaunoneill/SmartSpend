@@ -29,12 +29,12 @@ export async function createHousehold(data: { name: string; userId: string }) {
 
 export async function inviteMember(data: { householdId: string; email: string }) {
   const user = await getCurrentUser()
-  const householdUser = await HouseholdService.inviteMember(
+  const invitation = await HouseholdService.createInvitation(
     data.householdId,
     data.email,
     user.id
   )
-  return householdUser
+  return invitation
 }
 
 export async function removeMember(data: { householdId: string; userId: string }) {

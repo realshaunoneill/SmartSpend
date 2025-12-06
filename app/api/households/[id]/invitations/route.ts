@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { households, householdUsers, householdInvitations, users } from "@/lib/db/schema";
-import { UserService } from "@/lib/services/user-service";
+import { HouseholdService } from "@/lib/services/household-service";
 import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { eq, and } from "drizzle-orm";
-import { randomBytes } from "crypto";
 import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { randomUUID } from "crypto";
 
@@ -31,81 +30,12 @@ export async function POST(
       );
     }
 
-    // Check if user is owner/member of household
-    const [membership] = await db
-      .select()
-      .from(householdUsers)
-      .where(
-        and(
-          eq(householdUsers.householdId, householdId),
-          eq(householdUsers.userId, user.id)
-        )
-      )
-      .limit(1);
-
-    if (!membership) {
-      return NextResponse.json(
-        { error: "Not authorized to invite to this household" },
-        { status: 403 }
-      );
-    }
-
-    // Check if user is already a member
-    const invitedUser = await UserService.getUserByEmail(email);
-    if (invitedUser) {
-      const [existingMembership] = await db
-        .select()
-        .from(householdUsers)
-        .where(
-          and(
-            eq(householdUsers.householdId, householdId),
-            eq(householdUsers.userId, invitedUser.id)
-          )
-        )
-        .limit(1);
-
-      if (existingMembership) {
-        return NextResponse.json(
-          { error: "User is already a member of this household" },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Check for existing pending invitation
-    const [existingInvitation] = await db
-      .select()
-      .from(householdInvitations)
-      .where(
-        and(
-          eq(householdInvitations.householdId, householdId),
-          eq(householdInvitations.invitedEmail, email),
-          eq(householdInvitations.status, "pending")
-        )
-      )
-      .limit(1);
-
-    if (existingInvitation) {
-      return NextResponse.json(
-        { error: "Invitation already sent to this email" },
-        { status: 400 }
-      );
-    }
-
-    // Create invitation
-    const token = randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-    const [invitation] = await db
-      .insert(householdInvitations)
-      .values({
-        householdId,
-        invitedByUserId: user.id,
-        invitedEmail: email,
-        token,
-        expiresAt,
-      })
-      .returning();
+    // Use the service to create the invitation
+    const invitation = await HouseholdService.createInvitation(
+      householdId,
+      email,
+      user.id
+    );
 
     // Get household info for the response
     const [household] = await db
@@ -113,6 +43,12 @@ export async function POST(
       .from(households)
       .where(eq(households.id, householdId))
       .limit(1);
+
+    submitLogEvent('invitation', `Invitation created for ${email}`, correlationId, { 
+      householdId, 
+      invitationId: invitation.id,
+      invitedEmail: email 
+    });
 
     return NextResponse.json({
       id: invitation.id,
@@ -124,7 +60,7 @@ export async function POST(
   } catch (error) {
     submitLogEvent('invitation', `Error sending invitation: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
-      { error: "Failed to send invitation" },
+      { error: error instanceof Error ? error.message : "Failed to send invitation" },
       { status: 500 }
     );
   }

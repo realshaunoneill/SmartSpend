@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
-import { households, householdUsers, users, type Household, type HouseholdUser, type HouseholdMember, type NewHousehold, type NewHouseholdUser } from '@/lib/db/schema'
+import { households, householdUsers, householdInvitations, users, type Household, type HouseholdUser, type HouseholdInvitation, type HouseholdMember, type NewHousehold, type NewHouseholdUser } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
+import { randomBytes } from 'crypto'
 
 export class HouseholdService {
   /**
@@ -76,47 +77,71 @@ export class HouseholdService {
   }
 
   /**
-   * Invite a member to a household by email
+   * Create an invitation for a user to join a household
+   * The invited user must accept the invitation before becoming a member
    * Validates: Requirements 3.3
    */
-  static async inviteMember(householdId: string, email: string, invitedBy: string): Promise<HouseholdUser> {
-    // First verify the inviter is the owner
-    const isOwnerResult = await this.isOwner(householdId, invitedBy)
-    if (!isOwnerResult) {
-      throw new Error('Only household owners can invite members')
-    }
-    
-    // Find the user by email
-    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1)
-    
-    if (!user) {
-      throw new Error('User not found with the provided email')
-    }
-    
-    // Check if user is already a member
-    const [existingMember] = await db
+  static async createInvitation(householdId: string, email: string, invitedBy: string): Promise<HouseholdInvitation> {
+    // First verify the inviter is a member of the household
+    const [membership] = await db
       .select()
       .from(householdUsers)
       .where(and(
         eq(householdUsers.householdId, householdId),
-        eq(householdUsers.userId, user.id)
+        eq(householdUsers.userId, invitedBy)
       ))
       .limit(1)
     
-    if (existingMember) {
-      throw new Error('User is already a member of this household')
+    if (!membership) {
+      throw new Error('Only household members can invite others')
     }
     
-    // Create household_users record with role 'member'
-    const newHouseholdUser: NewHouseholdUser = {
+    // Check if user exists and is already a member
+    const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1)
+    
+    if (existingUser) {
+      const [existingMember] = await db
+        .select()
+        .from(householdUsers)
+        .where(and(
+          eq(householdUsers.householdId, householdId),
+          eq(householdUsers.userId, existingUser.id)
+        ))
+        .limit(1)
+      
+      if (existingMember) {
+        throw new Error('User is already a member of this household')
+      }
+    }
+    
+    // Check for existing pending invitation
+    const [existingInvitation] = await db
+      .select()
+      .from(householdInvitations)
+      .where(and(
+        eq(householdInvitations.householdId, householdId),
+        eq(householdInvitations.invitedEmail, email),
+        eq(householdInvitations.status, 'pending')
+      ))
+      .limit(1)
+    
+    if (existingInvitation) {
+      throw new Error('Invitation already sent to this email')
+    }
+    
+    // Create invitation
+    const token = randomBytes(32).toString('hex')
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+    
+    const [invitation] = await db.insert(householdInvitations).values({
       householdId,
-      userId: user.id,
-      role: 'member',
-    }
+      invitedByUserId: invitedBy,
+      invitedEmail: email,
+      token,
+      expiresAt,
+    }).returning()
     
-    const [householdUser] = await db.insert(householdUsers).values(newHouseholdUser).returning()
-    
-    return householdUser
+    return invitation
   }
 
   /**

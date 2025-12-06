@@ -37,7 +37,7 @@ export function InviteMemberDialog({ householdId, onMemberInvited }: InviteMembe
     setSuccessMessage("")
     try {
       await inviteMember({ householdId, email: email.trim() })
-      setSuccessMessage(`Invitation sent to ${email}`)
+      setSuccessMessage(`Invitation sent to ${email}. They will need to accept it to join.`)
       setEmail("")
       setTimeout(() => {
         onMemberInvited()
@@ -45,7 +45,7 @@ export function InviteMemberDialog({ householdId, onMemberInvited }: InviteMembe
         setSuccessMessage("")
       }, 2000)
     } catch (error) {
-      alert("Failed to send invitation")
+      alert(error instanceof Error ? error.message : "Failed to send invitation")
     } finally {
       setIsInviting(false)
     }
