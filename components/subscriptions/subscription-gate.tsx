@@ -124,7 +124,7 @@ export function SubscriptionGate({
           <div className="flex items-center justify-center gap-2 mb-2">
             <Crown className="h-5 w-5 text-primary" />
             <Badge variant="secondary" className="text-xs font-semibold">
-              Premium Feature
+              {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 ? "Try Premium Free" : "Premium Feature"}
             </Badge>
             <Sparkles className="h-5 w-5 text-primary animate-pulse" />
           </div>
@@ -137,6 +137,14 @@ export function SubscriptionGate({
         </CardHeader>
         
         <CardContent className="space-y-6">
+          {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 && (
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
+              <p className="text-center text-sm font-semibold text-primary">
+                🎉 Try free for {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS} days • No credit card required
+              </p>
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {config.benefits.map((benefit, index) => (
               <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-background/50">

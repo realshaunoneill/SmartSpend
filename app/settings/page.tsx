@@ -83,6 +83,9 @@ export default function SettingsPage() {
       
       if (url) {
         // Redirect to Stripe checkout
+        if (process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0) {
+          toast.success(`Starting your ${process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS}-day free trial...`)
+        }
         window.location.href = url
       }
     } catch (error) {

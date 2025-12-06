@@ -121,7 +121,7 @@ export default function LandingPage() {
               <>
                 <Link href="/sign-up">
                   <Button size="lg" className="gap-2 shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30">
-                    Start Tracking Free
+                    {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 ? "Start Free Trial" : "Start Tracking Free"}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -132,6 +132,11 @@ export default function LandingPage() {
               </>
             )}
           </div>
+          {!isSignedIn && process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              Start your {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS}-day free trial • No credit card required
+            </p>
+          )}
 
           {/* Stats */}
           <div className="mt-16 grid grid-cols-2 gap-6 sm:grid-cols-4">
@@ -234,7 +239,7 @@ export default function LandingPage() {
               ) : (
                 <Link href="/sign-up">
                   <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
-                    Get Started for Free
+                    {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 ? "Start Free Trial" : "Get Started for Free"}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>

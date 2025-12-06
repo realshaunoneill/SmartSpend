@@ -97,10 +97,17 @@ export function SubscriptionBanner({ page = "default" }: SubscriptionBannerProps
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="font-bold text-foreground text-lg">{message.title}</h3>
                 <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-                <Badge variant="secondary" className="text-xs">Premium</Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 ? "Free Trial Available" : "Premium"}
+                </Badge>
               </div>
               <p className="text-sm text-muted-foreground mb-3">
                 {message.description}
+                {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 && (
+                  <span className="block mt-1 font-semibold text-primary">
+                    Try free for {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS} days!
+                  </span>
+                )}
               </p>
               <div className="flex flex-wrap gap-2">
                 {message.features.map((feature, index) => (

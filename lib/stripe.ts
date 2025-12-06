@@ -98,6 +98,7 @@ export async function getOrCreateStripeCustomer(
 /**
  * Creates a Stripe checkout session for a subscription
  * Automatically handles customer creation if needed
+ * Supports free trial based on NEXT_PUBLIC_STRIPE_TRIAL_DAYS environment variable
  */
 export async function createCheckoutSession(
   userId: string,
@@ -119,6 +120,27 @@ export async function createCheckoutSession(
       correlationId
     );
 
+    // Parse trial days from environment variable
+    const trialDays = process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS 
+      ? parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS, 10) 
+      : 0;
+    
+    const hasValidTrial = trialDays > 0 && !isNaN(trialDays);
+
+    if (hasValidTrial) {
+      submitLogEvent('checkout', `Creating checkout session with ${trialDays} day free trial`, correlationId, { 
+        userId, 
+        priceId, 
+        trialDays 
+      });
+    }
+
+    // Calculate trial end timestamp (current time + trial days + 5 minutes buffer)
+    // The 5 minute buffer gives users time to complete the checkout process
+    const trialEnd = hasValidTrial 
+      ? Math.floor(Date.now() / 1000) + (trialDays * 24 * 60 * 60) + (5 * 60)
+      : undefined;
+
     // Create checkout session with the customer
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -130,6 +152,15 @@ export async function createCheckoutSession(
         },
       ],
       allow_promotion_codes: true,
+      // Add subscription data with trial period if configured
+      ...(hasValidTrial && {
+        subscription_data: {
+          trial_end: trialEnd,
+          metadata: {
+            trial_days: trialDays.toString(),
+          },
+        },
+      }),
       success_url: successUrl || `${process.env.NEXT_PUBLIC_APP_URL}/payment/successful?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL}/payment/failed`,
       client_reference_id: userId,
@@ -137,6 +168,7 @@ export async function createCheckoutSession(
         userId: userId,
         clerkId: clerkId,
         email: email,
+        ...(hasValidTrial && { trial_days: trialDays.toString() }),
       },
     });
 
