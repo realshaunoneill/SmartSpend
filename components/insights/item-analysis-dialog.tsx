@@ -183,21 +183,31 @@ export function ItemAnalysisDialog({
                 <CardContent>
                   <div className="space-y-3">
                     {analysis.itemVariants.map((variant, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium truncate">{variant.name}</div>
-                          <div className="text-sm text-muted-foreground mt-1">
-                            {variant.count} purchase{variant.count !== 1 ? 's' : ''}
+                      <div key={index} className="p-3 rounded-lg border space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate">{variant.name}</div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {variant.count} purchase{variant.count !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                          <div className="text-right ml-4">
+                            <div className="font-semibold">
+                              {analysis.summary.currency} {variant.totalSpent.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Avg: {analysis.summary.currency} {variant.averagePrice.toFixed(2)}
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right ml-4">
-                          <div className="font-semibold">
-                            {analysis.summary.currency} {variant.totalSpent.toFixed(2)}
+                        {variant.merchants && variant.merchants.length > 0 && (
+                          <div className="flex items-center gap-2 pt-2 border-t">
+                            <Store className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <div className="text-xs text-muted-foreground truncate">
+                              {variant.merchants.join(", ")}
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            Avg: {analysis.summary.currency} {variant.averagePrice.toFixed(2)}
-                          </div>
-                        </div>
+                        )}
                       </div>
                     ))}
                   </div>

@@ -39,6 +39,7 @@ export interface ItemAnalysis {
     count: number;
     totalSpent: number;
     averagePrice: number;
+    merchants: string[];
   }>;
 }
 
@@ -107,6 +108,7 @@ async function analyzeItem(
         count: number;
         totalSpent: number;
         averagePrice: number;
+        merchants: string[];
       }> = [];
 
       matchedItems.forEach((item: any) => {
@@ -120,6 +122,7 @@ async function analyzeItem(
           count: item.count,
           totalSpent: item.totalSpent,
           averagePrice: item.averagePrice,
+          merchants: item.merchants || [],
         });
       });
 
