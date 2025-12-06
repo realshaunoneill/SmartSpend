@@ -130,8 +130,8 @@ export async function createCheckoutSession(
         },
       ],
       allow_promotion_codes: true,
-      success_url: successUrl || `${process.env.NEXT_PUBLIC_APP_URL}/settings?success=true`,
-      cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL}/settings?canceled=true`,
+      success_url: successUrl || `${process.env.NEXT_PUBLIC_APP_URL}/payment/successful?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL}/payment/failed`,
       client_reference_id: userId,
       metadata: {
         userId: userId,

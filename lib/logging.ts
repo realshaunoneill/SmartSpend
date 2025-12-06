@@ -45,7 +45,7 @@ const simpleLog = (
 export const submitLogEvent =(
     event: EventType,
     logLine: string,
-    correlationId: CorrelationId,
+    correlationId: CorrelationId | null,
     data?: { [key: string]: any },
     alert = false,
   ) => {

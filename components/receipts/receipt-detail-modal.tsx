@@ -8,6 +8,7 @@ import { SubscriptionUpsell } from "@/components/subscriptions/subscription-upse
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
+import { useUser } from "@/lib/hooks/use-user"
 import { ReceiptHeader } from "./detail-modal/receipt-header"
 import { ReceiptBusinessDetails } from "./detail-modal/receipt-business-details"
 import { ReceiptServiceDetails } from "./detail-modal/receipt-service-details"
@@ -43,16 +44,8 @@ export function ReceiptDetailModal({
     enabled: !!receipt?.householdId && open,
   });
 
-  // Get current user data to check permissions
-  const { data: currentUser, isLoading: isLoadingUser } = useQuery({
-    queryKey: ["current-user"],
-    queryFn: async () => {
-      const response = await fetch("/api/users/me");
-      if (!response.ok) throw new Error("Failed to fetch user");
-      return response.json();
-    },
-    enabled: open,
-  });
+  // Get current user data to check permissions and subscription
+  const { user: currentUser, isLoading: isLoadingUser } = useUser();
 
   // Check if user can modify this receipt
   const canModifyReceipt = currentUser && receipt && (

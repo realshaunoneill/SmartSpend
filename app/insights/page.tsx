@@ -5,21 +5,14 @@ import { SpendingSummaryCard } from "@/components/insights/spending-summary-card
 import { TopItemsList } from "@/components/insights/top-items-list";
 import { ItemSearchAnalysis } from "@/components/insights/item-search-analysis";
 import { SubscriptionUpsell } from "@/components/subscriptions/subscription-upsell";
-import { useQuery } from "@tanstack/react-query";
+import { useUser } from "@/lib/hooks/use-user";
 import { Loader2 } from "lucide-react";
 
 export default function InsightsPage() {
   // Get current user data to check subscription
-  const { data: currentUser, isLoading } = useQuery({
-    queryKey: ["current-user"],
-    queryFn: async () => {
-      const response = await fetch("/api/users/me");
-      if (!response.ok) throw new Error("Failed to fetch user");
-      return response.json();
-    },
-  });
+  const { user, isLoading } = useUser();
 
-  const isSubscribed = currentUser?.subscribed === true;
+  const isSubscribed = user?.subscribed === true;
 
   return (
     <>

@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       Logger.info('User has no Stripe customer ID', {
         requestId,
         userId: user.id,
-        context: { clerkId, email },
+        context: { clerkId: user.clerkId, email: user.email },
       })
       return NextResponse.json({
         hasStripeCustomer: false,
@@ -49,8 +49,8 @@ export async function GET(req: NextRequest) {
       requestId,
       userId: user.id,
       context: {
-        clerkId,
-        email,
+        clerkId: user.clerkId,
+        email: user.email,
         stripeCustomerId: user.stripeCustomerId,
         subscriptionData,
         subscriptionStatus: updatedUser?.subscribed,

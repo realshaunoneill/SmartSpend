@@ -30,17 +30,6 @@ export default function SharingPage() {
   const { user, isSubscribed } = useUser()
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>()
   const queryClient = useQueryClient()
-  
-  // Get current user data
-  const { data: currentUser } = useQuery({
-    queryKey: ["current-user"],
-    queryFn: async () => {
-      const response = await fetch("/api/users/me")
-      if (!response.ok) throw new Error("Failed to fetch user")
-      return response.json()
-    },
-    enabled: !!user,
-  })
 
   // Get households
   const { data: households = [], isLoading: householdsLoading } = useHouseholds()
@@ -79,9 +68,9 @@ export default function SharingPage() {
   }, [households, selectedHouseholdId])
 
   const selectedHousehold = households.find((h: any) => h.id === selectedHouseholdId)
-  const currentUserId = currentUser?.id
-  const isCurrentUserAdmin = selectedHousehold && currentUser ? 
-    members.find((m: any) => m.user_id === currentUser.id)?.role === 'admin' : false
+  const currentUserId = user?.id
+  const isCurrentUserAdmin = selectedHousehold && user ? 
+    members.find((m: any) => m.user_id === user.id)?.role === 'admin' : false
 
   if (!isLoaded || !user) {
     return (
@@ -122,13 +111,13 @@ export default function SharingPage() {
             )}
             {isSubscribed ? (
               <CreateHouseholdDialog 
-                userId={currentUserId} 
+                userId={currentUserId!} 
                 onHouseholdCreated={handleHouseholdCreated} 
               />
             ) : (
               <SubscriptionGate feature="sharing">
                 <CreateHouseholdDialog 
-                  userId={currentUserId} 
+                  userId={currentUserId!} 
                   onHouseholdCreated={handleHouseholdCreated} 
                 />
               </SubscriptionGate>
@@ -161,13 +150,13 @@ export default function SharingPage() {
             </p>
             {isSubscribed ? (
               <CreateHouseholdDialog 
-                userId={currentUserId} 
+                userId={currentUserId!} 
                 onHouseholdCreated={handleHouseholdCreated}
               />
             ) : (
               <SubscriptionGate feature="sharing">
                 <CreateHouseholdDialog 
-                  userId={currentUserId} 
+                  userId={currentUserId!} 
                   onHouseholdCreated={handleHouseholdCreated}
                 />
               </SubscriptionGate>
@@ -180,7 +169,7 @@ export default function SharingPage() {
                 <h2 className="text-xl font-semibold text-foreground">Your Households</h2>
                 <HouseholdList
                   households={households}
-                  currentUserId={currentUserId}
+                  currentUserId={currentUserId!}
                   isSubscribed={isSubscribed}
                   onUpdate={() => {
                     queryClient.invalidateQueries({ queryKey: ["households"] })
@@ -199,7 +188,7 @@ export default function SharingPage() {
                       <HouseholdMembersList
                         householdId={selectedHousehold.id}
                         members={members}
-                        currentUserId={currentUserId}
+                        currentUserId={currentUserId!}
                         isCurrentUserAdmin={isCurrentUserAdmin}
                         isSubscribed={isSubscribed}
                         onUpdate={() => {
