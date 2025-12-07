@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Receipt, CreditCard, Users, Settings, LogOut, TrendingUp, Menu } from "lucide-react"
+import { LayoutDashboard, Receipt, CreditCard, Users, Settings, LogOut, TrendingUp, Menu, ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUser, useClerk } from "@clerk/nextjs"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useEffect, useState } from "react"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -28,6 +29,29 @@ export function Navigation() {
   const pathname = usePathname()
   const { user } = useUser()
   const { signOut } = useClerk()
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    async function checkAdmin() {
+      try {
+        const response = await fetch("/api/admin/check")
+        if (response.ok) {
+          const data = await response.json()
+          setIsAdmin(data.isAdmin)
+        }
+      } catch (error) {
+        setIsAdmin(false)
+      }
+    }
+    if (user) {
+      checkAdmin()
+    }
+  }, [user])
+
+  const displayNavItems = [...navItems]
+  if (isAdmin) {
+    displayNavItems.push({ href: "/admin", label: "Admin", icon: ShieldCheck })
+  }
 
   const handleLogout = async () => {
     await signOut()
@@ -51,7 +75,7 @@ export function Navigation() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
-              {navItems.map((item) => {
+              {displayNavItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href
                 return (
@@ -75,7 +99,7 @@ export function Navigation() {
 
         {/* Desktop Navigation */}
         <div className="hidden flex-1 items-center gap-0.5 md:flex sm:gap-1">
-          {navItems.map((item) => {
+          {displayNavItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
             return (

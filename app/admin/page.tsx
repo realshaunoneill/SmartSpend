@@ -2,19 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { Navigation } from "@/components/layout/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  Users, 
-  Receipt, 
-  Home, 
-  Loader2, 
-  ShieldCheck,
-  Calendar,
-  CreditCard,
-  Mail
-} from "lucide-react"
+import { ReceiptDetailModal } from "@/components/receipts/receipt-detail-modal"
+import { AdminStats } from "@/components/admin/admin-stats"
+import { UsersTab } from "@/components/admin/users-tab"
+import { HouseholdsTab } from "@/components/admin/households-tab"
+import { ReceiptsTab } from "@/components/admin/receipts-tab"
+import { Loader2, ShieldCheck } from "lucide-react"
 import { useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 
@@ -58,6 +52,13 @@ export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([])
   const [households, setHouseholds] = useState<Household[]>([])
   const [receipts, setReceipts] = useState<ReceiptDetail[]>([])
+  const [selectedReceipt, setSelectedReceipt] = useState<any>(null)
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
+  const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set())
+  const [expandedHouseholds, setExpandedHouseholds] = useState<Set<string>>(new Set())
+  const [userReceipts, setUserReceipts] = useState<Record<string, any[]>>({})
+  const [householdDetails, setHouseholdDetails] = useState<Record<string, any>>({})
+  const [householdReceipts, setHouseholdReceipts] = useState<Record<string, any[]>>({})
 
   useEffect(() => {
     async function checkAdminAndFetchData() {
@@ -98,6 +99,76 @@ export default function AdminPage() {
     checkAdminAndFetchData()
   }, [isLoaded, router])
 
+  const handleOpenReceipt = async (receiptId: string) => {
+    try {
+      const response = await fetch(`/api/receipts/${receiptId}`)
+      if (response.ok) {
+        const receiptData = await response.json()
+        setSelectedReceipt(receiptData)
+        setIsReceiptModalOpen(true)
+      }
+    } catch (error) {
+      console.error("Error fetching receipt:", error)
+    }
+  }
+
+  const toggleUserExpansion = async (userId: string) => {
+    const newExpanded = new Set(expandedUsers)
+    if (newExpanded.has(userId)) {
+      newExpanded.delete(userId)
+      setExpandedUsers(newExpanded)
+    } else {
+      newExpanded.add(userId)
+      setExpandedUsers(newExpanded)
+      
+      // Fetch user's receipts if not already fetched
+      if (!userReceipts[userId]) {
+        try {
+          const response = await fetch(`/api/admin/users/${userId}/receipts`)
+          if (response.ok) {
+            const data = await response.json()
+            setUserReceipts(prev => ({ ...prev, [userId]: data }))
+          }
+        } catch (error) {
+          console.error("Error fetching user receipts:", error)
+        }
+      }
+    }
+  }
+
+  const toggleHouseholdExpansion = async (householdId: string) => {
+    const newExpanded = new Set(expandedHouseholds)
+    if (newExpanded.has(householdId)) {
+      newExpanded.delete(householdId)
+      setExpandedHouseholds(newExpanded)
+    } else {
+      newExpanded.add(householdId)
+      setExpandedHouseholds(newExpanded)
+      
+      // Fetch household details and receipts if not already fetched
+      if (!householdDetails[householdId]) {
+        try {
+          const [detailsRes, receiptsRes] = await Promise.all([
+            fetch(`/api/households/${householdId}`),
+            fetch(`/api/admin/households/${householdId}/receipts`)
+          ])
+          
+          if (detailsRes.ok) {
+            const data = await detailsRes.json()
+            setHouseholdDetails(prev => ({ ...prev, [householdId]: data }))
+          }
+          
+          if (receiptsRes.ok) {
+            const receipts = await receiptsRes.json()
+            setHouseholdReceipts(prev => ({ ...prev, [householdId]: receipts }))
+          }
+        } catch (error) {
+          console.error("Error fetching household details:", error)
+        }
+      }
+    }
+  }
+
   if (!isLoaded || loading) {
     return (
       <>
@@ -135,46 +206,7 @@ export default function AdminPage() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{users.length}</div>
-              <p className="text-xs text-muted-foreground">
-                {users.filter(u => u.subscribed).length} subscribed
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Households</CardTitle>
-              <Home className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{households.length}</div>
-              <p className="text-xs text-muted-foreground">
-                {households.reduce((sum, h) => sum + h.memberCount, 0)} total members
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Receipts</CardTitle>
-              <Receipt className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{receipts.length}</div>
-              <p className="text-xs text-muted-foreground">
-                {receipts.filter(r => r.processingStatus === "completed").length} processed
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <AdminStats users={users} households={households} receipts={receipts} />
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="users" className="space-y-4">
@@ -185,163 +217,41 @@ export default function AdminPage() {
           </TabsList>
 
           <TabsContent value="users" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>All Users</CardTitle>
-                <CardDescription>View and manage user accounts</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {users.map((user) => (
-                    <div
-                      key={user.id}
-                      className="flex items-center justify-between rounded-lg border p-4"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{user.email}</span>
-                          {user.isAdmin && (
-                            <Badge variant="destructive">Admin</Badge>
-                          )}
-                          {user.subscribed && (
-                            <Badge variant="default">Subscribed</Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Receipt className="h-3 w-3" />
-                            {user.receiptCount} receipts
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Home className="h-3 w-3" />
-                            {user.householdCount} households
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Joined {new Date(user.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                      {user.stripeCustomerId && (
-                        <Badge variant="outline" className="gap-1">
-                          <CreditCard className="h-3 w-3" />
-                          Stripe Customer
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <UsersTab
+              users={users}
+              expandedUsers={expandedUsers}
+              userReceipts={userReceipts}
+              onToggleUser={toggleUserExpansion}
+              onOpenReceipt={handleOpenReceipt}
+            />
           </TabsContent>
 
           <TabsContent value="households" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>All Households</CardTitle>
-                <CardDescription>View household information and members</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {households.map((household) => (
-                    <div
-                      key={household.id}
-                      className="flex items-center justify-between rounded-lg border p-4"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Home className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{household.name}</span>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {household.memberCount} members
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Receipt className="h-3 w-3" />
-                            {household.receiptCount} receipts
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            Owner: {household.ownerEmail}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Created {new Date(household.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <HouseholdsTab
+              households={households}
+              expandedHouseholds={expandedHouseholds}
+              householdDetails={householdDetails}
+              householdReceipts={householdReceipts}
+              onToggleHousehold={toggleHouseholdExpansion}
+              onOpenReceipt={handleOpenReceipt}
+            />
           </TabsContent>
 
           <TabsContent value="receipts" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>All Receipts</CardTitle>
-                <CardDescription>View all receipt submissions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {receipts.map((receipt) => (
-                    <div
-                      key={receipt.id}
-                      className="flex items-center justify-between rounded-lg border p-4"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Receipt className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{receipt.merchantName || "Unknown Merchant"}</span>
-                          <Badge
-                            variant={
-                              receipt.processingStatus === "completed"
-                                ? "default"
-                                : receipt.processingStatus === "failed"
-                                ? "destructive"
-                                : "secondary"
-                            }
-                          >
-                            {receipt.processingStatus}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {receipt.userEmail}
-                          </span>
-                          {receipt.householdName && (
-                            <span className="flex items-center gap-1">
-                              <Home className="h-3 w-3" />
-                              {receipt.householdName}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(receipt.transactionDate).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-semibold">
-                          {receipt.currency} {receipt.totalAmount}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Uploaded {new Date(receipt.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <ReceiptsTab
+              receipts={receipts}
+              onOpenReceipt={handleOpenReceipt}
+            />
           </TabsContent>
         </Tabs>
       </main>
+      {selectedReceipt && (
+        <ReceiptDetailModal
+          receipt={selectedReceipt}
+          open={isReceiptModalOpen}
+          onOpenChange={setIsReceiptModalOpen}
+        />
+      )}
     </>
   )
 }

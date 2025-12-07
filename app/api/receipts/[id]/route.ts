@@ -4,6 +4,56 @@ import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { getReceiptById, deleteReceipt } from "@/lib/receipt-scanner";
 import { randomUUID } from "crypto";
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
+  try {
+    const authResult = await getAuthenticatedUser(correlationId);
+    if (authResult instanceof NextResponse) return authResult;
+    const { user } = authResult;
+
+    const { id: receiptId } = await params;
+
+    const receipt = await getReceiptById(receiptId);
+
+    if (!receipt) {
+      return NextResponse.json(
+        { error: "Receipt not found" },
+        { status: 404 }
+      );
+    }
+
+    // Verify the user owns this receipt or is admin
+    if (receipt.userId !== user.id && !user.isAdmin) {
+      return NextResponse.json(
+        { error: "You don't have permission to view this receipt" },
+        { status: 403 }
+      );
+    }
+
+    return NextResponse.json(receipt);
+  } catch (error) {
+    console.error("Error fetching receipt:", error);
+    
+    submitLogEvent(
+      "receipt-error",
+      "Failed to fetch receipt",
+      correlationId,
+      {
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      true
+    );
+
+    return NextResponse.json(
+      { error: "Failed to fetch receipt" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

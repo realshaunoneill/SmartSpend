@@ -16,7 +16,7 @@ export const maxDuration = 60;
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
@@ -24,13 +24,15 @@ export async function POST(
     if (authResult instanceof NextResponse) return authResult;
     const { user, email } = authResult;
 
+    const { id: receiptId } = await params;
+
     // Get the receipt
     const [receipt] = await db
       .select()
       .from(receipts)
       .where(
         and(
-          eq(receipts.id, params.id),
+          eq(receipts.id, receiptId),
           eq(receipts.userId, user.id),
           isNull(receipts.deletedAt)
         )
@@ -58,7 +60,7 @@ export async function POST(
         processingError: null,
         updatedAt: new Date()
       })
-      .where(eq(receipts.id, params.id));
+      .where(eq(receipts.id, receiptId));
 
     // Analyze receipt with OpenAI
     let ocrData, usage;
@@ -75,7 +77,7 @@ export async function POST(
           processingError: error instanceof Error ? error.message : 'Unknown error',
           updatedAt: new Date()
         })
-        .where(eq(receipts.id, params.id));
+        .where(eq(receipts.id, receiptId));
 
       submitLogEvent('receipt-error', `Receipt retry failed: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { 
         receiptId: receipt.id,
@@ -129,13 +131,13 @@ export async function POST(
         },
         updatedAt: new Date()
       })
-      .where(eq(receipts.id, params.id))
+      .where(eq(receipts.id, receiptId))
       .returning();
 
     // Save receipt items
     if (ocrData.items && Array.isArray(ocrData.items)) {
       // Delete existing items if any
-      await db.delete(receiptItems).where(eq(receiptItems.receiptId, params.id));
+      await db.delete(receiptItems).where(eq(receiptItems.receiptId, receiptId));
 
       const itemsToInsert = ocrData.items.map((item: any) => {
         const quantity = item.quantity || 1;
@@ -143,7 +145,7 @@ export async function POST(
         const unitPrice = quantity > 0 ? totalPrice / quantity : totalPrice;
         
         return {
-          receiptId: params.id,
+          receiptId: receiptId,
           name: item.name || 'Unknown Item',
           quantity: quantity.toString(),
           unitPrice: unitPrice.toString(),
