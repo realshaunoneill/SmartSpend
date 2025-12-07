@@ -6,6 +6,7 @@ export const users = pgTable('users', {
   clerkId: text('clerk_id').notNull().unique(),
   email: text('email').notNull().unique(),
   subscribed: boolean('subscribed').notNull().default(false),
+  isAdmin: boolean('is_admin').notNull().default(false),
   stripeCustomerId: text('stripe_customer_id').unique(),
   defaultHouseholdId: uuid('default_household_id').references(() => households.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').notNull().defaultNow(),

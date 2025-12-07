@@ -23,7 +23,8 @@ export type EventType =
   | 'household'
   | 'invitation'
   | 'checkout'
-  | 'subscription';
+  | 'subscription'
+  | 'admin';
 export type CorrelationId = `${string}-${string}-${string}-${string}-${string}`;
 
 const LOG_TOKEN = process.env.LOG_TOKEN;

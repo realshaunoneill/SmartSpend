@@ -93,4 +93,12 @@ export class UserService {
       .limit(1)
     return user || null
   }
+
+  /**
+   * Check if a user is an admin
+   */
+  static async isAdmin(userId: string): Promise<boolean> {
+    const user = await this.getUserProfile(userId)
+    return user?.isAdmin || false
+  }
 }
