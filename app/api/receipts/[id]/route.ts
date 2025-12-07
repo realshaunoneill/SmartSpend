@@ -77,8 +77,8 @@ export async function DELETE(
       );
     }
 
-    // Verify the user owns this receipt
-    if (receipt.userId !== user.id) {
+    // Verify the user owns this receipt or is admin
+    if (receipt.userId !== user.id && !user.isAdmin) {
       return NextResponse.json(
         { error: "You can only delete your own receipts" },
         { status: 403 }
@@ -105,6 +105,8 @@ export async function DELETE(
         userId: user.id,
         merchantName: receipt.merchantName,
         totalAmount: receipt.totalAmount,
+        deletedByAdmin: user.isAdmin && receipt.userId !== user.id,
+        receiptOwnerId: receipt.userId,
       }
     );
 
