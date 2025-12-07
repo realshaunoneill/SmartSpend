@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { receipts, receiptItems } from "@/lib/db/schema";
+import { receipts, receiptItems, insightsCache } from "@/lib/db/schema";
 import { getAuthenticatedUser, requireSubscription } from "@/lib/auth-helpers";
-import { eq, and, gte, desc, sql } from "drizzle-orm";
+import { eq, and, gte, desc, sql, lt } from "drizzle-orm";
 import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { generateSpendingSummary } from "@/lib/openai";
 import { randomUUID } from "crypto";
@@ -31,6 +31,33 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const householdId = searchParams.get("householdId");
     const months = parseInt(searchParams.get("months") || "3");
+
+    // Create cache key from query parameters
+    const cacheKey = `months:${months}|household:${householdId || 'null'}`;
+
+    // Check cache first
+    const cachedResult = await db
+      .select()
+      .from(insightsCache)
+      .where(
+        and(
+          eq(insightsCache.userId, user.id),
+          eq(insightsCache.cacheType, 'spending_summary'),
+          eq(insightsCache.cacheKey, cacheKey),
+          gte(insightsCache.expiresAt, new Date())
+        )
+      )
+      .limit(1);
+
+    if (cachedResult.length > 0) {
+      submitLogEvent('receipt', "Returning cached AI spending summary", correlationId, {
+        userId: user.id,
+        householdId,
+        months,
+        cacheAge: Date.now() - cachedResult[0].createdAt.getTime(),
+      });
+      return NextResponse.json(cachedResult[0].data);
+    }
 
     // Calculate date range
     const startDate = new Date();
@@ -144,7 +171,7 @@ export async function GET(request: NextRequest) {
       correlationId
     );
 
-    return NextResponse.json({
+    const responseData = {
       summary: aiSummary,
       data: {
         period: {
@@ -163,7 +190,37 @@ export async function GET(request: NextRequest) {
         topMerchants,
       },
       usage: aiUsage,
-    });
+    };
+
+    // Store in cache for 24 hours
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    try {
+      await db
+        .insert(insightsCache)
+        .values({
+          userId: user.id,
+          householdId: householdId || null,
+          cacheType: 'spending_summary',
+          cacheKey,
+          data: responseData,
+          expiresAt,
+        })
+        .onConflictDoUpdate({
+          target: [insightsCache.userId, insightsCache.cacheType, insightsCache.cacheKey],
+          set: {
+            data: responseData,
+            expiresAt,
+            createdAt: new Date(),
+          },
+        });
+    } catch (cacheError) {
+      // Log but don't fail the request if caching fails
+      submitLogEvent('receipt-error', `Failed to cache spending summary: ${cacheError instanceof Error ? cacheError.message : 'Unknown error'}`, correlationId, {}, true);
+    }
+
+    return NextResponse.json(responseData);
   } catch (error) {
     submitLogEvent('receipt-error', `Error generating spending summary: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(

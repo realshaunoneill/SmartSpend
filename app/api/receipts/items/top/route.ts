@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { receipts, receiptItems } from "@/lib/db/schema";
+import { receipts, receiptItems, insightsCache } from "@/lib/db/schema";
 import { getAuthenticatedUser, requireSubscription } from "@/lib/auth-helpers";
 import { eq, and, gte, sql, desc } from "drizzle-orm";
 import { CorrelationId, submitLogEvent } from "@/lib/logging";
@@ -33,6 +33,34 @@ export async function GET(request: NextRequest) {
     const months = parseInt(searchParams.get("months") || "12");
     const limit = parseInt(searchParams.get("limit") || "20");
     const sortBy = searchParams.get("sortBy") || "frequency";
+
+    // Create cache key from query parameters
+    const cacheKey = `months:${months}|limit:${limit}|sort:${sortBy}|household:${householdId || 'null'}`;
+
+    // Check cache first
+    const cachedResult = await db
+      .select()
+      .from(insightsCache)
+      .where(
+        and(
+          eq(insightsCache.userId, user.id),
+          eq(insightsCache.cacheType, 'top_items'),
+          eq(insightsCache.cacheKey, cacheKey),
+          gte(insightsCache.expiresAt, new Date())
+        )
+      )
+      .limit(1);
+
+    if (cachedResult.length > 0) {
+      submitLogEvent('receipt', "Returning cached top items", correlationId, {
+        userId: user.id,
+        householdId,
+        months,
+        sortBy,
+        cacheAge: Date.now() - cachedResult[0].createdAt.getTime(),
+      });
+      return NextResponse.json(cachedResult[0].data);
+    }
 
     // Calculate date range
     const startDate = new Date();
@@ -154,7 +182,7 @@ export async function GET(request: NextRequest) {
       totalPurchases,
     });
 
-    return NextResponse.json({
+    const responseData = {
       topItems,
       summary: {
         totalUniqueItems,
@@ -168,7 +196,37 @@ export async function GET(request: NextRequest) {
         },
       },
       sortBy,
-    });
+    };
+
+    // Store in cache for 24 hours
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    try {
+      await db
+        .insert(insightsCache)
+        .values({
+          userId: user.id,
+          householdId: householdId || null,
+          cacheType: 'top_items',
+          cacheKey,
+          data: responseData,
+          expiresAt,
+        })
+        .onConflictDoUpdate({
+          target: [insightsCache.userId, insightsCache.cacheType, insightsCache.cacheKey],
+          set: {
+            data: responseData,
+            expiresAt,
+            createdAt: new Date(),
+          },
+        });
+    } catch (cacheError) {
+      // Log but don't fail the request if caching fails
+      submitLogEvent('receipt-error', `Failed to cache top items: ${cacheError instanceof Error ? cacheError.message : 'Unknown error'}`, correlationId, {}, true);
+    }
+
+    return NextResponse.json(responseData);
   } catch (error) {
     submitLogEvent('receipt-error', `Error fetching top items: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(

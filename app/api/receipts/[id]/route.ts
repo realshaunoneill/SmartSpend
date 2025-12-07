@@ -3,6 +3,9 @@ import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { getReceiptById, deleteReceipt } from "@/lib/receipt-scanner";
 import { randomUUID } from "crypto";
+import { db } from "@/lib/db";
+import { insightsCache } from "@/lib/db/schema";
+import { eq, or } from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
@@ -109,6 +112,22 @@ export async function DELETE(
         receiptOwnerId: receipt.userId,
       }
     );
+
+    // Invalidate insights cache for this user
+    try {
+      await db
+        .delete(insightsCache)
+        .where(
+          or(
+            eq(insightsCache.userId, user.id),
+            receipt.householdId ? eq(insightsCache.householdId, receipt.householdId) : undefined
+          )
+        );
+      submitLogEvent('receipt', "Invalidated insights cache after receipt deletion", correlationId, { userId: user.id, householdId: receipt.householdId });
+    } catch (cacheError) {
+      // Log but don't fail the request if cache invalidation fails
+      submitLogEvent('receipt-error', `Failed to invalidate insights cache: ${cacheError instanceof Error ? cacheError.message : 'Unknown error'}`, correlationId, {}, true);
+    }
 
     return NextResponse.json({
       success: true,

@@ -105,6 +105,23 @@ export type NewReceiptItem = typeof receiptItems.$inferInsert;
 export type HouseholdInvitation = typeof householdInvitations.$inferSelect;
 export type NewHouseholdInvitation = typeof householdInvitations.$inferInsert;
 
+// Insights Cache Table - stores cached insights data for 24 hours
+export const insightsCache = pgTable('insights_cache', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  householdId: uuid('household_id').references(() => households.id, { onDelete: 'cascade' }),
+  cacheType: text('cache_type').notNull(), // 'spending_summary' | 'top_items'
+  cacheKey: text('cache_key').notNull(), // Includes query params like months, limit, sortBy
+  data: jsonb('data').notNull(), // The cached response data
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => ({
+  uniqueCache: unique().on(table.userId, table.cacheType, table.cacheKey),
+}));
+
+export type InsightsCache = typeof insightsCache.$inferSelect;
+export type NewInsightsCache = typeof insightsCache.$inferInsert;
+
 // Additional types for business logic
 export type HouseholdMember = {
   userId: string;
