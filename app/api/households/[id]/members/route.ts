@@ -96,7 +96,7 @@ export async function POST(
     }
 
     // Invite member (will verify ownership inside the service)
-    const householdUser = await HouseholdService.inviteMember(
+    const householdUser = await HouseholdService.createInvitation(
       householdId,
       body.email.trim(),
       user.id

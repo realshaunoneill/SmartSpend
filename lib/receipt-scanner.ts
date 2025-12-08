@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { receipts, receiptItems, users } from "@/lib/db/schema";
-import { eq, desc, count, isNull, and } from "drizzle-orm";
+import { eq, desc, asc, count, isNull, and, or, gte, lte, ilike, sql } from "drizzle-orm";
 
 export interface GetReceiptsOptions {
   userId: string;
@@ -11,6 +11,16 @@ export interface GetReceiptsOptions {
   page?: number;
   limit?: number;
   includeDeleted?: boolean;
+  // Search and filter options
+  search?: string;
+  category?: string;
+  merchant?: string;
+  minAmount?: string;
+  maxAmount?: string;
+  startDate?: string;
+  endDate?: string;
+  sortBy?: string;
+  sortOrder?: string;
 }
 
 export interface PaginatedReceipts {
@@ -36,30 +46,102 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
     page = 1,
     limit = 10,
     includeDeleted = false,
+    search,
+    category,
+    merchant,
+    minAmount,
+    maxAmount,
+    startDate,
+    endDate,
+    sortBy = "date",
+    sortOrder = "desc",
   } = options;
 
   const offset = (page - 1) * limit;
-
-  let userReceipts;
-  let totalCount;
 
   // Build base conditions
   const baseConditions = [
     includeDeleted ? undefined : isNull(receipts.deletedAt),
   ].filter(Boolean);
 
+  // Build search/filter conditions
+  const filterConditions = [];
+
+  // Text search across merchant name, category, and line items
+  if (search) {
+    // Search in receipt items for matching product names
+    const itemSubquery = db
+      .select({ receiptId: receiptItems.receiptId })
+      .from(receiptItems)
+      .where(ilike(receiptItems.name, `%${search}%`));
+
+    filterConditions.push(
+      or(
+        ilike(receipts.merchantName, `%${search}%`),
+        ilike(receipts.category, `%${search}%`),
+        sql`${receipts.id} IN ${itemSubquery}`
+      )
+    );
+  }
+
+  // Category filter
+  if (category) {
+    filterConditions.push(ilike(receipts.category, category));
+  }
+
+  // Merchant filter
+  if (merchant) {
+    filterConditions.push(ilike(receipts.merchantName, `%${merchant}%`));
+  }
+
+  // Amount range filter
+  if (minAmount) {
+    filterConditions.push(gte(sql`CAST(${receipts.totalAmount} AS DECIMAL)`, parseFloat(minAmount)));
+  }
+  if (maxAmount) {
+    filterConditions.push(lte(sql`CAST(${receipts.totalAmount} AS DECIMAL)`, parseFloat(maxAmount)));
+  }
+
+  // Date range filter
+  if (startDate) {
+    filterConditions.push(gte(receipts.transactionDate, startDate));
+  }
+  if (endDate) {
+    filterConditions.push(lte(receipts.transactionDate, endDate));
+  }
+
+  // Determine sort field and order
+  let sortField;
+  switch (sortBy) {
+    case "amount":
+      sortField = sql`CAST(${receipts.totalAmount} AS DECIMAL)`;
+      break;
+    case "merchant":
+      sortField = receipts.merchantName;
+      break;
+    case "date":
+    default:
+      sortField = receipts.transactionDate || receipts.createdAt;
+      break;
+  }
+  const orderFn = sortOrder === "asc" ? asc : desc;
+
+  let userReceipts;
+  let totalCount;
+
   if (householdId) {
     // Get receipts for specific household
     const conditions = and(
       eq(receipts.householdId, householdId),
-      ...baseConditions
+      ...baseConditions,
+      ...filterConditions
     );
 
     userReceipts = await db
       .select()
       .from(receipts)
       .where(conditions)
-      .orderBy(desc(receipts.createdAt))
+      .orderBy(orderFn(sortField))
       .limit(limit)
       .offset(offset);
 
@@ -73,14 +155,15 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
     const conditions = and(
       eq(receipts.userId, userId),
       isNull(receipts.householdId),
-      ...baseConditions
+      ...baseConditions,
+      ...filterConditions
     );
 
     userReceipts = await db
       .select()
       .from(receipts)
       .where(conditions)
-      .orderBy(desc(receipts.createdAt))
+      .orderBy(orderFn(sortField))
       .limit(limit)
       .offset(offset);
 
@@ -93,14 +176,15 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
     // Get all receipts for the user (personal + household)
     const conditions = and(
       eq(receipts.userId, userId),
-      ...baseConditions
+      ...baseConditions,
+      ...filterConditions
     );
 
     userReceipts = await db
       .select()
       .from(receipts)
       .where(conditions)
-      .orderBy(desc(receipts.createdAt))
+      .orderBy(orderFn(sortField))
       .limit(limit)
       .offset(offset);
 

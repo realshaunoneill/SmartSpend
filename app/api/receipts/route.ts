@@ -19,6 +19,17 @@ export async function GET(req: NextRequest) {
     const personalOnly = searchParams.get("personalOnly") === "true";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
+    
+    // Search and filter parameters
+    const search = searchParams.get("search") || undefined;
+    const category = searchParams.get("category") || undefined;
+    const merchant = searchParams.get("merchant") || undefined;
+    const minAmount = searchParams.get("minAmount") || undefined;
+    const maxAmount = searchParams.get("maxAmount") || undefined;
+    const startDate = searchParams.get("startDate") || undefined;
+    const endDate = searchParams.get("endDate") || undefined;
+    const sortBy = searchParams.get("sortBy") || "date";
+    const sortOrder = searchParams.get("sortOrder") || "desc";
 
     // Use the helper function to get receipts
     const result = await getReceipts({
@@ -27,6 +38,15 @@ export async function GET(req: NextRequest) {
       personalOnly,
       page,
       limit,
+      search,
+      category,
+      merchant,
+      minAmount,
+      maxAmount,
+      startDate,
+      endDate,
+      sortBy,
+      sortOrder,
     });
 
     return NextResponse.json(result);

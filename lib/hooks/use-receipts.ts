@@ -12,11 +12,29 @@ interface ReceiptsResponse {
   }
 }
 
-export function useReceipts(householdId?: string, page: number = 1, limit: number = 10, personalOnly: boolean = false) {
+interface ReceiptFilters {
+  search?: string
+  category?: string
+  merchant?: string
+  minAmount?: string
+  maxAmount?: string
+  startDate?: string
+  endDate?: string
+  sortBy?: string
+  sortOrder?: string
+}
+
+export function useReceipts(
+  householdId?: string, 
+  page: number = 1, 
+  limit: number = 10, 
+  filters?: ReceiptFilters,
+  personalOnly: boolean = false
+) {
   const queryClient = useQueryClient()
 
   const query = useQuery({
-    queryKey: ["receipts", householdId, page, limit, personalOnly],
+    queryKey: ["receipts", householdId, page, limit, filters, personalOnly],
     queryFn: async (): Promise<ReceiptsResponse> => {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -29,6 +47,35 @@ export function useReceipts(householdId?: string, page: number = 1, limit: numbe
       
       if (personalOnly) {
         params.append("personalOnly", "true")
+      }
+
+      // Add filter parameters
+      if (filters?.search) {
+        params.append("search", filters.search)
+      }
+      if (filters?.category) {
+        params.append("category", filters.category)
+      }
+      if (filters?.merchant) {
+        params.append("merchant", filters.merchant)
+      }
+      if (filters?.minAmount) {
+        params.append("minAmount", filters.minAmount)
+      }
+      if (filters?.maxAmount) {
+        params.append("maxAmount", filters.maxAmount)
+      }
+      if (filters?.startDate) {
+        params.append("startDate", filters.startDate)
+      }
+      if (filters?.endDate) {
+        params.append("endDate", filters.endDate)
+      }
+      if (filters?.sortBy) {
+        params.append("sortBy", filters.sortBy)
+      }
+      if (filters?.sortOrder) {
+        params.append("sortOrder", filters.sortOrder)
       }
       
       const response = await fetch(`/api/receipts?${params}`)
@@ -54,5 +101,6 @@ export function useReceipts(householdId?: string, page: number = 1, limit: numbe
 
 // Hook for getting recent receipts (for dashboard)
 export function useRecentReceipts(householdId?: string, limit: number = 5, personalOnly: boolean = false) {
-  return useReceipts(householdId, 1, limit, personalOnly)
+  return useReceipts(householdId, 1, limit, undefined, personalOnly)
 }
+

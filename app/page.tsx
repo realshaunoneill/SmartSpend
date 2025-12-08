@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Receipt, Scan, CreditCard, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock } from "lucide-react"
+import { Receipt, Scan, CreditCard, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
@@ -14,6 +14,12 @@ const features = [
     title: "AI Receipt Scanning",
     description: "Upload receipts and our AI extracts merchant, amount, date, and line items automatically.",
     gradient: "from-emerald-500/10 to-teal-500/10",
+  },
+  {
+    icon: Search,
+    title: "Powerful Search",
+    description: "Search receipts by merchant name, category, or even specific items you purchased. Find any receipt instantly.",
+    gradient: "from-violet-500/10 to-purple-500/10",
   },
   {
     icon: BarChart3,
@@ -32,12 +38,6 @@ const features = [
     title: "Household Sharing",
     description: "Share expenses with family members and track household spending together.",
     gradient: "from-orange-500/10 to-amber-500/10",
-  },
-  {
-    icon: Shield,
-    title: "Secure & Private",
-    description: "Bank-level encryption keeps your financial data safe and private.",
-    gradient: "from-red-500/10 to-rose-500/10",
   },
   {
     icon: Receipt,

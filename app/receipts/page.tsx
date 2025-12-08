@@ -8,15 +8,50 @@ import { ReceiptListSkeleton } from "@/components/receipts/receipt-list-skeleton
 import { HouseholdSelector } from "@/components/households/household-selector"
 import { Pagination } from "@/components/layout/pagination"
 import { ReceiptDetailModal } from "@/components/receipts/receipt-detail-modal"
+import { ReceiptSearchFilters, ReceiptFilters } from "@/components/receipts/receipt-search-filters"
 import { SubscriptionGate } from "@/components/subscriptions/subscription-gate"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Loader2, Search, Store, Tag, ShoppingCart } from "lucide-react"
 import { useUser as useClerkUser } from "@clerk/nextjs"
 import { useUser } from "@/lib/hooks/use-user"
 import { useReceipts, useRecentReceipts } from "@/lib/hooks/use-receipts"
 import { useHouseholds } from "@/lib/hooks/use-households"
 import { formatCategory } from "@/lib/utils/format-category"
+
+// Helper function to determine why a receipt matched the search
+function getSearchMatchReason(receipt: any, searchTerm: string): { type: string; icon: any; label: string } | null {
+  if (!searchTerm) return null;
+  
+  const search = searchTerm.toLowerCase();
+  
+  // Check merchant name
+  if (receipt.merchantName?.toLowerCase().includes(search)) {
+    return { type: "merchant", icon: Store, label: `Merchant: ${receipt.merchantName}` };
+  }
+  
+  // Check category
+  if (receipt.category?.toLowerCase().includes(search)) {
+    return { type: "category", icon: Tag, label: `Category: ${formatCategory(receipt.category)}` };
+  }
+  
+  // Check line items
+  if (receipt.items && Array.isArray(receipt.items)) {
+    const matchingItems = receipt.items.filter((item: any) => 
+      item.name?.toLowerCase().includes(search)
+    );
+    if (matchingItems.length > 0) {
+      return { 
+        type: "item", 
+        icon: ShoppingCart, 
+        label: `Item: ${matchingItems[0].name}${matchingItems.length > 1 ? ` +${matchingItems.length - 1} more` : ''}` 
+      };
+    }
+  }
+  
+  return null;
+}
 
 export default function ReceiptsPage() {
   const { user: clerkUser } = useClerkUser()
@@ -25,6 +60,10 @@ export default function ReceiptsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [filters, setFilters] = useState<ReceiptFilters>({
+    sortBy: "date",
+    sortOrder: "desc",
+  })
   const pageSize = 12
   
   const { data: households = [] } = useHouseholds()
@@ -33,12 +72,17 @@ export default function ReceiptsPage() {
   const { receipts: recentReceipts, isLoading: recentLoading, refetch: refetchRecent } = useRecentReceipts(selectedHouseholdId, 5)
   
   // Get paginated receipts for the main list
-  const { receipts: allReceipts, pagination, isLoading: allLoading, error, refetch: refetchAll } = useReceipts(selectedHouseholdId, currentPage, pageSize)
+  const { receipts: allReceipts, pagination, isLoading: allLoading, error, refetch: refetchAll } = useReceipts(
+    selectedHouseholdId, 
+    currentPage, 
+    pageSize,
+    filters
+  )
 
-  // Reset page when household changes
+  // Reset page when household or filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedHouseholdId])
+  }, [selectedHouseholdId, filters])
 
   const handleUploadComplete = () => {
     refetchRecent()
@@ -47,6 +91,17 @@ export default function ReceiptsPage() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
+  }
+
+  const handleFiltersChange = (newFilters: ReceiptFilters) => {
+    setFilters(newFilters)
+  }
+
+  const handleClearFilters = () => {
+    setFilters({
+      sortBy: "date",
+      sortOrder: "desc",
+    })
   }
 
   const handleReceiptClick = (receipt: any) => {
@@ -138,6 +193,13 @@ export default function ReceiptsPage() {
             </div>
           </div>
 
+          {/* Search and Filters */}
+          <ReceiptSearchFilters
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            onClearFilters={handleClearFilters}
+          />
+
           {allLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: pageSize }).map((_, i) => (
@@ -154,6 +216,7 @@ export default function ReceiptsPage() {
                 {allReceipts.map((receipt) => {
                   const isFailed = receipt.processingStatus === 'failed';
                   const isProcessing = receipt.processingStatus === 'processing';
+                  const matchReason = getSearchMatchReason(receipt, filters.search || "");
                   
                   return (
                     <Card 
@@ -167,6 +230,18 @@ export default function ReceiptsPage() {
                     >
                       <CardContent className="p-4">
                         <div className="space-y-2">
+                          {/* Search Match Indicator */}
+                          {matchReason && (
+                            <div className="mb-2 flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1.5">
+                              <matchReason.icon className="h-3.5 w-3.5 shrink-0 text-primary" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-primary truncate">
+                                  {matchReason.label}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
                           <div className="flex items-center justify-between">
                             <h3 className="font-semibold text-sm truncate">
                               {receipt.merchantName || "Unknown Merchant"}
