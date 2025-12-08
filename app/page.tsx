@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Receipt, Scan, CreditCard, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock, Search } from "lucide-react"
+import { Receipt, Scan, CreditCard, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock, Search, Cloud, Smartphone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
@@ -28,9 +28,9 @@ const features = [
     gradient: "from-blue-500/10 to-cyan-500/10",
   },
   {
-    icon: CreditCard,
-    title: "Bank Integration",
-    description: "Connect your bank accounts to automatically sync transactions in real-time.",
+    icon: Cloud,
+    title: "Cloud Sync",
+    description: "Access your receipts from any device with automatic cloud synchronization.",
     gradient: "from-purple-500/10 to-pink-500/10",
   },
   {
@@ -283,9 +283,9 @@ export default function LandingPage() {
               <p className="text-sm text-muted-foreground">Military-grade security</p>
             </div>
             <div className="rounded-lg border border-border/50 bg-card/50 p-6 backdrop-blur-sm">
-              <Lock className="mx-auto mb-3 h-8 w-8 text-primary" />
-              <h3 className="mb-2 font-semibold text-foreground">SOC 2 Compliant</h3>
-              <p className="text-sm text-muted-foreground">Industry standards</p>
+              <Cloud className="mx-auto mb-3 h-8 w-8 text-primary" />
+              <h3 className="mb-2 font-semibold text-foreground">Secure Cloud Storage</h3>
+              <p className="text-sm text-muted-foreground">Always backed up and accessible</p>
             </div>
             <div className="rounded-lg border border-border/50 bg-card/50 p-6 backdrop-blur-sm">
               <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-primary" />
