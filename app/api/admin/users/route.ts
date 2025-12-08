@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users, receipts, householdUsers } from "@/lib/db/schema";
-import { getAuthenticatedUser } from "@/lib/auth-helpers";
-import { UserService } from "@/lib/services/user-service";
+import { getAuthenticatedUser, requireAdmin } from "@/lib/auth-helpers";
 import { eq, count, sql } from "drizzle-orm";
 import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { randomUUID } from "crypto";
@@ -18,14 +17,8 @@ export async function GET(req: NextRequest) {
     const { user } = authResult;
 
     // Check if user is admin
-    const isAdmin = await UserService.isAdmin(user.id);
-    if (!isAdmin) {
-      submitLogEvent('admin', 'Unauthorized admin access attempt', correlationId, { userId: user.id }, true);
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 403 }
-      );
-    }
+    const adminCheck = await requireAdmin(user, correlationId);
+    if (adminCheck) return adminCheck;
 
     // Get all users with receipt and household counts
     const allUsers = await db

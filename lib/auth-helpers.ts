@@ -3,6 +3,10 @@ import { NextResponse } from 'next/server'
 import { CorrelationId, submitLogEvent } from '@/lib/logging'
 import { UserService } from '@/lib/services/user-service'
 import { randomUUID } from 'crypto'
+import { db } from '@/lib/db'
+import { householdUsers } from '@/lib/db/schema'
+import { eq, and } from 'drizzle-orm'
+import type { User } from '@/lib/db/schema'
 
 /**
  * Get user email from Clerk
@@ -67,3 +71,78 @@ export async function requireSubscription(userOrResult: any) {
 
   return null
 }
+
+/**
+ * Require admin privileges
+ * Returns null if admin, or NextResponse error if not
+ */
+export async function requireAdmin(user: User, correlationId: CorrelationId) {
+  const isAdmin = await UserService.isAdmin(user.id);
+  if (!isAdmin) {
+    submitLogEvent('admin', 'Unauthorized admin access attempt', correlationId, { userId: user.id }, true);
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 403 }
+    );
+  }
+  return null;
+}
+
+/**
+ * Check if user is member of household
+ * Returns membership record or null
+ */
+export async function getHouseholdMembership(householdId: string, userId: string) {
+  const [membership] = await db
+    .select()
+    .from(householdUsers)
+    .where(
+      and(
+        eq(householdUsers.householdId, householdId),
+        eq(householdUsers.userId, userId)
+      )
+    )
+    .limit(1);
+  return membership || null;
+}
+
+/**
+ * Require household membership
+ * Returns null if member, or NextResponse error if not
+ */
+export async function requireHouseholdMembership(
+  householdId: string,
+  userId: string,
+  correlationId: CorrelationId
+) {
+  const membership = await getHouseholdMembership(householdId, userId);
+  if (!membership) {
+    submitLogEvent('household', 'Unauthorized household access attempt', correlationId, { userId, householdId }, true);
+    return NextResponse.json(
+      { error: "Not a member of this household" },
+      { status: 403 }
+    );
+  }
+  return null;
+}
+
+/**
+ * Verify receipt ownership or admin
+ * Returns null if authorized, or NextResponse error if not
+ */
+export async function requireReceiptAccess(
+  receipt: any,
+  user: User,
+  correlationId: CorrelationId
+) {
+  const isAdmin = await UserService.isAdmin(user.id);
+  if (receipt.userId !== user.id && !isAdmin) {
+    submitLogEvent('receipt', 'Unauthorized receipt access attempt', correlationId, { userId: user.id, receiptId: receipt.id }, true);
+    return NextResponse.json(
+      { error: "You don't have permission to access this receipt" },
+      { status: 403 }
+    );
+  }
+  return null;
+}
+

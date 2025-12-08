@@ -6,6 +6,7 @@ import { analyzeReceiptWithGPT4o } from "@/lib/openai";
 import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { invalidateInsightsCache } from "@/lib/utils/cache-helpers";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -166,6 +167,9 @@ export async function POST(
       receiptId: receipt.id, 
       userId: user.id 
     });
+
+    // Invalidate insights cache since receipt data changed
+    await invalidateInsightsCache(user.id, receipt.householdId, correlationId);
 
     return NextResponse.json({
       success: true,

@@ -7,6 +7,8 @@ export type EventType =
   | 'generate-error' 
   | 'generate-retry' 
   | 'credits' 
+  | 'cache'
+  | 'cache-error'
   | 'image' 
   | 'image-proxy' 
   | 'image-metadata' 

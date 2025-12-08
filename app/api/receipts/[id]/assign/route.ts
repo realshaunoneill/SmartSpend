@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { receipts, householdUsers } from "@/lib/db/schema";
-import { getAuthenticatedUser } from "@/lib/auth-helpers";
-import { eq, and } from "drizzle-orm";
+import { receipts } from "@/lib/db/schema";
+import { getAuthenticatedUser, getHouseholdMembership } from "@/lib/auth-helpers";
+import { eq } from "drizzle-orm";
 import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { randomUUID } from "crypto";
+import { invalidateInsightsCache } from "@/lib/utils/cache-helpers";
 
 export const runtime = "nodejs";
 
@@ -40,16 +41,7 @@ export async function PATCH(
     if (receipt.householdId && householdId === null) {
       // Removing from household - check if user is owner OR household admin
       if (!isOwner) {
-        const [membership] = await db
-          .select()
-          .from(householdUsers)
-          .where(
-            and(
-              eq(householdUsers.householdId, receipt.householdId),
-              eq(householdUsers.userId, user.id)
-            )
-          )
-          .limit(1);
+        const membership = await getHouseholdMembership(receipt.householdId, user.id);
 
         if (!membership || membership.role !== "owner") {
           return NextResponse.json(
@@ -69,16 +61,7 @@ export async function PATCH(
 
       // If assigning to a household, verify user is a member
       if (householdId) {
-        const [membership] = await db
-          .select()
-          .from(householdUsers)
-          .where(
-            and(
-              eq(householdUsers.householdId, householdId),
-              eq(householdUsers.userId, user.id)
-            )
-          )
-          .limit(1);
+        const membership = await getHouseholdMembership(householdId, user.id);
 
         if (!membership) {
           return NextResponse.json(
@@ -98,6 +81,12 @@ export async function PATCH(
       })
       .where(eq(receipts.id, receiptId))
       .returning();
+
+    // Invalidate cache for both old and new household (if any)
+    await invalidateInsightsCache(user.id, receipt.householdId, correlationId);
+    if (householdId && householdId !== receipt.householdId) {
+      await invalidateInsightsCache(user.id, householdId, correlationId);
+    }
 
     return NextResponse.json(updatedReceipt);
   } catch (error) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { receipts, receiptItems, insightsCache } from "@/lib/db/schema";
-import { getAuthenticatedUser, requireSubscription } from "@/lib/auth-helpers";
+import { getAuthenticatedUser, requireSubscription, requireHouseholdMembership } from "@/lib/auth-helpers";
 import { eq, and, gte, desc, sql, lt } from "drizzle-orm";
 import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { generateSpendingSummary } from "@/lib/openai";
@@ -31,6 +31,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const householdId = searchParams.get("householdId");
     const months = parseInt(searchParams.get("months") || "3");
+
+    // If householdId is provided, verify user is a member
+    if (householdId) {
+      const membershipCheck = await requireHouseholdMembership(householdId, user.id, correlationId);
+      if (membershipCheck) return membershipCheck; // Returns error response if not a member
+    }
 
     // Create cache key from query parameters
     const cacheKey = `months:${months}|household:${householdId || 'null'}`;

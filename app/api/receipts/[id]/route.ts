@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth-helpers";
+import { getAuthenticatedUser, requireReceiptAccess } from "@/lib/auth-helpers";
 import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { getReceiptById, deleteReceipt } from "@/lib/receipt-scanner";
 import { randomUUID } from "crypto";
-import { db } from "@/lib/db";
-import { insightsCache } from "@/lib/db/schema";
-import { eq, or } from "drizzle-orm";
+import { invalidateInsightsCache } from "@/lib/utils/cache-helpers";
 
 export async function GET(
   request: NextRequest,
@@ -29,12 +27,8 @@ export async function GET(
     }
 
     // Verify the user owns this receipt or is admin
-    if (receipt.userId !== user.id && !user.isAdmin) {
-      return NextResponse.json(
-        { error: "You don't have permission to view this receipt" },
-        { status: 403 }
-      );
-    }
+    const accessCheck = await requireReceiptAccess(receipt, user, correlationId);
+    if (accessCheck) return accessCheck;
 
     return NextResponse.json(receipt);
   } catch (error) {
@@ -81,12 +75,8 @@ export async function DELETE(
     }
 
     // Verify the user owns this receipt or is admin
-    if (receipt.userId !== user.id && !user.isAdmin) {
-      return NextResponse.json(
-        { error: "You can only delete your own receipts" },
-        { status: 403 }
-      );
-    }
+    const accessCheck = await requireReceiptAccess(receipt, user, correlationId);
+    if (accessCheck) return accessCheck;
 
     // Soft delete the receipt using helper function
     const deleted = await deleteReceipt(receiptId, user.id);
@@ -114,20 +104,7 @@ export async function DELETE(
     );
 
     // Invalidate insights cache for this user
-    try {
-      await db
-        .delete(insightsCache)
-        .where(
-          or(
-            eq(insightsCache.userId, user.id),
-            receipt.householdId ? eq(insightsCache.householdId, receipt.householdId) : undefined
-          )
-        );
-      submitLogEvent('receipt', "Invalidated insights cache after receipt deletion", correlationId, { userId: user.id, householdId: receipt.householdId });
-    } catch (cacheError) {
-      // Log but don't fail the request if cache invalidation fails
-      submitLogEvent('receipt-error', `Failed to invalidate insights cache: ${cacheError instanceof Error ? cacheError.message : 'Unknown error'}`, correlationId, {}, true);
-    }
+    await invalidateInsightsCache(user.id, receipt.householdId, correlationId);
 
     return NextResponse.json({
       success: true,

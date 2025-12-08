@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { HouseholdService } from '@/lib/services/household-service'
-import { getAuthenticatedUser } from '@/lib/auth-helpers'
+import { getAuthenticatedUser, requireHouseholdMembership } from '@/lib/auth-helpers'
 import {
   createErrorResponse,
   ErrorCode,
@@ -29,6 +29,10 @@ export async function GET(
     const { user } = authResult;
 
     const { id: householdId } = await params
+
+    // Verify user is a member of this household before showing members list
+    const membershipCheck = await requireHouseholdMembership(householdId, user.id, correlationId);
+    if (membershipCheck) return membershipCheck;
 
     // Get household members
     const members = await HouseholdService.getHouseholdMembers(householdId)

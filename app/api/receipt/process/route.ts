@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { receipts, receiptItems, insightsCache } from "@/lib/db/schema";
+import { receipts, receiptItems } from "@/lib/db/schema";
 import { getAuthenticatedUser, requireSubscription } from "@/lib/auth-helpers";
 import { analyzeReceiptWithGPT4o } from "@/lib/openai";
 import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { randomUUID } from "crypto";
-import { eq, or } from "drizzle-orm";
+import { invalidateInsightsCache } from "@/lib/utils/cache-helpers";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -172,20 +172,7 @@ export async function POST(req: NextRequest) {
     submitLogEvent('receipt-process', "Receipt processing completed successfully", correlationId, { receiptId: receipt.id, userId: user.id });
 
     // Invalidate insights cache for this user
-    try {
-      await db
-        .delete(insightsCache)
-        .where(
-          or(
-            eq(insightsCache.userId, user.id),
-            householdId ? eq(insightsCache.householdId, householdId) : undefined
-          )
-        );
-      submitLogEvent('receipt', "Invalidated insights cache after new receipt", correlationId, { userId: user.id, householdId });
-    } catch (cacheError) {
-      // Log but don't fail the request if cache invalidation fails
-      submitLogEvent('receipt-error', `Failed to invalidate insights cache: ${cacheError instanceof Error ? cacheError.message : 'Unknown error'}`, correlationId, {}, true);
-    }
+    await invalidateInsightsCache(user.id, householdId, correlationId);
 
     // Prepare enhanced response with all extracted data
     const items = ocrData.items && Array.isArray(ocrData.items)
