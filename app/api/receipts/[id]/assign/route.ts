@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { receipts } from '@/lib/db/schema';
-import { getAuthenticatedUser, getHouseholdMembership, filterReceiptForSubscription } from '@/lib/auth-helpers';
+import { getAuthenticatedUser, getHouseholdMembership } from '@/lib/auth-helpers';
 import { eq } from 'drizzle-orm';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { randomUUID } from 'crypto';
