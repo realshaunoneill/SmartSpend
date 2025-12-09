@@ -110,7 +110,6 @@ export function HouseholdCard({ household, currentUserId, isSubscribed = false, 
               'Track shared expenses',
               'Assign household roles',
             ]}
-            className="border-0 bg-transparent"
           />
         )}
       </CardContent>
