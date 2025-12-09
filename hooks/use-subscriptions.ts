@@ -68,6 +68,7 @@ export function useSubscriptions(
       if (!res.ok) throw new Error('Failed to fetch subscriptions');
       return res.json();
     },
+    staleTime: 2 * 60 * 1000, // 2 minutes - subscriptions don't change frequently
   });
 }
 
@@ -81,6 +82,7 @@ export function useSubscription(id: string) {
       return res.json();
     },
     enabled: !!id,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
 

@@ -84,6 +84,7 @@ export function useReceipts(
       }
       return response.json()
     },
+    staleTime: 1 * 60 * 1000, // 1 minute - receipts update more frequently
   })
 
   const refetch = () => {

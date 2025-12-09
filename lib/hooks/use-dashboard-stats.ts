@@ -72,6 +72,7 @@ export function useDashboardStats(householdId?: string, personalOnly: boolean = 
       }
     },
     enabled: !receiptsLoading && !!receipts,
+    staleTime: 2 * 60 * 1000, // 2 minutes - dashboard stats are derived from receipts
   })
 
   return {

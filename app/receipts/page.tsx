@@ -100,22 +100,24 @@ export default function ReceiptsPage() {
         setSelectedReceipt(receipt)
         setIsModalOpen(true)
       } else {
-        // Receipt not yet loaded, fetch it
-        fetch(`/api/receipts/${selectedId}`)
-          .then(res => {
-            if (res.ok) return res.json()
-            throw new Error('Receipt not found')
-          })
-          .then(receipt => {
-            setSelectedReceipt(receipt)
-            setIsModalOpen(true)
-          })
-          .catch(err => {
-            console.error('Failed to fetch receipt:', err)
-          })
+        // Receipt not yet loaded, fetch it using queryClient
+        queryClient.fetchQuery({
+          queryKey: ['receipt', selectedId],
+          queryFn: async () => {
+            const res = await fetch(`/api/receipts/${selectedId}`)
+            if (!res.ok) throw new Error('Receipt not found')
+            return res.json()
+          },
+          staleTime: 5 * 60 * 1000,
+        }).then(receipt => {
+          setSelectedReceipt(receipt)
+          setIsModalOpen(true)
+        }).catch(err => {
+          console.error('Failed to fetch receipt:', err)
+        })
       }
     }
-  }, [searchParams, recentReceipts, allReceipts])
+  }, [searchParams, recentReceipts, allReceipts, queryClient])
 
   // Prefetch subscription data for all receipts when they load
   useEffect(() => {

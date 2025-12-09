@@ -10,5 +10,6 @@ export function useHouseholds() {
       }
       return response.json();
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes - households rarely change
   });
 }
