@@ -22,7 +22,6 @@ interface UploadItem {
 const ENV_PATH_PREFIX = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
 
 export function ReceiptBatchUpload({
-  clerkId,
   userEmail,
   householdId,
   onUploadComplete,

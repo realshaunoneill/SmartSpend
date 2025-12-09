@@ -1,7 +1,6 @@
 'use client';
 
 import { Building2, Phone, Globe, Hash, ExternalLink } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 
 interface ReceiptBusinessDetailsProps {
   ocrData: any

@@ -70,7 +70,7 @@ export function EditSubscriptionDialog({
 }: EditSubscriptionDialogProps) {
   const { mutate: updateSubscription, isPending } = useUpdateSubscription(subscription.id);
   const { toast } = useToast();
-  const { data: households = [] } = useHouseholds();
+  useHouseholds();
 
   const {
     register,

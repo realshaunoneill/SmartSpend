@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Receipt, CreditCard, Users, Settings, LogOut, TrendingUp, Menu, ShieldCheck, Repeat } from 'lucide-react';
+import { LayoutDashboard, Receipt, Users, Settings, LogOut, TrendingUp, Menu, ShieldCheck, Repeat } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser, useClerk } from '@clerk/nextjs';
 import { ThemeToggle } from '@/components/layout/theme-toggle';

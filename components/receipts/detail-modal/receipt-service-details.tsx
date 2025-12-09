@@ -1,7 +1,6 @@
 'use client';
 
 import { Utensils, Hash, UserCheck, Users } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 
 interface ReceiptServiceDetailsProps {
   ocrData: any

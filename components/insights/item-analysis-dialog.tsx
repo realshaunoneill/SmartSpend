@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useItemAnalysis, type ItemAnalysis } from '@/hooks/use-item-analysis';
+import { useItemAnalysis } from '@/hooks/use-item-analysis';
 import { Loader2, TrendingUp, ShoppingCart, Calendar, Store, ShoppingBag, AlertCircle, RefreshCcw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -26,7 +26,7 @@ export function ItemAnalysisDialog({
   onOpenChange,
   householdId,
 }: ItemAnalysisDialogProps) {
-  const [months, setMonths] = useState(12);
+  const [months] = useState(12);
 
   const { data: analysis, isLoading, error, refetch } = useItemAnalysis({
     itemName,

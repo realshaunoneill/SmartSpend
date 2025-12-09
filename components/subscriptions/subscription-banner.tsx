@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Crown, Sparkles, ArrowRight, Users, BarChart3, Receipt, Zap } from 'lucide-react';
+import { X, Crown, Sparkles, ArrowRight, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

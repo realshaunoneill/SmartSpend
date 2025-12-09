@@ -3,7 +3,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { HouseholdService } from '@/lib/services/household-service';
 import { UserService } from '@/lib/services/user-service';
-import type { Household } from './types';
 
 async function getCurrentUser() {
   const { userId: clerkId } = await auth();
@@ -49,7 +48,7 @@ export async function leaveHousehold(data: { householdId: string; userId: string
   return { success: true };
 }
 
-export async function updateMemberRole(data: {
+export async function updateMemberRole(_data: {
   householdId: string
   userId: string
   role: 'admin' | 'member'

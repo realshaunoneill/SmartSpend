@@ -53,7 +53,7 @@ export function HouseholdMembersList({
     try {
       await removeMember({ householdId, userId });
       onUpdate();
-    } catch (error) {
+    } catch {
       alert('Failed to remove member');
     } finally {
       setLoadingMemberId(undefined);
@@ -66,7 +66,7 @@ export function HouseholdMembersList({
     try {
       await updateMemberRole({ householdId, userId, role: newRole });
       onUpdate();
-    } catch (error) {
+    } catch {
       alert('Failed to update role');
     } finally {
       setLoadingMemberId(undefined);
