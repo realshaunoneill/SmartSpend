@@ -4,6 +4,22 @@ import type { Receipt, ReceiptItem, Household, Subscription, SubscriptionPayment
 export type ReceiptWithItems = Receipt & {
   items?: ReceiptItem[];
   submittedBy?: string;
+  linkedSubscription?: {
+    id: string;
+    subscriptionId: string;
+    expectedDate: string;
+    expectedAmount: string;
+    status: string;
+    subscription: {
+      id: string;
+      name: string;
+      amount: string;
+      currency: string;
+      billingFrequency: string;
+      status: string;
+      isBusinessExpense: boolean;
+    };
+  } | null;
 };
 
 // Household with member info

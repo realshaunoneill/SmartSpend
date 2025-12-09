@@ -3,8 +3,8 @@ import { getAuthenticatedUser, requireReceiptAccess, filterReceiptForSubscriptio
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { getReceiptById, deleteReceipt } from '@/lib/receipt-scanner';
 import { db } from '@/lib/db';
-import { receipts } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { receipts, subscriptionPayments, subscriptions } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
 
@@ -33,10 +33,46 @@ export async function GET(
     const accessCheck = await requireReceiptAccess(receipt, user, correlationId);
     if (accessCheck) return accessCheck;
 
+    // Fetch linked subscription if user is subscribed
+    let linkedSubscription = null;
+    if (user.subscribed) {
+      const [payment] = await db
+        .select({
+          id: subscriptionPayments.id,
+          subscriptionId: subscriptionPayments.subscriptionId,
+          expectedDate: subscriptionPayments.expectedDate,
+          expectedAmount: subscriptionPayments.expectedAmount,
+          status: subscriptionPayments.status,
+          subscription: {
+            id: subscriptions.id,
+            name: subscriptions.name,
+            amount: subscriptions.amount,
+            currency: subscriptions.currency,
+            billingFrequency: subscriptions.billingFrequency,
+            status: subscriptions.status,
+            isBusinessExpense: subscriptions.isBusinessExpense,
+          },
+        })
+        .from(subscriptionPayments)
+        .innerJoin(subscriptions, eq(subscriptionPayments.subscriptionId, subscriptions.id))
+        .where(
+          and(
+            eq(subscriptionPayments.receiptId, receiptId),
+            eq(subscriptions.userId, user.id),
+          ),
+        )
+        .limit(1);
+
+      linkedSubscription = payment || null;
+    }
+
     // Filter receipt data based on subscription status
     const filteredReceipt = filterReceiptForSubscription(receipt, user.subscribed);
 
-    return NextResponse.json(filteredReceipt);
+    return NextResponse.json({
+      ...filteredReceipt,
+      linkedSubscription,
+    });
   } catch (error) {
     console.error('Error fetching receipt:', error);
 

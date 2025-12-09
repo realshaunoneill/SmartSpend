@@ -1,16 +1,10 @@
 'use client';
 
 import { Repeat, Calendar, DollarSign, ExternalLink } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-
-type LinkedSubscriptionProps = {
-  receiptId: string;
-};
 
 type SubscriptionPayment = {
   id: string;
@@ -18,7 +12,7 @@ type SubscriptionPayment = {
   expectedDate: string;
   expectedAmount: string;
   status: string;
-  subscription?: {
+  subscription: {
     id: string;
     name: string;
     amount: string;
@@ -29,32 +23,11 @@ type SubscriptionPayment = {
   };
 };
 
-export function LinkedSubscription({ receiptId }: LinkedSubscriptionProps) {
-  const { data: payment, isLoading } = useQuery<SubscriptionPayment>({
-    queryKey: ['receipt-subscription', receiptId],
-    queryFn: async () => {
-      const res = await fetch(`/api/receipts/${receiptId}/subscription`);
-      if (!res.ok) {
-        if (res.status === 404) return null;
-        throw new Error('Failed to fetch subscription link');
-      }
-      return res.json();
-    },
-  });
+type LinkedSubscriptionProps = {
+  subscription: SubscriptionPayment | null | undefined;
+};
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-32" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-16 w-full" />
-        </CardContent>
-      </Card>
-    );
-  }
-
+export function LinkedSubscription({ subscription: payment }: LinkedSubscriptionProps) {
   if (!payment?.subscription) {
     return null;
   }

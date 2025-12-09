@@ -70,6 +70,9 @@ export function ReceiptDetailModal({
 
   if (!receipt) return null;
 
+  // Extract OCR data once to avoid repeated casting
+  const ocr = receipt.ocrData as OCRData | null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal>
@@ -118,9 +121,9 @@ export function ReceiptDetailModal({
 
               {/* Scrollable Content Section - All details and items */}
               <div className="flex-1 md:overflow-y-auto px-4 py-3 space-y-3 sm:px-6 sm:py-4 sm:space-y-4\">
-                <LinkedSubscription receiptId={receipt.id} />
+                <LinkedSubscription subscription={receipt.linkedSubscription} />
 
-                <ReceiptBusinessDetails ocrData={(receipt.ocrData as OCRData) || null} />
+                <ReceiptBusinessDetails ocrData={ocr} />
 
                 {!isSubscribed && (
                   <SubscriptionUpsell
@@ -137,24 +140,15 @@ export function ReceiptDetailModal({
 
                 {isSubscribed && (
                   <>
-                    {(() => {
-                      const ocr = receipt.ocrData as OCRData | null;
-                      return ocr?.phoneNumber || ocr?.website || ocr?.vatNumber ? <Separator /> : null;
-                    })()}
+                    {(ocr?.phoneNumber || ocr?.website || ocr?.vatNumber) && <Separator />}
 
-                    <ReceiptServiceDetails ocrData={(receipt.ocrData as OCRData) || null} />
+                    <ReceiptServiceDetails ocrData={ocr} />
 
-                    {(() => {
-                      const ocr = receipt.ocrData as OCRData | null;
-                      return ocr?.tableNumber || ocr?.serverName || ocr?.customerCount ? <Separator /> : null;
-                    })()}
+                    {(ocr?.tableNumber || ocr?.serverName || ocr?.customerCount) && <Separator />}
 
-                    <ReceiptLoyaltyDetails ocrData={(receipt.ocrData as OCRData) || null} />
+                    <ReceiptLoyaltyDetails ocrData={ocr} />
 
-                    {(() => {
-                      const ocr = receipt.ocrData as OCRData | null;
-                      return ocr?.loyaltyNumber || ocr?.specialOffers ? <Separator /> : null;
-                    })()}
+                    {(ocr?.loyaltyNumber || ocr?.specialOffers) && <Separator />}
 
                     <ReceiptItemsList
                       items={receipt.items ?? []}
