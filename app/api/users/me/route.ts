@@ -32,7 +32,11 @@ export async function GET(request: NextRequest) {
       requestId,
       userId: user.id,
     })
-    return NextResponse.json(user)
+    return NextResponse.json(user, {
+      headers: {
+        'Cache-Control': 'private, max-age=60', // Cache for 1 minute
+      }
+    })
   } catch (error) {
     Logger.error('Error fetching user profile', error as Error, { requestId })
     const errorResponse = createErrorResponse(

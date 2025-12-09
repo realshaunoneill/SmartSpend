@@ -38,7 +38,11 @@ export async function GET(request: NextRequest) {
       userId: user.id,
       context: { count: households.length },
     })
-    return NextResponse.json(households)
+    return NextResponse.json(households, {
+      headers: {
+        'Cache-Control': 'private, max-age=300', // Cache for 5 minutes
+      }
+    })
   } catch (error) {
     Logger.error('Error fetching households', error as Error, { requestId })
     const errorResponse = createErrorResponse(

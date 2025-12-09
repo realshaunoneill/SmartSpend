@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { subscriptions, subscriptionPayments } from '@/lib/db/schema';
-import { eq, and, or, desc, isNull, gte } from 'drizzle-orm';
+import { eq, and, or, desc, isNull, gte, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { CorrelationId, submitLogEvent } from '@/lib/logging';
 
@@ -42,31 +42,46 @@ export async function GET(req: NextRequest) {
 
     // Optionally include payment information
     if (includePayments) {
-      const subsWithPayments = await Promise.all(
-        userSubscriptions.map(async (subscription) => {
-          // Get pending and missed payments
-          const payments = await db
-            .select()
-            .from(subscriptionPayments)
-            .where(
-              and(
-                eq(subscriptionPayments.subscriptionId, subscription.id),
-                or(
-                  eq(subscriptionPayments.status, 'pending'),
-                  eq(subscriptionPayments.status, 'missed')
-                )
-              )
+      // Get all subscription IDs
+      const subscriptionIds = userSubscriptions.map(s => s.id);
+      
+      // Fetch all payments in one query
+      const allPayments = subscriptionIds.length > 0 ? await db
+        .select()
+        .from(subscriptionPayments)
+        .where(
+          and(
+            sql`${subscriptionPayments.subscriptionId} = ANY(${subscriptionIds})`,
+            or(
+              eq(subscriptionPayments.status, 'pending'),
+              eq(subscriptionPayments.status, 'missed')
             )
-            .orderBy(desc(subscriptionPayments.expectedDate))
-            .limit(12); // Last 12 expected payments
+          )
+        )
+        .orderBy(desc(subscriptionPayments.expectedDate))
+        .limit(12 * subscriptionIds.length) : [];
 
-          return {
-            ...subscription,
-            missingPayments: payments.filter(p => p.status === 'pending' || p.status === 'missed').length,
-            recentPayments: payments,
-          };
-        })
-      );
+      // Group payments by subscription ID
+      const paymentsBySubscription = new Map<string, typeof allPayments>();
+      allPayments.forEach(payment => {
+        if (!paymentsBySubscription.has(payment.subscriptionId)) {
+          paymentsBySubscription.set(payment.subscriptionId, []);
+        }
+        const subPayments = paymentsBySubscription.get(payment.subscriptionId)!;
+        if (subPayments.length < 12) {
+          subPayments.push(payment);
+        }
+      });
+
+      // Map payments to subscriptions
+      const subsWithPayments = userSubscriptions.map(subscription => {
+        const payments = paymentsBySubscription.get(subscription.id) || [];
+        return {
+          ...subscription,
+          missingPayments: payments.filter(p => p.status === 'pending' || p.status === 'missed').length,
+          recentPayments: payments,
+        };
+      });
       
       return NextResponse.json(subsWithPayments);
     }

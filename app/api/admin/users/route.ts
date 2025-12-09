@@ -20,8 +20,8 @@ export async function GET(req: NextRequest) {
     const adminCheck = await requireAdmin(user, correlationId);
     if (adminCheck) return adminCheck;
 
-    // Get all users with receipt and household counts
-    const allUsers = await db
+    // Get all users with receipt and household counts using efficient subqueries
+    const usersWithCounts = await db
       .select({
         id: users.id,
         email: users.email,
@@ -29,29 +29,18 @@ export async function GET(req: NextRequest) {
         isAdmin: users.isAdmin,
         createdAt: users.createdAt,
         stripeCustomerId: users.stripeCustomerId,
+        receiptCount: sql<number>`(
+          SELECT COUNT(*)
+          FROM ${receipts}
+          WHERE ${receipts.userId} = ${users.id}
+        )`,
+        householdCount: sql<number>`(
+          SELECT COUNT(*)
+          FROM ${householdUsers}
+          WHERE ${householdUsers.userId} = ${users.id}
+        )`,
       })
       .from(users);
-
-    // Get counts for each user
-    const usersWithCounts = await Promise.all(
-      allUsers.map(async (u) => {
-        const [receiptCount] = await db
-          .select({ count: count() })
-          .from(receipts)
-          .where(eq(receipts.userId, u.id));
-
-        const [householdCount] = await db
-          .select({ count: count() })
-          .from(householdUsers)
-          .where(eq(householdUsers.userId, u.id));
-
-        return {
-          ...u,
-          receiptCount: receiptCount.count,
-          householdCount: householdCount.count,
-        };
-      })
-    );
 
     submitLogEvent('admin', 'Admin viewed users list', correlationId, { adminId: user.id });
 

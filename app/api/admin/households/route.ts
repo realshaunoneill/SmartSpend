@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { households, householdUsers, receipts, users } from "@/lib/db/schema";
 import { getAuthenticatedUser, requireAdmin } from "@/lib/auth-helpers";
-import { eq, count } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { randomUUID } from "crypto";
 
@@ -20,44 +20,31 @@ export async function GET(req: NextRequest) {
     const adminCheck = await requireAdmin(user, correlationId);
     if (adminCheck) return adminCheck;
 
-    // Get all households with members and receipt counts
-    const allHouseholds = await db
+    // Get all households with members and receipt counts using efficient subqueries
+    const householdsWithDetails = await db
       .select({
         id: households.id,
         name: households.name,
         createdAt: households.createdAt,
+        memberCount: sql<number>`(
+          SELECT COUNT(*)
+          FROM ${householdUsers}
+          WHERE ${householdUsers.householdId} = ${households.id}
+        )`,
+        receiptCount: sql<number>`(
+          SELECT COUNT(*)
+          FROM ${receipts}
+          WHERE ${receipts.householdId} = ${households.id}
+        )`,
+        ownerEmail: sql<string>`(
+          SELECT ${users.email}
+          FROM ${householdUsers}
+          INNER JOIN ${users} ON ${householdUsers.userId} = ${users.id}
+          WHERE ${householdUsers.householdId} = ${households.id}
+          LIMIT 1
+        )`,
       })
       .from(households);
-
-    // Get counts and owner info for each household
-    const householdsWithDetails = await Promise.all(
-      allHouseholds.map(async (h) => {
-        const [memberCount] = await db
-          .select({ count: count() })
-          .from(householdUsers)
-          .where(eq(householdUsers.householdId, h.id));
-
-        const [receiptCount] = await db
-          .select({ count: count() })
-          .from(receipts)
-          .where(eq(receipts.householdId, h.id));
-
-        // Get owner email
-        const [owner] = await db
-          .select({ email: users.email })
-          .from(householdUsers)
-          .innerJoin(users, eq(householdUsers.userId, users.id))
-          .where(eq(householdUsers.householdId, h.id))
-          .limit(1);
-
-        return {
-          ...h,
-          memberCount: memberCount.count,
-          receiptCount: receiptCount.count,
-          ownerEmail: owner?.email || 'Unknown',
-        };
-      })
-    );
 
     submitLogEvent('admin', 'Admin viewed households list', correlationId, { adminId: user.id });
 

@@ -16,9 +16,14 @@ export async function GET(req: NextRequest) {
 
     const isAdmin = await UserService.isAdmin(user.id);
 
-    return NextResponse.json({
-      isAdmin,
-    });
+    return NextResponse.json(
+      { isAdmin },
+      { 
+        headers: {
+          'Cache-Control': 'private, max-age=300', // Cache for 5 minutes
+        }
+      }
+    );
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to check admin status" },

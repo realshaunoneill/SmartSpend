@@ -20,8 +20,8 @@ export async function GET(req: NextRequest) {
     const adminCheck = await requireAdmin(user, correlationId);
     if (adminCheck) return adminCheck;
 
-    // Get query parameters
-    const allReceipts = await db
+    // Get receipts with user and household data using JOINs
+    const receiptsWithDetails = await db
       .select({
         id: receipts.id,
         merchantName: receipts.merchantName,
@@ -30,45 +30,14 @@ export async function GET(req: NextRequest) {
         transactionDate: receipts.transactionDate,
         processingStatus: receipts.processingStatus,
         createdAt: receipts.createdAt,
-        userId: receipts.userId,
-        householdId: receipts.householdId,
+        userEmail: sql<string>`COALESCE(${users.email}, 'Unknown')`,
+        householdName: households.name,
       })
       .from(receipts)
+      .leftJoin(users, eq(receipts.userId, users.id))
+      .leftJoin(households, eq(receipts.householdId, households.id))
       .where(isNull(receipts.deletedAt))
       .limit(500); // Limit to prevent huge responses
-
-    // Enrich with user and household data
-    const receiptsWithDetails = await Promise.all(
-      allReceipts.map(async (r) => {
-        const [userInfo] = await db
-          .select({ email: users.email })
-          .from(users)
-          .where(eq(users.id, r.userId))
-          .limit(1);
-
-        let householdName = null;
-        if (r.householdId) {
-          const [householdInfo] = await db
-            .select({ name: households.name })
-            .from(households)
-            .where(eq(households.id, r.householdId))
-            .limit(1);
-          householdName = householdInfo?.name || null;
-        }
-
-        return {
-          id: r.id,
-          merchantName: r.merchantName,
-          totalAmount: r.totalAmount,
-          currency: r.currency,
-          transactionDate: r.transactionDate,
-          processingStatus: r.processingStatus,
-          createdAt: r.createdAt,
-          userEmail: userInfo?.email || 'Unknown',
-          householdName,
-        };
-      })
-    );
 
     submitLogEvent('admin', 'Admin viewed receipts list', correlationId, { adminId: user.id });
 
