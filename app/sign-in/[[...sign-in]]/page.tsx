@@ -114,6 +114,22 @@ export default function SignInPage() {
                     </p>
                   </div>
 
+                  <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium text-foreground">
+                          Quick & Secure Sign In
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Sign in with Google or create an account with your email. All data is encrypted and secure.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="flex justify-center">
                     <SignIn
                       appearance={{
@@ -134,10 +150,23 @@ export default function SignInPage() {
                     />
                   </div>
 
-                  <div className="mt-6 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      New to ReceiptWise? Create your account in seconds.
-                    </p>
+                  <div className="mt-6 space-y-4">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">
+                        New to ReceiptWise? Create your account in seconds.
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                        <span>No credit card required</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                        <span>Free forever plan</span>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
