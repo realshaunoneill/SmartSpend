@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useUser as useClerkUser } from '@clerk/nextjs'
 import type { User } from '@/lib/db/schema'
 
-interface UserResponse extends User {}
+type UserResponse = User
 
 /**
  * Fetch current user from API
