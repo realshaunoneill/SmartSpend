@@ -38,7 +38,7 @@ export function CreateHouseholdDialog({ userId, onHouseholdCreated }: CreateHous
       onHouseholdCreated();
       setOpen(false);
       setName('');
-    } catch (error) {
+    } catch (_error) {
       alert('Failed to create household');
     } finally {
       setIsCreating(false);

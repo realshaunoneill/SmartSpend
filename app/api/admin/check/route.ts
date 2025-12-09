@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
         },
       },
     );
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to check admin status' },
       { status: 500 },

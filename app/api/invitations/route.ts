@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { households, householdUsers, householdInvitations } from '@/lib/db/schema';
+import { households, householdInvitations } from '@/lib/db/schema';
 import { getAuthenticatedUser } from '@/lib/auth-helpers';
 import { eq, and } from 'drizzle-orm';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';

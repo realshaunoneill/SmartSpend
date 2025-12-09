@@ -40,7 +40,7 @@ export function Navigation() {
           const data = await response.json();
           setIsAdmin(data.isAdmin);
         }
-      } catch (error) {
+      } catch (_error) {
         setIsAdmin(false);
       }
     }

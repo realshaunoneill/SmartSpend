@@ -92,7 +92,7 @@ export default async function Success({ searchParams }: SuccessPageProps) {
       >
         <SuccessContent
           sessionId={sessionId}
-          subscriptionStatus={subscriptionData?.status}
+          _subscriptionStatus={subscriptionData?.status}
           userName={user.email}
         />
       </Suspense>

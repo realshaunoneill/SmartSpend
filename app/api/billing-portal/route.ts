@@ -3,7 +3,7 @@ import { createBillingPortalSession } from '@/lib/stripe';
 import { getAuthenticatedUser } from '@/lib/auth-helpers';
 import { type CorrelationId } from '@/lib/logging';
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   const correlationId = crypto.randomUUID() as CorrelationId;
 
   try {

@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Users, Crown, MoreVertical, Trash2, LogOut } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,33 +20,25 @@ interface HouseholdCardProps {
 }
 
 export function HouseholdCard({ household, currentUserId, isSubscribed = false, onUpdate }: HouseholdCardProps) {
-  const [isLoading, setIsLoading] = useState(false);
-
   const handleLeave = async () => {
     if (!confirm('Are you sure you want to leave this household?')) return;
 
-    setIsLoading(true);
     try {
       await leaveHousehold({ householdId: household.id, userId: currentUserId });
       onUpdate();
-    } catch (error) {
+    } catch (_error) {
       alert('Failed to leave household');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this household? This action cannot be undone.')) return;
 
-    setIsLoading(true);
     try {
       await deleteHousehold(household.id);
       onUpdate();
-    } catch (error) {
+    } catch (_error) {
       alert('Failed to delete household');
-    } finally {
-      setIsLoading(false);
     }
   };
 

@@ -22,7 +22,8 @@ export async function POST(req: NextRequest) {
     if (subCheck) return subCheck;
 
     const body = await req.json();
-    let { imageUrl, householdId } = body;
+    let { householdId } = body;
+    const { imageUrl } = body;
 
     if (!imageUrl) {
       return NextResponse.json(

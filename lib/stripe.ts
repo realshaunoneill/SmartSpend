@@ -82,7 +82,7 @@ export async function getOrCreateStripeCustomer(
           submitLogEvent('stripe', `Using existing Stripe customer ${stripeCustomerId}`, correlationId, { userId, customerId: stripeCustomerId });
           return stripeCustomerId;
         }
-      } catch (error) {
+      } catch (_error) {
         submitLogEvent('stripe', 'Existing Stripe customer not found, creating new one', correlationId, { userId, stripeCustomerId });
       }
     }

@@ -61,9 +61,6 @@ export function LinkReceiptDialog({ subscription, payments, children }: LinkRece
 
   // Get all payments (show linked ones for unlinking)
   const allPayments = payments;
-  const unlinkablePayments = payments.filter(
-    (p) => p.status === 'pending' || p.status === 'missed' || !p.receiptId,
-  );
 
   // Filter receipts by search query
   const filteredReceipts = receipts?.filter((receipt) => {

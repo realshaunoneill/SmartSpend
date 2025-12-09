@@ -1,7 +1,6 @@
 'use client';
 
 import { Gift, Tag, Percent } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 
 interface ReceiptLoyaltyDetailsProps {
   ocrData: any

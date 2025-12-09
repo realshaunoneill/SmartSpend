@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { subscriptions, subscriptionPayments } from '@/lib/db/schema';
-import { eq, and, or, desc, isNull, gte, sql } from 'drizzle-orm';
+import { eq, and, or, desc, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 

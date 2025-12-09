@@ -13,50 +13,13 @@ import { ReceiptDetailModal } from '@/components/receipts/receipt-detail-modal';
 import { ReceiptSearchFilters, type ReceiptFilters } from '@/components/receipts/receipt-search-filters';
 import { SubscriptionGate } from '@/components/subscriptions/subscription-gate';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Store, Tag, ShoppingCart } from 'lucide-react';
 import { useUser as useClerkUser } from '@clerk/nextjs';
-import { useUser } from '@/lib/hooks/use-user';
 import { useReceipts, useRecentReceipts } from '@/lib/hooks/use-receipts';
 import { useHouseholds } from '@/lib/hooks/use-households';
-import { formatCategory } from '@/lib/utils/format-category';
 import { ReceiptTimeline } from '@/components/receipts/receipt-timeline';
-
-// Helper function to determine why a receipt matched the search
-function getSearchMatchReason(receipt: any, searchTerm: string): { type: string; icon: any; label: string } | null {
-  if (!searchTerm) return null;
-
-  const search = searchTerm.toLowerCase();
-
-  // Check merchant name
-  if (receipt.merchantName?.toLowerCase().includes(search)) {
-    return { type: 'merchant', icon: Store, label: `Merchant: ${receipt.merchantName}` };
-  }
-
-  // Check category
-  if (receipt.category?.toLowerCase().includes(search)) {
-    return { type: 'category', icon: Tag, label: `Category: ${formatCategory(receipt.category)}` };
-  }
-
-  // Check line items
-  if (receipt.items && Array.isArray(receipt.items)) {
-    const matchingItems = receipt.items.filter((item: any) =>
-      item.name?.toLowerCase().includes(search),
-    );
-    if (matchingItems.length > 0) {
-      return {
-        type: 'item',
-        icon: ShoppingCart,
-        label: `Item: ${matchingItems[0].name}${matchingItems.length > 1 ? ` +${matchingItems.length - 1} more` : ''}`,
-      };
-    }
-  }
-
-  return null;
-}
 
 function ReceiptsPageContent() {
   const { user: clerkUser } = useClerkUser();
-  const { user } = useUser();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>();

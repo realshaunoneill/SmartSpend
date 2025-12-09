@@ -15,18 +15,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Users } from 'lucide-react';
 import { HouseholdReceipts } from '@/components/households/household-receipts';
 
-interface Member {
-  id: string
-  user_id: string
-  full_name: string
-  email: string
-  avatar_url?: string
-  role: 'admin' | 'member'
-  joined_at: string
-}
-
 export default function SharingPage() {
-  const { user: clerkUser, isLoaded } = useClerkUser();
+  const { user: _clerkUser, isLoaded } = useClerkUser();
   const { user, isSubscribed } = useUser();
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>();
   const queryClient = useQueryClient();

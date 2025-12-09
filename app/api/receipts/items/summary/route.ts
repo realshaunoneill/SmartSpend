@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { receipts, receiptItems, insightsCache } from '@/lib/db/schema';
 import { getAuthenticatedUser, requireSubscription, requireHouseholdMembership } from '@/lib/auth-helpers';
-import { eq, and, gte, desc, sql, lt } from 'drizzle-orm';
+import { eq, and, gte, desc, sql } from 'drizzle-orm';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { generateSpendingSummary } from '@/lib/openai';
 import { randomUUID } from 'crypto';

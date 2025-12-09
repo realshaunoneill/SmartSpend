@@ -8,13 +8,13 @@ import { Navigation } from '@/components/layout/navigation';
 
 interface SuccessContentProps {
   sessionId?: string;
-  subscriptionStatus?: string;
+  _subscriptionStatus?: string;
   userName?: string;
 }
 
 export default function SuccessContent({
   sessionId,
-  subscriptionStatus,
+  _subscriptionStatus,
   userName,
 }: SuccessContentProps) {
   return (
