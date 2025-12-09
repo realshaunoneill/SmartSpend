@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { SubscriptionUpsell } from '@/components/subscriptions/subscription-upsell';
 import { removeMember, updateMemberRole } from '@/lib/household-actions';
 import { useSendInvitation, useHouseholdInvitations } from '@/lib/hooks/use-invitations';
 import { toast } from 'sonner';
@@ -149,6 +150,20 @@ export function HouseholdMembersList({
         </div>
       </CardHeader>
       <CardContent>
+        {!isSubscribed && isCurrentUserAdmin && (
+          <div className="mb-4">
+            <SubscriptionUpsell
+              title="Member Management Locked"
+              description="Upgrade to Premium to unlock full member management:"
+              features={[
+                'Invite unlimited members',
+                'Assign admin roles',
+                'Remove members',
+                'Manage household permissions',
+              ]}
+            />
+          </div>
+        )}
         <div className="space-y-3">
           {members.map((member) => {
             const isCurrentUser = member.user_id === currentUserId;

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { InviteMemberDialog } from '@/components/households/invite-member-dialog';
+import { SubscriptionUpsell } from '@/components/subscriptions/subscription-upsell';
 import type { Household } from '@/lib/types';
 import { leaveHousehold, deleteHousehold } from '@/lib/household-actions';
 
@@ -92,13 +93,25 @@ export function HouseholdCard({ household, currentUserId, isSubscribed = false, 
       </CardHeader>
       <CardContent>
         {isSubscribed ? (
-          <InviteMemberDialog householdId={household.id} onMemberInvited={onUpdate} />
-        ) : (
-          <div className="text-center py-4">
-            <p className="text-sm text-muted-foreground">
-              Upgrade to Premium to manage household members
+          household.isAdmin ? (
+            <InviteMemberDialog householdId={household.id} onMemberInvited={onUpdate} />
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-3">
+              Only admins can invite members
             </p>
-          </div>
+          )
+        ) : (
+          <SubscriptionUpsell
+            title="Household Management"
+            description="Upgrade to Premium to manage your household:"
+            features={[
+              'Invite and manage members',
+              'Share receipts automatically',
+              'Track shared expenses',
+              'Assign household roles',
+            ]}
+            className="border-0 bg-transparent"
+          />
         )}
       </CardContent>
     </Card>

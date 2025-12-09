@@ -11,6 +11,7 @@ interface SubscriptionGateProps {
   title?: string
   description?: string
   children?: React.ReactNode
+  variant?: 'full' | 'inline'
 }
 
 const featureConfig = {
@@ -65,6 +66,7 @@ export function SubscriptionGate({
   title,
   description,
   children,
+  variant = 'full',
 }: SubscriptionGateProps) {
   const { user, isSubscribed } = useUser();
 
@@ -114,9 +116,20 @@ export function SubscriptionGate({
     }
   };
 
+  // Inline variant - compact upgrade button
+  if (variant === 'inline') {
+    return (
+      <Button onClick={handleSubscribe} className="gap-2" variant="default">
+        <Crown className="h-4 w-4" />
+        Upgrade to Create
+      </Button>
+    );
+  }
+
+  // Full variant - complete card
   return (
     <div className="flex items-center justify-center p-8">
-      <Card className="max-w-2xl w-full border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+      <Card className="max-w-2xl w-full border-2 border-primary/20 bg-primary/5">
         <CardHeader className="text-center pb-4">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 ring-4 ring-primary/10">
             <FeatureIcon className="h-8 w-8 text-primary" />

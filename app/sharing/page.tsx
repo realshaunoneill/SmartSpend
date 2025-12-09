@@ -106,7 +106,7 @@ export default function SharingPage() {
                 onHouseholdCreated={handleHouseholdCreated}
               />
             ) : (
-              <SubscriptionGate feature="sharing">
+              <SubscriptionGate feature="sharing" variant="inline">
                 <CreateHouseholdDialog
                   userId={currentUserId!}
                   onHouseholdCreated={handleHouseholdCreated}
@@ -128,31 +128,23 @@ export default function SharingPage() {
             </div>
           </div>
         ) : households.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="rounded-full bg-muted p-6 mb-6">
-              <Users className="h-12 w-12 text-muted-foreground" />
-            </div>
-            <h3 className="text-2xl font-semibold mb-2">No households yet</h3>
-            <p className="text-muted-foreground mb-6 max-w-md">
-              {isSubscribed
-                ? 'Create your first household to start sharing receipts with family members or roommates.'
-                : "You're not part of any households yet. Upgrade to Premium to create and manage households."
-              }
-            </p>
-            {isSubscribed ? (
+          !isSubscribed ? (
+            <SubscriptionGate feature="sharing" />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="rounded-full bg-muted p-6 mb-6">
+                <Users className="h-12 w-12 text-muted-foreground" />
+              </div>
+              <h3 className="text-2xl font-semibold mb-2">No households yet</h3>
+              <p className="text-muted-foreground mb-6 max-w-md">
+                Create your first household to start sharing receipts with family members or roommates.
+              </p>
               <CreateHouseholdDialog
                 userId={currentUserId!}
                 onHouseholdCreated={handleHouseholdCreated}
               />
-            ) : (
-              <SubscriptionGate feature="sharing">
-                <CreateHouseholdDialog
-                  userId={currentUserId!}
-                  onHouseholdCreated={handleHouseholdCreated}
-                />
-              </SubscriptionGate>
-            )}
-          </div>
+            </div>
+          )
         ) : (
           <div className="space-y-8">
             <div className="grid gap-8 lg:grid-cols-2">
@@ -170,8 +162,9 @@ export default function SharingPage() {
                 />
               </div>
 
-              <div>
-                {selectedHousehold && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-foreground">Members</h2>
+                {selectedHousehold ? (
                   <>
                     {membersLoading ? (
                       <Skeleton className="h-64 w-full" />
@@ -188,6 +181,12 @@ export default function SharingPage() {
                       />
                     )}
                   </>
+                ) : (
+                  <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-12 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Select a household to view members
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
