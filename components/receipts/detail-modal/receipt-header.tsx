@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ReceiptAssignmentDialog } from "@/components/receipts/receipt-assignment-dialog"
 import { DeleteReceiptButton } from "./delete-receipt-button"
+import { BusinessExpenseDialog } from "./business-expense-dialog"
 import { formatCategory, capitalizeText } from "@/lib/utils/format-category"
 
 interface ReceiptHeaderProps {
@@ -148,6 +149,19 @@ export function ReceiptHeader({
           </Badge>
         )}
       </div>
+
+      {/* Business Expense Section - Only for receipt owner */}
+      {isReceiptOwner && (
+        <div className="mt-4">
+          <BusinessExpenseDialog
+            receiptId={receipt.id}
+            isBusinessExpense={receipt.isBusinessExpense || false}
+            businessCategory={receipt.businessCategory}
+            businessNotes={receipt.businessNotes}
+            taxDeductible={receipt.taxDeductible || false}
+          />
+        </div>
+      )}
     </div>
   )
 }

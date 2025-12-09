@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp, jsonb, unique } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, boolean, timestamp, jsonb, unique, integer, index } from 'drizzle-orm/pg-core';
 
 // Users Table
 export const users = pgTable('users', {
@@ -53,6 +53,12 @@ export const receipts = pgTable('receipts', {
   processingTokens: jsonb('processing_tokens'), // OpenAI token usage: { prompt_tokens, completion_tokens, total_tokens }
   processingStatus: text('processing_status').notNull().default('pending'), // 'pending' | 'processing' | 'completed' | 'failed'
   processingError: text('processing_error'), // Error message if processing failed
+  // Business expense fields
+  isBusinessExpense: boolean('is_business_expense').default(false),
+  businessCategory: text('business_category'),
+  businessNotes: text('business_notes'),
+  taxDeductible: boolean('tax_deductible').default(false),
+  // Soft delete
   deletedAt: timestamp('deleted_at'), // Soft delete timestamp
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -121,6 +127,84 @@ export const insightsCache = pgTable('insights_cache', {
 
 export type InsightsCache = typeof insightsCache.$inferSelect;
 export type NewInsightsCache = typeof insightsCache.$inferInsert;
+
+// Subscriptions Table
+export const subscriptions = pgTable('subscriptions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  householdId: uuid('household_id').references(() => households.id, { onDelete: 'cascade' }),
+  
+  // Subscription Details
+  name: text('name').notNull(),
+  description: text('description'),
+  category: text('category'), // 'Software', 'Streaming', 'Utilities', 'Insurance', etc.
+  
+  // Financial Info
+  amount: text('amount').notNull(),
+  currency: text('currency').notNull().default('EUR'),
+  
+  // Recurrence
+  billingFrequency: text('billing_frequency').notNull(), // 'monthly', 'quarterly', 'yearly', 'custom'
+  billingDay: integer('billing_day').notNull(), // Day of month (1-31)
+  customFrequencyDays: integer('custom_frequency_days'), // For custom frequency
+  
+  // Status
+  status: text('status').notNull().default('active'), // 'active', 'paused', 'cancelled'
+  isBusinessExpense: boolean('is_business_expense').default(false),
+  
+  // Dates
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date'), // NULL for ongoing
+  nextBillingDate: timestamp('next_billing_date').notNull(),
+  lastPaymentDate: timestamp('last_payment_date'),
+  
+  // Metadata
+  website: text('website'),
+  notes: text('notes'),
+  
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  userIdIdx: index('subscriptions_user_id_idx').on(table.userId),
+  householdIdIdx: index('subscriptions_household_id_idx').on(table.householdId),
+  nextBillingDateIdx: index('subscriptions_next_billing_date_idx').on(table.nextBillingDate),
+  statusIdx: index('subscriptions_status_idx').on(table.status),
+}));
+
+// Subscription Payments (Links receipts to subscriptions)
+export const subscriptionPayments = pgTable('subscription_payments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  subscriptionId: uuid('subscription_id').notNull().references(() => subscriptions.id, { onDelete: 'cascade' }),
+  receiptId: uuid('receipt_id').references(() => receipts.id, { onDelete: 'set null' }),
+  
+  // Payment Info
+  expectedDate: timestamp('expected_date').notNull(),
+  expectedAmount: text('expected_amount').notNull(),
+  
+  // Status
+  status: text('status').notNull().default('pending'), // 'pending', 'paid', 'missed', 'cancelled'
+  
+  // Actual payment (if receipt linked)
+  actualDate: timestamp('actual_date'),
+  actualAmount: text('actual_amount'),
+  
+  // Metadata
+  notes: text('notes'),
+  
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  subscriptionIdIdx: index('subscription_payments_subscription_id_idx').on(table.subscriptionId),
+  receiptIdIdx: index('subscription_payments_receipt_id_idx').on(table.receiptId),
+  expectedDateIdx: index('subscription_payments_expected_date_idx').on(table.expectedDate),
+  statusIdx: index('subscription_payments_status_idx').on(table.status),
+}));
+
+export type Subscription = typeof subscriptions.$inferSelect;
+export type NewSubscription = typeof subscriptions.$inferInsert;
+
+export type SubscriptionPayment = typeof subscriptionPayments.$inferSelect;
+export type NewSubscriptionPayment = typeof subscriptionPayments.$inferInsert;
 
 // Additional types for business logic
 export type HouseholdMember = {

@@ -64,6 +64,20 @@
       "when": 1765151187034,
       "tag": "0008_wide_justin_hammer",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1765242438033,
+      "tag": "0009_outgoing_giant_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1765242494373,
+      "tag": "0010_silent_carlie_cooper",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, requireReceiptAccess } from "@/lib/auth-helpers";
 import { CorrelationId, submitLogEvent } from "@/lib/logging";
 import { getReceiptById, deleteReceipt } from "@/lib/receipt-scanner";
+import { db } from "@/lib/db";
+import { receipts } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { invalidateInsightsCache } from "@/lib/utils/cache-helpers";
 
@@ -46,6 +49,86 @@ export async function GET(
 
     return NextResponse.json(
       { error: "Failed to fetch receipt" },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH /api/receipts/[id] - Update receipt (e.g., business expense fields)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
+  try {
+    const authResult = await getAuthenticatedUser(correlationId);
+    if (authResult instanceof NextResponse) return authResult;
+    const { user } = authResult;
+
+    const { id: receiptId } = await params;
+
+    const receipt = await getReceiptById(receiptId);
+
+    if (!receipt) {
+      return NextResponse.json(
+        { error: "Receipt not found" },
+        { status: 404 }
+      );
+    }
+
+    // Only receipt owner can update business expense fields
+    if (receipt.userId !== user.id) {
+      return NextResponse.json(
+        { error: "Unauthorized - only receipt owner can update this receipt" },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const {
+      isBusinessExpense,
+      businessCategory,
+      businessNotes,
+      taxDeductible,
+    } = body;
+
+    // Build update object
+    const updates: Partial<typeof receipts.$inferInsert> = {};
+    
+    if (isBusinessExpense !== undefined) updates.isBusinessExpense = isBusinessExpense;
+    if (businessCategory !== undefined) updates.businessCategory = businessCategory;
+    if (businessNotes !== undefined) updates.businessNotes = businessNotes;
+    if (taxDeductible !== undefined) updates.taxDeductible = taxDeductible;
+
+    const [updatedReceipt] = await db
+      .update(receipts)
+      .set(updates)
+      .where(eq(receipts.id, receiptId))
+      .returning();
+
+    submitLogEvent(
+      "receipt",
+      `Updated receipt ${receiptId}`,
+      correlationId,
+      { receiptId, updates }
+    );
+
+    return NextResponse.json(updatedReceipt);
+  } catch (error) {
+    console.error("Error updating receipt:", error);
+    
+    submitLogEvent(
+      "receipt-error",
+      "Failed to update receipt",
+      correlationId,
+      {
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      true
+    );
+
+    return NextResponse.json(
+      { error: "Failed to update receipt" },
       { status: 500 }
     );
   }

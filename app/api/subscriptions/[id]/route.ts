@@ -1,0 +1,208 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { db } from '@/lib/db';
+import { subscriptions, subscriptionPayments } from '@/lib/db/schema';
+import { eq, and, desc } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
+import { CorrelationId, submitLogEvent } from '@/lib/logging';
+
+export const runtime = 'nodejs';
+
+type RouteParams = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+// GET /api/subscriptions/[id] - Get single subscription
+export async function GET(req: NextRequest, { params }: RouteParams) {
+  const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
+  const { id } = await params;
+  
+  try {
+    const authResult = await getAuthenticatedUser(correlationId);
+    if (authResult instanceof NextResponse) return authResult;
+    const { user } = authResult;
+
+    const [subscription] = await db
+      .select()
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.id, id),
+          eq(subscriptions.userId, user.id)
+        )
+      );
+
+    if (!subscription) {
+      return NextResponse.json(
+        { error: 'Subscription not found' },
+        { status: 404 }
+      );
+    }
+
+    // Fetch payment history
+    const payments = await db
+      .select()
+      .from(subscriptionPayments)
+      .where(eq(subscriptionPayments.subscriptionId, id))
+      .orderBy(desc(subscriptionPayments.expectedDate))
+      .limit(24);
+
+    return NextResponse.json({
+      ...subscription,
+      payments,
+    });
+  } catch (error) {
+    submitLogEvent('subscription', `Error fetching subscription: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
+    return NextResponse.json(
+      { error: 'Failed to fetch subscription' },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH /api/subscriptions/[id] - Update subscription
+export async function PATCH(req: NextRequest, { params }: RouteParams) {
+  const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
+  const { id } = await params;
+  
+  try {
+    const authResult = await getAuthenticatedUser(correlationId);
+    if (authResult instanceof NextResponse) return authResult;
+    const { user } = authResult;
+
+    // Verify ownership
+    const [existing] = await db
+      .select()
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.id, id),
+          eq(subscriptions.userId, user.id)
+        )
+      );
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: 'Subscription not found' },
+        { status: 404 }
+      );
+    }
+
+    const body = await req.json();
+    const {
+      name,
+      description,
+      category,
+      amount,
+      currency,
+      billingFrequency,
+      billingDay,
+      customFrequencyDays,
+      status,
+      endDate,
+      isBusinessExpense,
+      website,
+      notes,
+    } = body;
+
+    // Build update object with only provided fields
+    const updates: Partial<typeof subscriptions.$inferInsert> = {};
+    
+    if (name !== undefined) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (category !== undefined) updates.category = category;
+    if (amount !== undefined) updates.amount = amount;
+    if (currency !== undefined) updates.currency = currency;
+    if (billingFrequency !== undefined) updates.billingFrequency = billingFrequency;
+    if (billingDay !== undefined) updates.billingDay = billingDay;
+    if (customFrequencyDays !== undefined) updates.customFrequencyDays = customFrequencyDays;
+    if (status !== undefined) updates.status = status;
+    if (endDate !== undefined) updates.endDate = endDate ? new Date(endDate) : null;
+    if (isBusinessExpense !== undefined) updates.isBusinessExpense = isBusinessExpense;
+    if (website !== undefined) updates.website = website;
+    if (notes !== undefined) updates.notes = notes;
+
+    // Handle status changes
+    if (status === 'cancelled' && !endDate && !existing.endDate) {
+      updates.endDate = new Date();
+    }
+
+    const [updated] = await db
+      .update(subscriptions)
+      .set(updates)
+      .where(
+        and(
+          eq(subscriptions.id, id),
+          eq(subscriptions.userId, user.id)
+        )
+      )
+      .returning();
+
+    submitLogEvent('subscription', `Updated subscription: ${id}`, correlationId, { subscriptionId: id });
+    
+    return NextResponse.json(updated);
+  } catch (error) {
+    submitLogEvent('subscription', `Error updating subscription: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
+    return NextResponse.json(
+      { error: 'Failed to update subscription' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/subscriptions/[id] - Delete subscription
+export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
+  const { id } = await params;
+  
+  try {
+    const authResult = await getAuthenticatedUser(correlationId);
+    if (authResult instanceof NextResponse) return authResult;
+    const { user } = authResult;
+
+    // Verify ownership
+    const [existing] = await db
+      .select()
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.id, id),
+          eq(subscriptions.userId, user.id)
+        )
+      );
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: 'Subscription not found' },
+        { status: 404 }
+      );
+    }
+
+    // Delete associated payments first
+    await db
+      .delete(subscriptionPayments)
+      .where(eq(subscriptionPayments.subscriptionId, id));
+
+    // Delete subscription
+    await db
+      .delete(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.id, id),
+          eq(subscriptions.userId, user.id)
+        )
+      );
+
+    submitLogEvent('subscription', `Deleted subscription: ${id}`, correlationId, { subscriptionId: id });
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    submitLogEvent('subscription', `Error deleting subscription: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
+    return NextResponse.json(
+      { error: 'Failed to delete subscription' },
+      { status: 500 }
+    );
+  }
+}

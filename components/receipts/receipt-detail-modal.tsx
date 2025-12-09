@@ -16,6 +16,7 @@ import { ReceiptLoyaltyDetails } from "./detail-modal/receipt-loyalty-details"
 import { ReceiptItemsList } from "./detail-modal/receipt-items-list"
 import { ReceiptFinancialBreakdown } from "./detail-modal/receipt-financial-breakdown"
 import { ReceiptImage } from "./detail-modal/receipt-image"
+import { LinkedSubscription } from "./detail-modal/linked-subscription"
 
 interface ReceiptDetailModalProps {
   receipt: any
@@ -115,7 +116,9 @@ export function ReceiptDetailModal({
               </div>
 
               {/* Scrollable Content Section - All details and items */}
-              <div className="flex-1 md:overflow-y-auto px-4 py-3 space-y-3 sm:px-6 sm:py-4 sm:space-y-4">
+              <div className="flex-1 md:overflow-y-auto px-4 py-3 space-y-3 sm:px-6 sm:py-4 sm:space-y-4\">
+                <LinkedSubscription receiptId={receipt.id} />
+                
                 <ReceiptBusinessDetails ocrData={receipt.ocrData} />
 
                 {!isSubscribed && (

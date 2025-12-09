@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { Navigation } from "@/components/layout/navigation"
 import { ReceiptBatchUpload } from "@/components/receipts/receipt-batch-upload"
 import { ReceiptList } from "@/components/receipts/receipt-list"
@@ -56,6 +57,7 @@ function getSearchMatchReason(receipt: any, searchTerm: string): { type: string;
 export default function ReceiptsPage() {
   const { user: clerkUser } = useClerkUser()
   const { user } = useUser()
+  const queryClient = useQueryClient()
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>()
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null)
@@ -83,6 +85,33 @@ export default function ReceiptsPage() {
   useEffect(() => {
     setCurrentPage(1)
   }, [selectedHouseholdId, filters])
+
+  // Prefetch subscription data for all receipts when they load
+  useEffect(() => {
+    const prefetchSubscriptions = async () => {
+      const receiptsToCheck = [...(recentReceipts || []), ...(allReceipts || [])]
+      
+      for (const receipt of receiptsToCheck) {
+        // Prefetch subscription data for each receipt
+        queryClient.prefetchQuery({
+          queryKey: ['receipt-subscription', receipt.id],
+          queryFn: async () => {
+            const res = await fetch(`/api/receipts/${receipt.id}/subscription`)
+            if (!res.ok) {
+              if (res.status === 404) return null
+              throw new Error('Failed to fetch subscription link')
+            }
+            return res.json()
+          },
+          staleTime: 5 * 60 * 1000, // 5 minutes
+        })
+      }
+    }
+
+    if (recentReceipts || allReceipts) {
+      prefetchSubscriptions()
+    }
+  }, [recentReceipts, allReceipts, queryClient])
 
   const handleUploadComplete = () => {
     refetchRecent()
