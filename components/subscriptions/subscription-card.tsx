@@ -1,10 +1,11 @@
 'use client';
 
-import { DollarSign, Calendar, AlertCircle } from 'lucide-react';
+import { DollarSign, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LinkReceiptDialog } from './link-receipt-dialog';
+import { NextPaymentBadge } from './next-payment-badge';
 import { Subscription, SubscriptionPayment } from '@/lib/db/schema';
 
 type SubscriptionWithPayments = Subscription & {
@@ -56,15 +57,14 @@ export function SubscriptionCard({ subscription, onClick }: SubscriptionCardProp
             )}
           </div>
 
-          {/* Next Billing Date */}
+          {/* Next Payment */}
           {subscription.nextBillingDate && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="w-4 h-4" />
-              Next billing: {new Date(subscription.nextBillingDate).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })}
+            <div className="flex items-center gap-2">
+              <NextPaymentBadge
+                nextBillingDate={subscription.nextBillingDate}
+                amount={subscription.amount}
+                currency={subscription.currency}
+              />
             </div>
           )}
 

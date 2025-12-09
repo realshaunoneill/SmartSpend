@@ -25,6 +25,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,8 +39,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Subscription } from '@/lib/db/schema';
 import { LinkReceiptDialog } from './link-receipt-dialog';
+import { EditSubscriptionDialog } from './edit-subscription-dialog';
 
 type SubscriptionDetailModalProps = {
   subscriptionId: string | null;
@@ -59,6 +60,7 @@ export function SubscriptionDetailModal({
   const { mutate: unlinkPayment } = useUnlinkPayment(subscriptionId || '');
   const { toast } = useToast();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const handleDelete = () => {
     if (!subscriptionId) return;
@@ -216,6 +218,11 @@ export function SubscriptionDetailModal({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit Details
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleToggleStatus}>
                         {subscription.status === 'active' ? (
                           <>
@@ -448,6 +455,35 @@ export function SubscriptionDetailModal({
           </div>
         )}
       </DialogContent>
+
+      {/* Edit Subscription Dialog */}
+      {subscription && (
+        <EditSubscriptionDialog
+          subscription={subscription}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Subscription</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this subscription? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

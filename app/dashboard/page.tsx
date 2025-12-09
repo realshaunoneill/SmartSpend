@@ -15,8 +15,8 @@ import { useDashboardStats } from "@/lib/hooks/use-dashboard-stats"
 import { useHouseholds } from "@/lib/hooks/use-households"
 import { Upload, Receipt, BarChart3, ArrowRight } from "lucide-react"
 import { useRouter } from "next/navigation"
-
-import { SubscriptionBanner } from "@/components/subscriptions/subscription-banner"
+import { UpcomingPayments } from "@/components/subscriptions/upcoming-payments"
+import { useSubscriptions } from "@/hooks/use-subscriptions"
 
 export default function DashboardPage() {
   const [period, setPeriod] = useState<"week" | "month" | "year">("month")
@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const router = useRouter()
   
   const { data: households = [] } = useHouseholds()
+  const { data: subscriptions = [] } = useSubscriptions(undefined, 'active', false)
   
   // Determine view mode based on selection
   const isPersonalOnly = selectedHouseholdId === "personal"
@@ -124,6 +125,10 @@ export default function DashboardPage() {
             />
           </div>
         </SubscriptionGate>
+
+        {subscriptions.length > 0 && (
+          <UpcomingPayments subscriptions={subscriptions} daysAhead={7} />
+        )}
 
         {stats?.recentReceipts && stats.recentReceipts.length > 0 && (
           <div>

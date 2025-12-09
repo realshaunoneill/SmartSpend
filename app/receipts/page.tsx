@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { Navigation } from "@/components/layout/navigation"
 import { ReceiptBatchUpload } from "@/components/receipts/receipt-batch-upload"
@@ -58,6 +59,7 @@ export default function ReceiptsPage() {
   const { user: clerkUser } = useClerkUser()
   const { user } = useUser()
   const queryClient = useQueryClient()
+  const searchParams = useSearchParams()
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>()
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null)
@@ -85,6 +87,35 @@ export default function ReceiptsPage() {
   useEffect(() => {
     setCurrentPage(1)
   }, [selectedHouseholdId, filters])
+
+  // Handle selected query parameter from URL
+  useEffect(() => {
+    const selectedId = searchParams.get('selected')
+    if (selectedId) {
+      // Find the receipt in either recent or all receipts
+      const receiptsToSearch = [...(recentReceipts || []), ...(allReceipts || [])]
+      const receipt = receiptsToSearch.find(r => r.id === selectedId)
+      
+      if (receipt) {
+        setSelectedReceipt(receipt)
+        setIsModalOpen(true)
+      } else {
+        // Receipt not yet loaded, fetch it
+        fetch(`/api/receipts/${selectedId}`)
+          .then(res => {
+            if (res.ok) return res.json()
+            throw new Error('Receipt not found')
+          })
+          .then(receipt => {
+            setSelectedReceipt(receipt)
+            setIsModalOpen(true)
+          })
+          .catch(err => {
+            console.error('Failed to fetch receipt:', err)
+          })
+      }
+    }
+  }, [searchParams, recentReceipts, allReceipts])
 
   // Prefetch subscription data for all receipts when they load
   useEffect(() => {
