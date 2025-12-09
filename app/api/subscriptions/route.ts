@@ -1,10 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { subscriptions, subscriptionPayments } from '@/lib/db/schema';
 import { eq, and, or, desc, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { SubscriptionService } from '@/lib/services/subscription-service';
 
 export const runtime = 'nodejs';
 
@@ -16,6 +17,10 @@ export async function GET(req: NextRequest) {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
+
+    // Require active subscription
+    const subCheck = await requireSubscription(user);
+    if (subCheck) return subCheck;
 
     const { searchParams } = new URL(req.url);
     const householdId = searchParams.get('householdId');
@@ -105,6 +110,10 @@ export async function POST(req: NextRequest) {
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
+    // Require active subscription
+    const subCheck = await requireSubscription(user);
+    if (subCheck) return subCheck;
+
     const body = await req.json();
     const {
       name,
@@ -132,17 +141,11 @@ export async function POST(req: NextRequest) {
 
     // Calculate next billing date
     const start = new Date(startDate);
-    const nextBilling = new Date(start);
-
-    if (billingFrequency === 'monthly') {
-      nextBilling.setMonth(nextBilling.getMonth() + 1);
-    } else if (billingFrequency === 'quarterly') {
-      nextBilling.setMonth(nextBilling.getMonth() + 3);
-    } else if (billingFrequency === 'yearly') {
-      nextBilling.setFullYear(nextBilling.getFullYear() + 1);
-    } else if (billingFrequency === 'custom' && customFrequencyDays) {
-      nextBilling.setDate(nextBilling.getDate() + customFrequencyDays);
-    }
+    const nextBilling = SubscriptionService.calculateNextBillingDate(
+      start,
+      billingFrequency,
+      customFrequencyDays,
+    );
 
     // Create subscription
     const [newSubscription] = await db

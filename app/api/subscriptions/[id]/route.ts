@@ -1,10 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { subscriptions, subscriptionPayments } from '@/lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { SubscriptionService } from '@/lib/services/subscription-service';
 
 export const runtime = 'nodejs';
 
@@ -24,15 +25,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
-    const [subscription] = await db
-      .select()
-      .from(subscriptions)
-      .where(
-        and(
-          eq(subscriptions.id, id),
-          eq(subscriptions.userId, user.id),
-        ),
-      );
+    // Require active subscription
+    const subCheck = await requireSubscription(user);
+    if (subCheck) return subCheck;
+
+    const subscription = await SubscriptionService.getSubscriptionByIdAndUserId(id, user.id);
 
     if (!subscription) {
       return NextResponse.json(
@@ -162,16 +159,12 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
+    // Require active subscription
+    const subCheck = await requireSubscription(user);
+    if (subCheck) return subCheck;
+
     // Verify ownership
-    const [existing] = await db
-      .select()
-      .from(subscriptions)
-      .where(
-        and(
-          eq(subscriptions.id, id),
-          eq(subscriptions.userId, user.id),
-        ),
-      );
+    const existing = await SubscriptionService.getSubscriptionByIdAndUserId(id, user.id);
 
     if (!existing) {
       return NextResponse.json(

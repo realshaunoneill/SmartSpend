@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { subscriptions, subscriptionPayments, receipts } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -23,6 +23,10 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
+
+    // Require active subscription
+    const subCheck = await requireSubscription(user);
+    if (subCheck) return subCheck;
 
     const body = await req.json();
     const { receiptId, status, actualDate, actualAmount, notes } = body;
@@ -121,6 +125,10 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
+
+    // Require active subscription
+    const subCheck = await requireSubscription(user);
+    if (subCheck) return subCheck;
 
     // Fetch payment and verify ownership
     const [payment] = await db
