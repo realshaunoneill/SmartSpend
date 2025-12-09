@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Navigation } from '@/components/layout/navigation';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
@@ -10,8 +10,9 @@ import { SubscriptionDetailModal } from '@/components/subscriptions/subscription
 import { SubscriptionStats } from '@/components/subscriptions/subscription-stats';
 import { SubscriptionList } from '@/components/subscriptions/subscription-list';
 import { NextSubscriptionCard } from '@/components/subscriptions/next-subscription-card';
+import { Loader2 } from 'lucide-react';
 
-export default function SubscriptionsPage() {
+function SubscriptionsPageContent() {
   const [statusFilter, setStatusFilter] = useState<'active' | 'paused' | 'cancelled' | undefined>('active');
   const { data: subscriptions, isLoading } = useSubscriptions(undefined, statusFilter, true);
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);
@@ -114,4 +115,15 @@ export default function SubscriptionsPage() {
   );
 }
 
+export default function SubscriptionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    }>
+      <SubscriptionsPageContent />
+    </Suspense>
+  );
+}
 

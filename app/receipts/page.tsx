@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { Navigation } from "@/components/layout/navigation"
@@ -54,7 +54,7 @@ function getSearchMatchReason(receipt: any, searchTerm: string): { type: string;
   return null;
 }
 
-export default function ReceiptsPage() {
+function ReceiptsPageContent() {
   const { user: clerkUser } = useClerkUser()
   const { user } = useUser()
   const queryClient = useQueryClient()
@@ -308,5 +308,13 @@ export default function ReceiptsPage() {
         onOpenChange={handleModalClose}
       />
     </>
+  )
+}
+
+export default function ReceiptsPage() {
+  return (
+    <Suspense fallback={<ReceiptListSkeleton />}>
+      <ReceiptsPageContent />
+    </Suspense>
   )
 }

@@ -18,7 +18,7 @@ interface SpendingTrendsData {
 
 export function useSpendingTrends(householdId?: string, period: "week" | "month" | "year" = "month", personalOnly: boolean = false) {
   // Get all receipts for analysis (not paginated)
-  const { receipts, isLoading: receiptsLoading } = useReceipts(householdId, 1, 1000, personalOnly)
+  const { receipts, isLoading: receiptsLoading } = useReceipts(householdId, 1, 1000, undefined, personalOnly)
 
   const trendsData = useQuery({
     queryKey: ["spending-trends", householdId, period, personalOnly, receipts?.length],
