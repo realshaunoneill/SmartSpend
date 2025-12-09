@@ -1,7 +1,8 @@
 'use client';
 
-import { AlertCircle } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import { AlertCircle, TrendingUp, Calendar, DollarSign, Receipt } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 type SubscriptionStatsProps = {
   activeCount: number;
@@ -10,6 +11,38 @@ type SubscriptionStatsProps = {
   missingPayments: number;
 };
 
+type StatCardProps = {
+  label: string;
+  value: string | number;
+  icon: React.ReactNode;
+  iconColor: string;
+  alert?: boolean;
+};
+
+function StatCard({ label, value, icon, iconColor, alert }: StatCardProps) {
+  return (
+    <Card className={cn(
+      "transition-all duration-300 hover:shadow-lg",
+      alert && "border-yellow-500/50"
+    )}>
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">{label}</p>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold tracking-tight">{value}</p>
+              {alert && <AlertCircle className="w-5 h-5 text-yellow-500" />}
+            </div>
+          </div>
+          <div className={cn("p-3 rounded-xl bg-muted", iconColor)}>
+            {icon}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function SubscriptionStats({
   activeCount,
   monthlyTotal,
@@ -17,45 +50,35 @@ export function SubscriptionStats({
   missingPayments,
 }: SubscriptionStatsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardDescription>Active Subscriptions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold">{activeCount}</div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardDescription>Monthly Cost</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold">€{monthlyTotal.toFixed(2)}</div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardDescription>Yearly Cost</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold">€{yearlyTotal.toFixed(2)}</div>
-        </CardContent>
-      </Card>
-
-      <Card className={missingPayments > 0 ? 'border-yellow-500' : ''}>
-        <CardHeader className="pb-2">
-          <CardDescription>Missing Receipts</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2">
-            <div className="text-3xl font-bold">{missingPayments}</div>
-            {missingPayments > 0 && <AlertCircle className="w-5 h-5 text-yellow-500" />}
-          </div>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <StatCard
+        label="Active Subscriptions"
+        value={activeCount}
+        icon={<TrendingUp className="w-5 h-5" />}
+        iconColor="text-blue-600 dark:text-blue-400"
+      />
+      
+      <StatCard
+        label="Monthly Cost"
+        value={`€${monthlyTotal.toFixed(2)}`}
+        icon={<Calendar className="w-5 h-5" />}
+        iconColor="text-green-600 dark:text-green-400"
+      />
+      
+      <StatCard
+        label="Yearly Cost"
+        value={`€${yearlyTotal.toFixed(2)}`}
+        icon={<DollarSign className="w-5 h-5" />}
+        iconColor="text-purple-600 dark:text-purple-400"
+      />
+      
+      <StatCard
+        label="Missing Receipts"
+        value={missingPayments}
+        icon={<Receipt className="w-5 h-5" />}
+        iconColor="text-orange-600 dark:text-orange-400"
+        alert={missingPayments > 0}
+      />
     </div>
   );
 }

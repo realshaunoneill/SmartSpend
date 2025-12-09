@@ -9,6 +9,7 @@ import { CreateSubscriptionDialog } from '@/components/subscriptions/create-subs
 import { SubscriptionDetailModal } from '@/components/subscriptions/subscription-detail-modal';
 import { SubscriptionStats } from '@/components/subscriptions/subscription-stats';
 import { SubscriptionList } from '@/components/subscriptions/subscription-list';
+import { NextSubscriptionCard } from '@/components/subscriptions/next-subscription-card';
 
 export default function SubscriptionsPage() {
   const [statusFilter, setStatusFilter] = useState<'active' | 'paused' | 'cancelled' | undefined>('active');
@@ -26,6 +27,16 @@ export default function SubscriptionsPage() {
 
   // Calculate stats
   const activeSubscriptions = subscriptions?.filter(s => s.status === 'active') || [];
+  
+  // Find next upcoming subscription
+  const nextSubscription = activeSubscriptions
+    .filter(s => s.nextBillingDate)
+    .sort((a, b) => {
+      const dateA = new Date(a.nextBillingDate!).getTime();
+      const dateB = new Date(b.nextBillingDate!).getTime();
+      return dateA - dateB;
+    })[0];
+  
   const totalMonthly = activeSubscriptions.reduce((sum, sub) => {
     const amount = parseFloat(sub.amount);
     if (sub.billingFrequency === 'monthly') return sum + amount;
@@ -62,6 +73,17 @@ export default function SubscriptionsPage() {
           missingPayments={missingPaymentsCount}
         />
       </div>
+
+      {/* Next Upcoming Subscription */}
+      {nextSubscription && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-3">Next Payment Due</h2>
+          <NextSubscriptionCard
+            subscription={nextSubscription}
+            onClick={() => setSelectedSubscriptionId(nextSubscription.id)}
+          />
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)} className="w-full">
