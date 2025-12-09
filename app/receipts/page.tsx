@@ -12,7 +12,7 @@ import { Pagination } from '@/components/layout/pagination';
 import { ReceiptDetailModal } from '@/components/receipts/receipt-detail-modal';
 import { ReceiptSearchFilters, type ReceiptFilters } from '@/components/receipts/receipt-search-filters';
 import { SubscriptionGate } from '@/components/subscriptions/subscription-gate';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useUser as useClerkUser } from '@clerk/nextjs';
 import { useReceipts, useRecentReceipts } from '@/lib/hooks/use-receipts';
 import { useHouseholds } from '@/lib/hooks/use-households';
@@ -183,28 +183,24 @@ function ReceiptsPageContent() {
               />
             </SubscriptionGate>
           </div>
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Receipts</CardTitle>
-                <CardDescription>Your 5 most recent receipts</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {recentLoading ? (
-                  <ReceiptListSkeleton />
-                ) : error ? (
-                  <div className="text-center p-8 text-destructive">
-                    Failed to load recent receipts
-                  </div>
-                ) : recentReceipts.length > 0 ? (
-                  <ReceiptList receipts={recentReceipts} onReceiptClick={handleReceiptClick} />
-                ) : (
-                  <div className="text-center p-8 text-muted-foreground">
-                    No receipts found. Upload your first receipt to get started!
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          <div className="space-y-4">
+            {recentLoading ? (
+              <ReceiptListSkeleton />
+            ) : error ? (
+              <Card>
+                <CardContent className="text-center p-8 text-destructive">
+                  Failed to load recent receipts
+                </CardContent>
+              </Card>
+            ) : recentReceipts.length > 0 ? (
+              <ReceiptList receipts={recentReceipts} onReceiptClick={handleReceiptClick} />
+            ) : (
+              <Card>
+                <CardContent className="text-center p-8 text-muted-foreground">
+                  No receipts found. Upload your first receipt to get started!
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
 

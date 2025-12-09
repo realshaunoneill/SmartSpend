@@ -128,9 +128,7 @@ export default function SharingPage() {
             </div>
           </div>
         ) : households.length === 0 ? (
-          !isSubscribed ? (
-            <SubscriptionGate feature="sharing" />
-          ) : (
+          isSubscribed ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="rounded-full bg-muted p-6 mb-6">
                 <Users className="h-12 w-12 text-muted-foreground" />
@@ -144,6 +142,8 @@ export default function SharingPage() {
                 onHouseholdCreated={handleHouseholdCreated}
               />
             </div>
+          ) : (
+            <SubscriptionGate feature="sharing" />
           )
         ) : (
           <div className="space-y-8">
