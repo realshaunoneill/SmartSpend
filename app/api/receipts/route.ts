@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { getAuthenticatedUser, filterReceiptsForSubscription } from '@/lib/auth-helpers';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { getReceipts } from '@/lib/receipt-scanner';
 import { randomUUID } from 'crypto';
@@ -49,7 +49,13 @@ export async function GET(req: NextRequest) {
       sortOrder,
     });
 
-    return NextResponse.json(result);
+    // Filter receipts based on subscription status
+    const filteredReceipts = filterReceiptsForSubscription(result.receipts, user.subscribed);
+
+    return NextResponse.json({
+      ...result,
+      receipts: filteredReceipts,
+    });
   } catch (error) {
     submitLogEvent('receipt', `Error fetching receipts: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(

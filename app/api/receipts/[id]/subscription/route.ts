@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { subscriptions, subscriptionPayments, receipts } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -23,6 +23,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
+
+    // Subscription linking is a premium feature
+    const subCheck = await requireSubscription(user);
+    if (subCheck) return subCheck;
 
     // Verify receipt ownership
     const [receipt] = await db

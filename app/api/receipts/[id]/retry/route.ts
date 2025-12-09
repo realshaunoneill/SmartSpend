@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { receipts, receiptItems } from '@/lib/db/schema';
-import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { getAuthenticatedUser, filterReceiptForSubscription } from '@/lib/auth-helpers';
 import { analyzeReceiptWithGPT4o } from '@/lib/openai';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { eq, and, isNull } from 'drizzle-orm';
@@ -171,9 +171,12 @@ export async function POST(
     // Invalidate insights cache since receipt data changed
     await invalidateInsightsCache(user.id, receipt.householdId, correlationId);
 
+    // Filter based on subscription status
+    const filteredReceipt = filterReceiptForSubscription(updatedReceipt, user.subscribed);
+
     return NextResponse.json({
       success: true,
-      receipt: updatedReceipt,
+      receipt: filteredReceipt,
     });
   } catch (error) {
     submitLogEvent('receipt-error', `Receipt retry error: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {

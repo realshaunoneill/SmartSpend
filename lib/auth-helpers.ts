@@ -146,3 +146,54 @@ export async function requireReceiptAccess(
   return null;
 }
 
+/**
+ * Filter receipt data for non-subscribed users
+ * Removes premium features like line items, OCR data, detailed analytics
+ */
+export function filterReceiptForSubscription(receipt: any, isSubscribed: boolean) {
+  if (isSubscribed) {
+    return receipt;
+  }
+
+  // For non-subscribed users, only return basic receipt info
+  return {
+    id: receipt.id,
+    userId: receipt.userId,
+    householdId: receipt.householdId,
+    imageUrl: receipt.imageUrl,
+    merchantName: receipt.merchantName,
+    totalAmount: receipt.totalAmount,
+    currency: receipt.currency,
+    transactionDate: receipt.transactionDate,
+    category: receipt.category,
+    processingStatus: receipt.processingStatus,
+    createdAt: receipt.createdAt,
+    updatedAt: receipt.updatedAt,
+    submittedBy: receipt.submittedBy,
+    // Exclude premium features:
+    // - items (line items)
+    // - ocrData (detailed OCR response)
+    // - paymentMethod
+    // - location
+    // - tax
+    // - serviceCharge
+    // - subtotal
+    // - receiptNumber
+    // - processingTokens
+    // - isBusinessExpense
+    // - businessCategory
+    // - businessNotes
+    // - taxDeductible
+  };
+}
+
+/**
+ * Filter multiple receipts for non-subscribed users
+ */
+export function filterReceiptsForSubscription(receipts: any[], isSubscribed: boolean) {
+  if (isSubscribed) {
+    return receipts;
+  }
+  return receipts.map(receipt => filterReceiptForSubscription(receipt, false));
+}
+

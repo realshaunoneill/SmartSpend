@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser, requireReceiptAccess } from '@/lib/auth-helpers';
+import { getAuthenticatedUser, requireReceiptAccess, filterReceiptForSubscription } from '@/lib/auth-helpers';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { getReceiptById, deleteReceipt } from '@/lib/receipt-scanner';
 import { db } from '@/lib/db';
@@ -33,7 +33,10 @@ export async function GET(
     const accessCheck = await requireReceiptAccess(receipt, user, correlationId);
     if (accessCheck) return accessCheck;
 
-    return NextResponse.json(receipt);
+    // Filter receipt data based on subscription status
+    const filteredReceipt = filterReceiptForSubscription(receipt, user.subscribed);
+
+    return NextResponse.json(filteredReceipt);
   } catch (error) {
     console.error('Error fetching receipt:', error);
 
@@ -113,7 +116,10 @@ export async function PATCH(
       { receiptId, updates },
     );
 
-    return NextResponse.json(updatedReceipt);
+    // Filter based on subscription status
+    const filteredReceipt = filterReceiptForSubscription(updatedReceipt, user.subscribed);
+
+    return NextResponse.json(filteredReceipt);
   } catch (error) {
     console.error('Error updating receipt:', error);
 
