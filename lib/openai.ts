@@ -1,5 +1,5 @@
-import OpenAI from "openai";
-import { CorrelationId, submitLogEvent } from "@/lib/logging";
+import OpenAI from 'openai';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -8,7 +8,7 @@ const openai = new OpenAI({
 export interface ItemModifier {
   name: string;
   price: number;
-  type: "fee" | "deposit" | "discount" | "addon" | "modifier";
+  type: 'fee' | 'deposit' | 'discount' | 'addon' | 'modifier';
 }
 
 export interface ReceiptData {
@@ -76,32 +76,32 @@ export async function analyzeReceiptWithGPT4o(
   imageUrl: string,
   userEmail: string,
   userId: string,
-  correlationId: CorrelationId
+  correlationId: CorrelationId,
 ): Promise<ReceiptAnalysisResult> {
-  submitLogEvent('receipt-process', "Fetching image for analysis", correlationId, { imageUrl, userId });
+  submitLogEvent('receipt-process', 'Fetching image for analysis', correlationId, { imageUrl, userId });
 
   const inputImageRes = await fetch(imageUrl);
   if (!inputImageRes.ok) {
     throw new Error(`Failed to download image: ${inputImageRes.statusText}`);
   }
 
-  const contentType = inputImageRes.headers.get("content-type");
+  const contentType = inputImageRes.headers.get('content-type');
   const inputImageBuffer = await inputImageRes.arrayBuffer();
 
   const buffer = Buffer.from(inputImageBuffer);
-  const base64Image = buffer.toString("base64");
-  const mimeType = contentType || "image/png";
+  const base64Image = buffer.toString('base64');
+  const mimeType = contentType || 'image/png';
 
-  submitLogEvent('receipt-process', "Calling OpenAI Vision API", correlationId, { userId, userEmail });
+  submitLogEvent('receipt-process', 'Calling OpenAI Vision API', correlationId, { userId, userEmail });
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: 'gpt-4o',
     messages: [
       {
-        role: "user",
+        role: 'user',
         content: [
           {
-            type: "text",
+            type: 'text',
             text: `Analyze this receipt image and extract the following information in JSON format:
 
 REQUIRED FIELDS:
@@ -171,7 +171,7 @@ SMART CATEGORIZATION RULES:
 Return ONLY valid JSON with all numeric values as numbers (not strings), no additional text.`,
           },
           {
-            type: "image_url",
+            type: 'image_url',
             image_url: {
               url: `data:${mimeType};base64,${base64Image}`,
             },
@@ -184,24 +184,24 @@ Return ONLY valid JSON with all numeric values as numbers (not strings), no addi
     metadata: {
       userId: userId,
       userEmail: userEmail,
-      purpose: "receipt_processing",
+      purpose: 'receipt_processing',
     },
   });
 
   const usage = response.usage;
-  
-  submitLogEvent('receipt-process', "OpenAI API usage", correlationId, {
+
+  submitLogEvent('receipt-process', 'OpenAI API usage', correlationId, {
     promptTokens: usage?.prompt_tokens,
     completionTokens: usage?.completion_tokens,
     totalTokens: usage?.total_tokens,
-    model: "gpt-4o",
+    model: 'gpt-4o',
     userEmail,
     userId,
   });
 
   const content = response.choices[0]?.message?.content;
   if (!content) {
-    throw new Error("No response from OpenAI");
+    throw new Error('No response from OpenAI');
   }
 
   return {
@@ -224,21 +224,21 @@ export async function analyzeReceiptSimple(imageUrl: string, correlationId: Corr
       throw new Error(`Failed to download image: ${inputImageRes.statusText}`);
     }
 
-    const contentType = inputImageRes.headers.get("content-type");
+    const contentType = inputImageRes.headers.get('content-type');
     const inputImageBuffer = await inputImageRes.arrayBuffer();
 
     const buffer = Buffer.from(inputImageBuffer);
-    const base64Image = buffer.toString("base64");
-    const mimeType = contentType || "image/png";
+    const base64Image = buffer.toString('base64');
+    const mimeType = contentType || 'image/png';
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: 'gpt-4o',
       messages: [
         {
-          role: "user",
+          role: 'user',
           content: [
             {
-              type: "text",
+              type: 'text',
               text: `Analyze this receipt image and extract the following information in JSON format:
 - items: array of objects with name, quantity, and price for each item
 - location: store location/address
@@ -255,7 +255,7 @@ export async function analyzeReceiptSimple(imageUrl: string, correlationId: Corr
 Return ONLY valid JSON, no additional text.`,
             },
             {
-              type: "image_url",
+              type: 'image_url',
               image_url: {
                 url: `data:${mimeType};base64,${base64Image}`,
               },
@@ -268,7 +268,7 @@ Return ONLY valid JSON, no additional text.`,
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
-      throw new Error("No response from OpenAI");
+      throw new Error('No response from OpenAI');
     }
 
     return cleanJsonResponse(content);
@@ -293,9 +293,9 @@ export async function generateSpendingSummary(
   },
   userEmail: string,
   userId: string,
-  correlationId: CorrelationId
+  correlationId: CorrelationId,
 ): Promise<SpendingInsight> {
-  submitLogEvent('receipt', "Generating AI spending summary", correlationId, {
+  submitLogEvent('receipt', 'Generating AI spending summary', correlationId, {
     userId,
     userEmail,
     totalItems: aggregatedData.totalItems,
@@ -303,14 +303,14 @@ export async function generateSpendingSummary(
   });
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: 'gpt-4o-mini',
     messages: [
       {
-        role: "system",
-        content: "You are a helpful financial advisor analyzing spending patterns. Provide insights, identify trends, and offer actionable advice. Be concise but insightful. Use a friendly, conversational tone.",
+        role: 'system',
+        content: 'You are a helpful financial advisor analyzing spending patterns. Provide insights, identify trends, and offer actionable advice. Be concise but insightful. Use a friendly, conversational tone.',
       },
       {
-        role: "user",
+        role: 'user',
         content: `Analyze this spending data and provide a summary with insights and recommendations:
 
 Period: ${aggregatedData.period}
@@ -342,24 +342,24 @@ Keep the response under 300 words and format it in a friendly, easy-to-read way.
     metadata: {
       userId: userId,
       userEmail: userEmail,
-      purpose: "spending_summary",
+      purpose: 'spending_summary',
     },
   });
 
   const usage = response.usage;
-  
-  submitLogEvent('receipt', "AI spending summary generated", correlationId, {
+
+  submitLogEvent('receipt', 'AI spending summary generated', correlationId, {
     promptTokens: usage?.prompt_tokens,
     completionTokens: usage?.completion_tokens,
     totalTokens: usage?.total_tokens,
-    model: "gpt-4o-mini",
+    model: 'gpt-4o-mini',
     userEmail,
     userId,
   });
 
   const content = response.choices[0]?.message?.content;
   if (!content) {
-    throw new Error("No summary generated from OpenAI");
+    throw new Error('No summary generated from OpenAI');
   }
 
   return {
@@ -377,14 +377,14 @@ Keep the response under 300 words and format it in a friendly, easy-to-read way.
  */
 export function cleanJsonResponse(content: string): any {
   let jsonContent = content.trim();
-  
+
   // Remove markdown code blocks
-  if (jsonContent.startsWith("```json")) {
-    jsonContent = jsonContent.replace(/^```json\n/, "").replace(/\n```$/, "");
-  } else if (jsonContent.startsWith("```")) {
-    jsonContent = jsonContent.replace(/^```\n/, "").replace(/\n```$/, "");
+  if (jsonContent.startsWith('```json')) {
+    jsonContent = jsonContent.replace(/^```json\n/, '').replace(/\n```$/, '');
+  } else if (jsonContent.startsWith('```')) {
+    jsonContent = jsonContent.replace(/^```\n/, '').replace(/\n```$/, '');
   }
-  
+
   return JSON.parse(jsonContent);
 }
 

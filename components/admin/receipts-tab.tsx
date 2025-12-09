@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ReceiptCard } from "./receipt-card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ReceiptCard } from './receipt-card';
 
 interface ReceiptsTabProps {
   receipts: any[]
@@ -27,5 +27,5 @@ export function ReceiptsTab({ receipts, onOpenReceipt }: ReceiptsTabProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

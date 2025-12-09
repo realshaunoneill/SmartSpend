@@ -133,35 +133,35 @@ export const subscriptions = pgTable('subscriptions', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   householdId: uuid('household_id').references(() => households.id, { onDelete: 'cascade' }),
-  
+
   // Subscription Details
   name: text('name').notNull(),
   description: text('description'),
   category: text('category'), // 'Software', 'Streaming', 'Utilities', 'Insurance', etc.
-  
+
   // Financial Info
   amount: text('amount').notNull(),
   currency: text('currency').notNull().default('EUR'),
-  
+
   // Recurrence
   billingFrequency: text('billing_frequency').notNull(), // 'monthly', 'quarterly', 'yearly', 'custom'
   billingDay: integer('billing_day').notNull(), // Day of month (1-31)
   customFrequencyDays: integer('custom_frequency_days'), // For custom frequency
-  
+
   // Status
   status: text('status').notNull().default('active'), // 'active', 'paused', 'cancelled'
   isBusinessExpense: boolean('is_business_expense').default(false),
-  
+
   // Dates
   startDate: timestamp('start_date').notNull(),
   endDate: timestamp('end_date'), // NULL for ongoing
   nextBillingDate: timestamp('next_billing_date').notNull(),
   lastPaymentDate: timestamp('last_payment_date'),
-  
+
   // Metadata
   website: text('website'),
   notes: text('notes'),
-  
+
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({
@@ -176,21 +176,21 @@ export const subscriptionPayments = pgTable('subscription_payments', {
   id: uuid('id').defaultRandom().primaryKey(),
   subscriptionId: uuid('subscription_id').notNull().references(() => subscriptions.id, { onDelete: 'cascade' }),
   receiptId: uuid('receipt_id').references(() => receipts.id, { onDelete: 'set null' }),
-  
+
   // Payment Info
   expectedDate: timestamp('expected_date').notNull(),
   expectedAmount: text('expected_amount').notNull(),
-  
+
   // Status
   status: text('status').notNull().default('pending'), // 'pending', 'paid', 'missed', 'cancelled'
-  
+
   // Actual payment (if receipt linked)
   actualDate: timestamp('actual_date'),
   actualAmount: text('actual_amount'),
-  
+
   // Metadata
   notes: text('notes'),
-  
+
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({

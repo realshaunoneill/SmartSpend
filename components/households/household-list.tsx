@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { HouseholdCard } from "@/components/households/household-card"
-import type { Household } from "@/lib/types"
+import { HouseholdCard } from '@/components/households/household-card';
+import type { Household } from '@/lib/types';
 
 interface HouseholdWithDetails extends Household {
   memberCount: number
@@ -17,13 +17,13 @@ interface HouseholdListProps {
   selectedId?: string
 }
 
-export function HouseholdList({ 
-  households, 
-  currentUserId, 
+export function HouseholdList({
+  households,
+  currentUserId,
   isSubscribed = false,
   onUpdate,
   onSelect,
-  selectedId
+  selectedId,
 }: HouseholdListProps) {
   if (households.length === 0) {
     return (
@@ -33,27 +33,27 @@ export function HouseholdList({
           Create your first household to start sharing receipts
         </p>
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-4">
       {households.map((household) => (
-        <div 
-          key={household.id} 
+        <div
+          key={household.id}
           onClick={() => onSelect?.(household)}
           className={`cursor-pointer transition-opacity ${
             selectedId && selectedId !== household.id ? 'opacity-60 hover:opacity-100' : ''
           }`}
         >
-          <HouseholdCard 
-            household={household} 
-            currentUserId={currentUserId} 
+          <HouseholdCard
+            household={household}
+            currentUserId={currentUserId}
             isSubscribed={isSubscribed}
-            onUpdate={onUpdate} 
+            onUpdate={onUpdate}
           />
         </div>
       ))}
     </div>
-  )
+  );
 }

@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useUser as useClerkUser } from '@clerk/nextjs'
-import type { User } from '@/lib/db/schema'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useUser as useClerkUser } from '@clerk/nextjs';
+import type { User } from '@/lib/db/schema';
 
 type UserResponse = User
 
@@ -10,11 +10,11 @@ type UserResponse = User
  * Fetch current user from API
  */
 async function fetchUser(): Promise<UserResponse> {
-  const response = await fetch('/api/users/me')
+  const response = await fetch('/api/users/me');
   if (!response.ok) {
-    throw new Error('Failed to fetch user')
+    throw new Error('Failed to fetch user');
   }
-  return response.json()
+  return response.json();
 }
 
 /**
@@ -25,18 +25,18 @@ async function updateUser(data: Partial<User>): Promise<UserResponse> {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
-  })
+  });
   if (!response.ok) {
-    throw new Error('Failed to update user')
+    throw new Error('Failed to update user');
   }
-  return response.json()
+  return response.json();
 }
 
 /**
  * Hook to get current user data with subscription status
  */
 export function useUser() {
-  const { isLoaded: isClerkLoaded, isSignedIn, user: clerkUser } = useClerkUser()
+  const { isLoaded: isClerkLoaded, isSignedIn, user: clerkUser } = useClerkUser();
 
   const {
     data: user,
@@ -48,7 +48,7 @@ export function useUser() {
     queryFn: fetchUser,
     enabled: isClerkLoaded && isSignedIn && !!clerkUser,
     retry: 1,
-  })
+  });
 
   return {
     user,
@@ -57,20 +57,20 @@ export function useUser() {
     error,
     refetch,
     isSubscribed: user?.subscribed ?? false,
-  }
+  };
 }
 
 /**
  * Hook to update user data
  */
 export function useUpdateUser() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: updateUser,
     onSuccess: (data) => {
       // Update the user query cache
-      queryClient.setQueryData(['user', data.clerkId], data)
+      queryClient.setQueryData(['user', data.clerkId], data);
     },
-  })
+  });
 }

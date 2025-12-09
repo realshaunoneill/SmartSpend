@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { HouseholdService } from '@/lib/services/household-service'
-import { getAuthenticatedUser } from '@/lib/auth-helpers'
+import { type NextRequest, NextResponse } from 'next/server';
+import { HouseholdService } from '@/lib/services/household-service';
+import { getAuthenticatedUser } from '@/lib/auth-helpers';
 import {
   createErrorResponse,
   ErrorCode,
   generateRequestId,
   getHttpStatusCode,
   Logger,
-} from '@/lib/errors'
-import { randomUUID } from 'crypto'
-import { CorrelationId } from '@/lib/logging'
+} from '@/lib/errors';
+import { randomUUID } from 'crypto';
+import { type CorrelationId } from '@/lib/logging';
 
 /**
  * DELETE /api/households/:id/members/:userId
@@ -18,9 +18,9 @@ import { CorrelationId } from '@/lib/logging'
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string; userId: string }> }
+  { params }: { params: Promise<{ id: string; userId: string }> },
 ) {
-  const requestId = generateRequestId()
+  const requestId = generateRequestId();
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
 
   try {
@@ -28,17 +28,17 @@ export async function DELETE(
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
-    const { id: householdId, userId: memberUserId } = await params
+    const { id: householdId, userId: memberUserId } = await params;
 
     // Remove member (will verify ownership inside the service)
-    await HouseholdService.removeMember(householdId, memberUserId, user.id)
+    await HouseholdService.removeMember(householdId, memberUserId, user.id);
 
     Logger.info('Member removed successfully', {
       requestId,
       userId: user.id,
       context: { householdId, removedUserId: memberUserId },
-    })
-    return NextResponse.json({ success: true }, { status: 200 })
+    });
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     // Handle specific error messages
     if (error instanceof Error) {
@@ -46,43 +46,43 @@ export async function DELETE(
         Logger.warn('Non-owner attempted to remove member', {
           requestId,
           context: { error: error.message },
-        })
+        });
         const errorResponse = createErrorResponse(
           ErrorCode.INSUFFICIENT_PERMISSIONS,
           error.message,
           undefined,
-          requestId
-        )
+          requestId,
+        );
         return NextResponse.json(errorResponse, {
           status: getHttpStatusCode(ErrorCode.INSUFFICIENT_PERMISSIONS),
-        })
+        });
       }
       if (error.message.includes('cannot remove themselves')) {
         Logger.warn('Owner attempted to remove themselves', {
           requestId,
           context: { error: error.message },
-        })
+        });
         const errorResponse = createErrorResponse(
           ErrorCode.INVALID_INPUT,
           error.message,
           undefined,
-          requestId
-        )
+          requestId,
+        );
         return NextResponse.json(errorResponse, {
           status: getHttpStatusCode(ErrorCode.INVALID_INPUT),
-        })
+        });
       }
     }
 
-    Logger.error('Error removing member', error as Error, { requestId })
+    Logger.error('Error removing member', error as Error, { requestId });
     const errorResponse = createErrorResponse(
       ErrorCode.DATABASE_ERROR,
       'Failed to remove member',
       undefined,
-      requestId
-    )
+      requestId,
+    );
     return NextResponse.json(errorResponse, {
       status: getHttpStatusCode(ErrorCode.DATABASE_ERROR),
-    })
+    });
   }
 }

@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { receipts, receiptItems, insightsCache } from "@/lib/db/schema";
-import { getAuthenticatedUser, requireSubscription, requireHouseholdMembership } from "@/lib/auth-helpers";
-import { eq, and, gte, desc, sql, lt } from "drizzle-orm";
-import { CorrelationId, submitLogEvent } from "@/lib/logging";
-import { generateSpendingSummary } from "@/lib/openai";
-import { randomUUID } from "crypto";
+import { type NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { receipts, receiptItems, insightsCache } from '@/lib/db/schema';
+import { getAuthenticatedUser, requireSubscription, requireHouseholdMembership } from '@/lib/auth-helpers';
+import { eq, and, gte, desc, sql, lt } from 'drizzle-orm';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { generateSpendingSummary } from '@/lib/openai';
+import { randomUUID } from 'crypto';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 export const maxDuration = 30;
 
 /**
@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
     if (subCheck) return subCheck;
 
     const { searchParams } = new URL(request.url);
-    const householdId = searchParams.get("householdId");
-    const months = parseInt(searchParams.get("months") || "3");
+    const householdId = searchParams.get('householdId');
+    const months = parseInt(searchParams.get('months') || '3');
 
     // If householdId is provided, verify user is a member
     if (householdId) {
@@ -50,13 +50,13 @@ export async function GET(request: NextRequest) {
           eq(insightsCache.userId, user.id),
           eq(insightsCache.cacheType, 'spending_summary'),
           eq(insightsCache.cacheKey, cacheKey),
-          gte(insightsCache.expiresAt, new Date())
-        )
+          gte(insightsCache.expiresAt, new Date()),
+        ),
       )
       .limit(1);
 
     if (cachedResult.length > 0) {
-      submitLogEvent('receipt', "Returning cached AI spending summary", correlationId, {
+      submitLogEvent('receipt', 'Returning cached AI spending summary', correlationId, {
         userId: user.id,
         householdId,
         months,
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - months);
 
-    submitLogEvent('receipt', "Generating AI spending summary", correlationId, {
+    submitLogEvent('receipt', 'Generating AI spending summary', correlationId, {
       userId: user.id,
       householdId,
       months,
@@ -95,18 +95,18 @@ export async function GET(request: NextRequest) {
           eq(receipts.userId, user.id),
           gte(
             sql`TO_DATE(${receipts.transactionDate}, 'YYYY-MM-DD')`,
-            startDate.toISOString().split('T')[0]
+            startDate.toISOString().split('T')[0],
           ),
           sql`${receipts.deletedAt} IS NULL`,
-          householdId ? eq(receipts.householdId, householdId) : undefined
-        )
+          householdId ? eq(receipts.householdId, householdId) : undefined,
+        ),
       )
       .orderBy(desc(receipts.transactionDate))
       .limit(500); // Limit to prevent token overflow
 
     if (items.length === 0) {
       return NextResponse.json({
-        summary: "No receipt data found for the selected period.",
+        summary: 'No receipt data found for the selected period.',
         itemCount: 0,
         period: {
           startDate: startDate.toISOString().split('T')[0],
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate basic statistics
     const totalSpent = items.reduce((sum, item) => {
-      return sum + parseFloat(item.totalPrice || item.unitPrice || "0");
+      return sum + parseFloat(item.totalPrice || item.unitPrice || '0');
     }, 0);
 
     const categoryBreakdown: Record<string, number> = {};
@@ -126,16 +126,16 @@ export async function GET(request: NextRequest) {
     const itemFrequency: Record<string, number> = {};
 
     items.forEach((item) => {
-      const price = parseFloat(item.totalPrice || item.unitPrice || "0");
-      
+      const price = parseFloat(item.totalPrice || item.unitPrice || '0');
+
       // Category breakdown
-      const category = item.category || item.receiptCategory || "other";
+      const category = item.category || item.receiptCategory || 'other';
       categoryBreakdown[category] = (categoryBreakdown[category] || 0) + price;
-      
+
       // Merchant breakdown
-      const merchant = item.merchantName || "Unknown";
+      const merchant = item.merchantName || 'Unknown';
       merchantBreakdown[merchant] = (merchantBreakdown[merchant] || 0) + price;
-      
+
       // Item frequency
       itemFrequency[item.itemName] = (itemFrequency[item.itemName] || 0) + 1;
     });
@@ -163,7 +163,7 @@ export async function GET(request: NextRequest) {
       period: `${months} months`,
       totalItems: items.length,
       totalSpent: totalSpent.toFixed(2),
-      currency: items[0]?.currency || "USD",
+      currency: items[0]?.currency || 'USD',
       topItems: topItems.slice(0, 10),
       topCategories: topCategories.slice(0, 5),
       topMerchants: topMerchants.slice(0, 5),
@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
       dataForAI,
       email,
       user.id,
-      correlationId
+      correlationId,
     );
 
     const responseData = {
@@ -188,7 +188,7 @@ export async function GET(request: NextRequest) {
         statistics: {
           totalItems: items.length,
           totalSpent: parseFloat(totalSpent.toFixed(2)),
-          currency: items[0]?.currency || "USD",
+          currency: items[0]?.currency || 'USD',
           averagePerItem: parseFloat((totalSpent / items.length).toFixed(2)),
         },
         topItems,
@@ -230,8 +230,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     submitLogEvent('receipt-error', `Error generating spending summary: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
-      { error: "Failed to generate spending summary" },
-      { status: 500 }
+      { error: 'Failed to generate spending summary' },
+      { status: 500 },
     );
   }
 }

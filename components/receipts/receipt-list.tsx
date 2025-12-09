@@ -1,12 +1,12 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { ReceiptIcon, Calendar, Store, Users } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ReceiptDetailModal } from "@/components/receipts/receipt-detail-modal"
-import { formatCategory } from "@/lib/utils/format-category"
-import type { Receipt } from "@/lib/types"
+import { useState } from 'react';
+import { ReceiptIcon, Calendar, Store, Users } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ReceiptDetailModal } from '@/components/receipts/receipt-detail-modal';
+import { formatCategory } from '@/lib/utils/format-category';
+import type { Receipt } from '@/lib/types';
 
 interface ReceiptListProps {
   receipts: Receipt[]
@@ -14,34 +14,34 @@ interface ReceiptListProps {
 }
 
 const categoryColors: Record<string, string> = {
-  groceries: "bg-green-500/10 text-green-700 dark:text-green-400",
-  dining: "bg-orange-500/10 text-orange-700 dark:text-orange-400",
-  transportation: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  shopping: "bg-purple-500/10 text-purple-700 dark:text-purple-400",
-  utilities: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
-  entertainment: "bg-pink-500/10 text-pink-700 dark:text-pink-400",
-  healthcare: "bg-red-500/10 text-red-700 dark:text-red-400",
-  travel: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400",
-  other: "bg-gray-500/10 text-gray-700 dark:text-gray-400",
-}
+  groceries: 'bg-green-500/10 text-green-700 dark:text-green-400',
+  dining: 'bg-orange-500/10 text-orange-700 dark:text-orange-400',
+  transportation: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
+  shopping: 'bg-purple-500/10 text-purple-700 dark:text-purple-400',
+  utilities: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400',
+  entertainment: 'bg-pink-500/10 text-pink-700 dark:text-pink-400',
+  healthcare: 'bg-red-500/10 text-red-700 dark:text-red-400',
+  travel: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400',
+  other: 'bg-gray-500/10 text-gray-700 dark:text-gray-400',
+};
 
 export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
-  const [selectedReceipt, setSelectedReceipt] = useState<any>(null)
-  const [modalOpen, setModalOpen] = useState(false)
+  const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-  }
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
 
   const handleReceiptClick = (receipt: any) => {
     if (onReceiptClick) {
-      onReceiptClick(receipt)
+      onReceiptClick(receipt);
     } else {
-      setSelectedReceipt(receipt)
-      setModalOpen(true)
+      setSelectedReceipt(receipt);
+      setModalOpen(true);
     }
-  }
+  };
 
   return (
     <>
@@ -72,8 +72,8 @@ export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
                   <div className="h-16 w-16 overflow-hidden rounded-md border bg-muted">
                     {(receipt as any).imageUrl ? (
                       <img
-                        src={(receipt as any).imageUrl || "/placeholder.svg"}
-                        alt={`Receipt from ${(receipt as any).merchantName || "merchant"}`}
+                        src={(receipt as any).imageUrl || '/placeholder.svg'}
+                        alt={`Receipt from ${(receipt as any).merchantName || 'merchant'}`}
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -90,11 +90,11 @@ export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
                     <div className="flex items-center gap-2">
                       <Store className="h-4 w-4 text-muted-foreground" />
                       <span className="font-semibold text-foreground">
-                        {(receipt as any).merchantName || "Unknown Merchant"}
+                        {(receipt as any).merchantName || 'Unknown Merchant'}
                       </span>
                     </div>
                     <span className="text-lg font-bold text-foreground sm:whitespace-nowrap">
-                      {(receipt as any).currency || "$"} {(receipt as any).totalAmount || "0.00"}
+                      {(receipt as any).currency || '$'} {(receipt as any).totalAmount || '0.00'}
                     </span>
                   </div>
 
@@ -112,7 +112,7 @@ export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
                       </Badge>
                     )}
                     {(receipt as any).paymentMethod && (
-                      <span className="capitalize">{(receipt as any).paymentMethod.replace("_", " ")}</span>
+                      <span className="capitalize">{(receipt as any).paymentMethod.replace('_', ' ')}</span>
                     )}
                     {(receipt as any).items && (receipt as any).items.length > 0 && (
                       <span>{(receipt as any).items.length} items</span>
@@ -145,5 +145,5 @@ export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
         />
       )}
     </>
-  )
+  );
 }

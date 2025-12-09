@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { Check, ChevronsUpDown, Home } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Check, ChevronsUpDown, Home } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -9,15 +9,15 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
+} from '@/components/ui/command';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { useState } from "react"
-import type { Household } from "@/lib/types"
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { useState } from 'react';
+import type { Household } from '@/lib/types';
 
 interface HouseholdSelectorProps {
   households: Household[]
@@ -25,14 +25,14 @@ interface HouseholdSelectorProps {
   onSelect: (householdId: string) => void
 }
 
-export function HouseholdSelector({ 
-  households, 
-  selectedHouseholdId, 
-  onSelect 
+export function HouseholdSelector({
+  households,
+  selectedHouseholdId,
+  onSelect,
 }: HouseholdSelectorProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
-  const selectedHousehold = households.find(h => h.id === selectedHouseholdId)
+  const selectedHousehold = households.find(h => h.id === selectedHouseholdId);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -46,7 +46,7 @@ export function HouseholdSelector({
           <div className="flex items-center gap-2">
             <Home className="h-4 w-4 text-muted-foreground" />
             <span className="truncate">
-              {selectedHousehold ? selectedHousehold.name : "Select household..."}
+              {selectedHousehold ? selectedHousehold.name : 'Select household...'}
             </span>
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -63,14 +63,14 @@ export function HouseholdSelector({
                   key={household.id}
                   value={household.name}
                   onSelect={() => {
-                    onSelect(household.id)
-                    setOpen(false)
+                    onSelect(household.id);
+                    setOpen(false);
                   }}
                 >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedHouseholdId === household.id ? "opacity-100" : "opacity-0"
+                      'mr-2 h-4 w-4',
+                      selectedHouseholdId === household.id ? 'opacity-100' : 'opacity-0',
                     )}
                   />
                   {household.name}
@@ -81,5 +81,5 @@ export function HouseholdSelector({
         </Command>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

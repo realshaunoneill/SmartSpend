@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 
 export interface TopItem {
   name: string;
@@ -33,7 +33,7 @@ interface UseTopItemsOptions {
   householdId?: string;
   months?: number;
   limit?: number;
-  sortBy?: "frequency" | "spending";
+  sortBy?: 'frequency' | 'spending';
   enabled?: boolean;
 }
 
@@ -48,7 +48,7 @@ async function fetchTopItems(options: UseTopItemsOptions): Promise<TopItemsRespo
   const response = await fetch(`/api/receipts/items/top?${params}`);
 
   if (!response.ok) {
-    throw new Error("Failed to fetch top items");
+    throw new Error('Failed to fetch top items');
   }
 
   return response.json();
@@ -58,7 +58,7 @@ export function useTopItems(options: UseTopItemsOptions = {}) {
   const { enabled = true, ...fetchOptions } = options;
 
   return useQuery({
-    queryKey: ["topItems", fetchOptions],
+    queryKey: ['topItems', fetchOptions],
     queryFn: () => fetchTopItems(fetchOptions),
     enabled,
     staleTime: 5 * 60 * 1000, // 5 minutes

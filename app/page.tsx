@@ -1,70 +1,70 @@
-"use client"
+'use client';
 
-import Link from "next/link"
-import { Receipt, Scan, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock, Search, Cloud } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ThemeToggle } from "@/components/layout/theme-toggle"
-import { Navigation } from "@/components/layout/navigation"
-import { useUser } from "@clerk/nextjs"
+import Link from 'next/link';
+import { Receipt, Scan, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock, Search, Cloud } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { Navigation } from '@/components/layout/navigation';
+import { useUser } from '@clerk/nextjs';
 
 const features = [
   {
     icon: Scan,
-    title: "AI Receipt Scanning",
-    description: "Upload receipts and our AI extracts merchant, amount, date, and line items automatically.",
-    gradient: "from-emerald-500/10 to-teal-500/10",
+    title: 'AI Receipt Scanning',
+    description: 'Upload receipts and our AI extracts merchant, amount, date, and line items automatically.',
+    gradient: 'from-emerald-500/10 to-teal-500/10',
   },
   {
     icon: Search,
-    title: "Powerful Search",
-    description: "Search receipts by merchant name, category, or even specific items you purchased. Find any receipt instantly.",
-    gradient: "from-violet-500/10 to-purple-500/10",
+    title: 'Powerful Search',
+    description: 'Search receipts by merchant name, category, or even specific items you purchased. Find any receipt instantly.',
+    gradient: 'from-violet-500/10 to-purple-500/10',
   },
   {
     icon: BarChart3,
-    title: "Spending Analytics",
-    description: "Visualize your spending patterns with beautiful charts and category breakdowns.",
-    gradient: "from-blue-500/10 to-cyan-500/10",
+    title: 'Spending Analytics',
+    description: 'Visualize your spending patterns with beautiful charts and category breakdowns.',
+    gradient: 'from-blue-500/10 to-cyan-500/10',
   },
   {
     icon: Cloud,
-    title: "Cloud Sync",
-    description: "Access your receipts from any device with automatic cloud synchronization.",
-    gradient: "from-purple-500/10 to-pink-500/10",
+    title: 'Cloud Sync',
+    description: 'Access your receipts from any device with automatic cloud synchronization.',
+    gradient: 'from-purple-500/10 to-pink-500/10',
   },
   {
     icon: Users,
-    title: "Household Sharing",
-    description: "Share expenses with family members and track household spending together.",
-    gradient: "from-orange-500/10 to-amber-500/10",
+    title: 'Household Sharing',
+    description: 'Share expenses with family members and track household spending together.',
+    gradient: 'from-orange-500/10 to-amber-500/10',
   },
   {
     icon: Receipt,
-    title: "Receipt Storage",
-    description: "Never lose a receipt again. All your receipts stored and searchable.",
-    gradient: "from-green-500/10 to-emerald-500/10",
+    title: 'Receipt Storage',
+    description: 'Never lose a receipt again. All your receipts stored and searchable.',
+    gradient: 'from-green-500/10 to-emerald-500/10',
   },
-]
+];
 
 const stats = [
-  { value: "10K+", label: "Active Users" },
-  { value: "500K+", label: "Receipts Scanned" },
-  { value: "99.9%", label: "Uptime" },
-  { value: "$2M+", label: "Tracked Spending" },
-]
+  { value: '10K+', label: 'Active Users' },
+  { value: '500K+', label: 'Receipts Scanned' },
+  { value: '99.9%', label: 'Uptime' },
+  { value: '$2M+', label: 'Tracked Spending' },
+];
 
 const benefits = [
-  "Track all expenses in one place",
-  "Automatic categorization",
-  "Export reports for taxes",
-  "Set budget alerts",
-  "Multi-currency support",
-  "Works on all devices",
-]
+  'Track all expenses in one place',
+  'Automatic categorization',
+  'Export reports for taxes',
+  'Set budget alerts',
+  'Multi-currency support',
+  'Works on all devices',
+];
 
 export default function LandingPage() {
-  const { isLoaded, isSignedIn } = useUser()
+  const { isLoaded, isSignedIn } = useUser();
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -93,14 +93,14 @@ export default function LandingPage() {
         {/* Background gradient */}
         <div className="absolute inset-0 -z-10 bg-linear-to-b from-primary/5 via-transparent to-transparent dark:from-primary/10" />
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.15),transparent_50%)]" />
-        
+
         <div className="mx-auto max-w-4xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-foreground backdrop-blur-sm">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
             Now with AI-powered receipt scanning
           </div>
           <h1 className="mb-6 text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
-            Track Every Penny,{" "}
+            Track Every Penny,{' '}
             <span className="bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Effortlessly
             </span>
@@ -121,7 +121,7 @@ export default function LandingPage() {
               <>
                 <Link href="/sign-up">
                   <Button size="lg" className="gap-2 shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30">
-                    {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 ? "Start Free Trial" : "Start Tracking Free"}
+                    {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 ? 'Start Free Trial' : 'Start Tracking Free'}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -182,10 +182,10 @@ export default function LandingPage() {
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => {
-              const Icon = feature.icon
+              const Icon = feature.icon;
               return (
-                <Card 
-                  key={feature.title} 
+                <Card
+                  key={feature.title}
                   className="group relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm transition-all hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5"
                 >
                   <div className={`absolute inset-0 bg-linear-to-br ${feature.gradient} opacity-0 transition-opacity group-hover:opacity-100`} />
@@ -197,7 +197,7 @@ export default function LandingPage() {
                     <p className="text-sm text-muted-foreground">{feature.description}</p>
                   </CardContent>
                 </Card>
-              )
+              );
             })}
           </div>
         </div>
@@ -239,7 +239,7 @@ export default function LandingPage() {
               ) : (
                 <Link href="/sign-up">
                   <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
-                    {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 ? "Start Free Trial" : "Get Started for Free"}
+                    {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 ? 'Start Free Trial' : 'Get Started for Free'}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -400,16 +400,16 @@ export default function LandingPage() {
             Ready to Start Saving?
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-lg text-primary-foreground/90">
-            {isSignedIn 
-              ? "Start tracking your expenses and take control of your finances today."
-              : "Join ReceiptWise today and start tracking your expenses. Free to get started, no credit card required."
+            {isSignedIn
+              ? 'Start tracking your expenses and take control of your finances today.'
+              : 'Join ReceiptWise today and start tracking your expenses. Free to get started, no credit card required.'
             }
           </p>
           {isSignedIn ? (
             <Link href="/dashboard">
-              <Button 
-                size="lg" 
-                variant="secondary" 
+              <Button
+                size="lg"
+                variant="secondary"
                 className="gap-2 shadow-xl transition-all hover:scale-105"
               >
                 Go to Dashboard
@@ -418,9 +418,9 @@ export default function LandingPage() {
             </Link>
           ) : (
             <Link href="/sign-up">
-              <Button 
-                size="lg" 
-                variant="secondary" 
+              <Button
+                size="lg"
+                variant="secondary"
                 className="gap-2 shadow-xl transition-all hover:scale-105"
               >
                 Create Free Account
@@ -431,5 +431,5 @@ export default function LandingPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }

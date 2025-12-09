@@ -3,7 +3,7 @@
  */
 export function formatCategory(category: string): string {
   if (!category) return '';
-  
+
   const categoryMap: { [key: string]: string } = {
     'groceries': 'Groceries',
     'dining': 'Dining',
@@ -17,9 +17,9 @@ export function formatCategory(category: string): string {
     'utilities': 'Utilities',
     'travel': 'Travel',
     'home': 'Home & Garden',
-    'other': 'Other'
+    'other': 'Other',
   };
-  
+
   return categoryMap[category.toLowerCase()] || capitalizeText(category);
 }
 

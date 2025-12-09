@@ -15,7 +15,7 @@ function getDb() {
     // Check if DATABASE_URL is configured
     if (!process.env.DATABASE_URL) {
       throw new Error(
-        'DATABASE_URL environment variable is not set. Please configure your database connection.'
+        'DATABASE_URL environment variable is not set. Please configure your database connection.',
       );
     }
 
@@ -29,16 +29,16 @@ function getDb() {
 
       // Initialize Drizzle with the connection and schema
       // Use casing: 'snake_case' to match database column names
-      dbInstance = drizzle(client, { 
+      dbInstance = drizzle(client, {
         schema,
-        casing: 'snake_case'
+        casing: 'snake_case',
       });
 
       submitLogEvent('database', 'Database connection established successfully', null);
     } catch (error) {
       submitLogEvent('database', `Failed to establish database connection: ${error instanceof Error ? error.message : 'Unknown error'}`, null, {}, true);
       throw new Error(
-        `Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }

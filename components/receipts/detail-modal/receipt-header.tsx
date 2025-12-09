@@ -1,12 +1,12 @@
-"use client"
+'use client';
 
-import { Store, MapPin, Info, Calendar, Clock, CreditCard, Hash, Receipt as ReceiptIcon, Tag, Building2, Users } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { ReceiptAssignmentDialog } from "@/components/receipts/receipt-assignment-dialog"
-import { DeleteReceiptButton } from "./delete-receipt-button"
-import { BusinessExpenseDialog } from "./business-expense-dialog"
-import { formatCategory, capitalizeText } from "@/lib/utils/format-category"
+import { Store, MapPin, Info, Calendar, Clock, CreditCard, Hash, Receipt as ReceiptIcon, Tag, Building2, Users } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ReceiptAssignmentDialog } from '@/components/receipts/receipt-assignment-dialog';
+import { DeleteReceiptButton } from './delete-receipt-button';
+import { BusinessExpenseDialog } from './business-expense-dialog';
+import { formatCategory, capitalizeText } from '@/lib/utils/format-category';
 
 interface ReceiptHeaderProps {
   receipt: any
@@ -35,7 +35,7 @@ export function ReceiptHeader({
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold">
-                {receipt.merchantName || "Unknown Merchant"}
+                {receipt.merchantName || 'Unknown Merchant'}
               </h2>
               {receipt.ocrData && Object.keys(receipt.ocrData).length > 5 && (
                 <Badge variant="default" className="text-xs">
@@ -97,18 +97,18 @@ export function ReceiptHeader({
             >
               <Button variant="secondary" size="sm" className="flex-1">
                 <Users className="h-4 w-4 mr-2" />
-                {!isReceiptOwner && receipt.householdId 
-                  ? "Remove from Household" 
-                  : receipt.householdId 
-                    ? "Change Household" 
-                    : "Assign to Household"
+                {!isReceiptOwner && receipt.householdId
+                  ? 'Remove from Household'
+                  : receipt.householdId
+                    ? 'Change Household'
+                    : 'Assign to Household'
                 }
               </Button>
             </ReceiptAssignmentDialog>
-            
+
             {/* Delete Button - Only for receipt owner */}
             {isReceiptOwner && (
-              <DeleteReceiptButton 
+              <DeleteReceiptButton
                 receiptId={receipt.id}
                 onDeleted={onDeleted}
               />
@@ -163,5 +163,5 @@ export function ReceiptHeader({
         </div>
       )}
     </div>
-  )
+  );
 }

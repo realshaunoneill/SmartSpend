@@ -1,13 +1,13 @@
-"use client"
+'use client';
 
-import { Crown, Sparkles, ArrowRight, Lock, Upload, Users, BarChart3 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { useUser } from "@/lib/hooks/use-user"
+import { Crown, Sparkles, ArrowRight, Lock, Upload, Users, BarChart3 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useUser } from '@/lib/hooks/use-user';
 
 interface SubscriptionGateProps {
-  feature: "upload" | "sharing" | "analytics" | "bank"
+  feature: 'upload' | 'sharing' | 'analytics' | 'bank'
   title?: string
   description?: string
   children?: React.ReactNode
@@ -16,61 +16,61 @@ interface SubscriptionGateProps {
 const featureConfig = {
   upload: {
     icon: Upload,
-    title: "Receipt Upload",
-    description: "Upload and process new receipts with AI-powered data extraction",
+    title: 'Receipt Upload',
+    description: 'Upload and process new receipts with AI-powered data extraction',
     benefits: [
-      "Unlimited receipt uploads",
-      "AI-powered OCR extraction", 
-      "Smart categorization",
-      "Cloud storage & sync"
-    ]
+      'Unlimited receipt uploads',
+      'AI-powered OCR extraction',
+      'Smart categorization',
+      'Cloud storage & sync',
+    ],
   },
   sharing: {
     icon: Users,
-    title: "Household Sharing",
-    description: "Create households and share receipts with family members",
+    title: 'Household Sharing',
+    description: 'Create households and share receipts with family members',
     benefits: [
-      "Unlimited households",
-      "Member management",
-      "Real-time collaboration",
-      "Shared expense tracking"
-    ]
+      'Unlimited households',
+      'Member management',
+      'Real-time collaboration',
+      'Shared expense tracking',
+    ],
   },
   analytics: {
     icon: BarChart3,
-    title: "Advanced Analytics",
-    description: "Get detailed insights and spending analysis",
+    title: 'Advanced Analytics',
+    description: 'Get detailed insights and spending analysis',
     benefits: [
-      "Advanced charts & graphs",
-      "Spending trends analysis",
-      "Category breakdowns",
-      "Export capabilities"
-    ]
+      'Advanced charts & graphs',
+      'Spending trends analysis',
+      'Category breakdowns',
+      'Export capabilities',
+    ],
   },
   bank: {
     icon: Lock,
-    title: "Bank Integration",
-    description: "Connect your bank accounts for automatic transaction matching",
+    title: 'Bank Integration',
+    description: 'Connect your bank accounts for automatic transaction matching',
     benefits: [
-      "Multiple bank connections",
-      "Automatic transaction matching",
-      "Real-time balance updates",
-      "Enhanced security"
-    ]
-  }
-}
+      'Multiple bank connections',
+      'Automatic transaction matching',
+      'Real-time balance updates',
+      'Enhanced security',
+    ],
+  },
+};
 
-export function SubscriptionGate({ 
-  feature, 
-  title, 
-  description, 
-  children 
+export function SubscriptionGate({
+  feature,
+  title,
+  description,
+  children,
 }: SubscriptionGateProps) {
-  const { user, isSubscribed } = useUser()
+  const { user, isSubscribed } = useUser();
 
   // If user is subscribed, render children normally
   if (isSubscribed) {
-    return <>{children}</>
+    return <>{children}</>;
   }
 
   // If user data isn't loaded yet, show loading
@@ -82,37 +82,37 @@ export function SubscriptionGate({
           <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
-  const config = featureConfig[feature]
-  const FeatureIcon = config.icon
+  const config = featureConfig[feature];
+  const FeatureIcon = config.icon;
 
   const handleSubscribe = async () => {
     try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({}),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create checkout session");
+        throw new Error('Failed to create checkout session');
       }
 
       const { url } = await response.json();
-      
+
       if (url) {
         // Redirect to Stripe checkout
         window.location.href = url;
       }
     } catch (error) {
-      console.error("Error creating checkout session:", error);
-      alert("Failed to start checkout. Please try again.");
+      console.error('Error creating checkout session:', error);
+      alert('Failed to start checkout. Please try again.');
     }
-  }
+  };
 
   return (
     <div className="flex items-center justify-center p-8">
@@ -124,7 +124,7 @@ export function SubscriptionGate({
           <div className="flex items-center justify-center gap-2 mb-2">
             <Crown className="h-5 w-5 text-primary" />
             <Badge variant="secondary" className="text-xs font-semibold">
-              {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 ? "Try Premium Free" : "Premium Feature"}
+              {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 ? 'Try Premium Free' : 'Premium Feature'}
             </Badge>
             <Sparkles className="h-5 w-5 text-primary animate-pulse" />
           </div>
@@ -135,7 +135,7 @@ export function SubscriptionGate({
             {description || config.description}
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 && (
             <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
@@ -144,7 +144,7 @@ export function SubscriptionGate({
               </p>
             </div>
           )}
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {config.benefits.map((benefit, index) => (
               <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
@@ -155,7 +155,7 @@ export function SubscriptionGate({
               </div>
             ))}
           </div>
-          
+
           <div className="text-center pt-4 border-t">
             <p className="text-sm text-muted-foreground mb-4">
               Upgrade to Premium to unlock this feature and many more
@@ -169,5 +169,5 @@ export function SubscriptionGate({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

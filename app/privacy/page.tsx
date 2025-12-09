@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Navigation } from "@/components/layout/navigation"
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Navigation } from '@/components/layout/navigation';
 
 export default function PrivacyPage() {
   return (
@@ -21,8 +21,8 @@ export default function PrivacyPage() {
           </CardHeader>
           <CardContent className="prose prose-sm dark:prose-invert max-w-none">
             <p>
-              ReceiptWise ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy 
-              explains how we collect, use, disclose, and safeguard your information when you use our receipt 
+              ReceiptWise ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy
+              explains how we collect, use, disclose, and safeguard your information when you use our receipt
               management service.
             </p>
           </CardContent>
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
               <li>Profile information you provide</li>
               <li>Account preferences and settings</li>
             </ul>
-            
+
             <p><strong>Receipt Data:</strong></p>
             <ul className="list-disc pl-5 space-y-1">
               <li>Receipt images you upload</li>
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
               <li>Categories and tags you assign</li>
               <li>Notes and modifications you make</li>
             </ul>
-            
+
             <p><strong>Usage Information:</strong></p>
             <ul className="list-disc pl-5 space-y-1">
               <li>How you interact with the Service</li>
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
               <li>Time and date of your visits</li>
               <li>Browser type and device information</li>
             </ul>
-            
+
             <p><strong>Payment Information:</strong></p>
             <ul className="list-disc pl-5 space-y-1">
               <li>Payment information is processed and stored by Stripe</li>
@@ -91,7 +91,7 @@ export default function PrivacyPage() {
           </CardHeader>
           <CardContent className="prose prose-sm dark:prose-invert max-w-none space-y-3">
             <p>
-              We use OpenAI's GPT-4 Vision API to process receipt images and extract structured data. When you 
+              We use OpenAI's GPT-4 Vision API to process receipt images and extract structured data. When you
               upload a receipt:
             </p>
             <ul className="list-disc pl-5 space-y-1">
@@ -101,7 +101,7 @@ export default function PrivacyPage() {
               <li>OpenAI's data processing is subject to their privacy policy and data retention practices</li>
             </ul>
             <p>
-              According to OpenAI's policies, API data is not used to train their models and is retained for a 
+              According to OpenAI's policies, API data is not used to train their models and is retained for a
               limited period for abuse monitoring.
             </p>
           </CardContent>
@@ -123,7 +123,7 @@ export default function PrivacyPage() {
               <li>Payment processing is handled by Stripe with PCI compliance</li>
             </ul>
             <p>
-              While we strive to protect your data, no method of transmission or storage is 100% secure. We cannot 
+              While we strive to protect your data, no method of transmission or storage is 100% secure. We cannot
               guarantee absolute security.
             </p>
           </CardContent>
@@ -170,9 +170,9 @@ export default function PrivacyPage() {
           </CardHeader>
           <CardContent className="prose prose-sm dark:prose-invert max-w-none space-y-3">
             <p>
-              We retain your data for as long as your account is active or as needed to provide you with our 
-              services. You can delete receipts at any time through the Service. When you delete your account, 
-              we will delete or anonymize your personal data, except where we are required to retain it for 
+              We retain your data for as long as your account is active or as needed to provide you with our
+              services. You can delete receipts at any time through the Service. When you delete your account,
+              we will delete or anonymize your personal data, except where we are required to retain it for
               legal or regulatory purposes.
             </p>
           </CardContent>
@@ -193,7 +193,7 @@ export default function PrivacyPage() {
               <li>Close your account</li>
             </ul>
             <p>
-              To exercise these rights, please contact us at support@receiptwise.com or use the account 
+              To exercise these rights, please contact us at support@receiptwise.com or use the account
               settings in the Service.
             </p>
           </CardContent>
@@ -205,8 +205,8 @@ export default function PrivacyPage() {
           </CardHeader>
           <CardContent className="prose prose-sm dark:prose-invert max-w-none space-y-3">
             <p>
-              We use cookies and similar tracking technologies to maintain your session and improve your 
-              experience. Essential cookies are required for the Service to function. You can control 
+              We use cookies and similar tracking technologies to maintain your session and improve your
+              experience. Essential cookies are required for the Service to function. You can control
               non-essential cookies through your browser settings.
             </p>
           </CardContent>
@@ -218,8 +218,8 @@ export default function PrivacyPage() {
           </CardHeader>
           <CardContent className="prose prose-sm dark:prose-invert max-w-none space-y-3">
             <p>
-              Our Service is not intended for children under 13 years of age. We do not knowingly collect 
-              personal information from children under 13. If you become aware that a child has provided us 
+              Our Service is not intended for children under 13 years of age. We do not knowingly collect
+              personal information from children under 13. If you become aware that a child has provided us
               with personal information, please contact us.
             </p>
           </CardContent>
@@ -231,8 +231,8 @@ export default function PrivacyPage() {
           </CardHeader>
           <CardContent className="prose prose-sm dark:prose-invert max-w-none space-y-3">
             <p>
-              Your information may be transferred to and processed in countries other than your country of 
-              residence. These countries may have different data protection laws. By using our Service, you 
+              Your information may be transferred to and processed in countries other than your country of
+              residence. These countries may have different data protection laws. By using our Service, you
               consent to such transfers.
             </p>
           </CardContent>
@@ -244,8 +244,8 @@ export default function PrivacyPage() {
           </CardHeader>
           <CardContent className="prose prose-sm dark:prose-invert max-w-none space-y-3">
             <p>
-              We may update this Privacy Policy from time to time. We will notify you of any material changes 
-              by posting the new policy on this page and updating the "Last updated" date. Your continued use 
+              We may update this Privacy Policy from time to time. We will notify you of any material changes
+              by posting the new policy on this page and updating the "Last updated" date. Your continued use
               of the Service after such changes constitutes acceptance of the updated policy.
             </p>
           </CardContent>
@@ -266,5 +266,5 @@ export default function PrivacyPage() {
         </Card>
       </main>
     </>
-  )
+  );
 }

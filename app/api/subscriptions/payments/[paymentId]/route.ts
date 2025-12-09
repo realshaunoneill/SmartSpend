@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { subscriptions, subscriptionPayments, receipts } from '@/lib/db/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
-import { CorrelationId, submitLogEvent } from '@/lib/logging';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 
 export const runtime = 'nodejs';
 
@@ -18,7 +18,7 @@ type RouteParams = {
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   const { paymentId } = await params;
-  
+
   try {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
@@ -35,14 +35,14 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       .where(
         and(
           eq(subscriptionPayments.id, paymentId),
-          eq(subscriptions.userId, user.id)
-        )
+          eq(subscriptions.userId, user.id),
+        ),
       );
 
     if (!payment) {
       return NextResponse.json(
         { error: 'Payment not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -54,14 +54,14 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         .where(
           and(
             eq(receipts.id, receiptId),
-            eq(receipts.userId, user.id)
-          )
+            eq(receipts.userId, user.id),
+          ),
         );
 
       if (!receipt) {
         return NextResponse.json(
           { error: 'Receipt not found or unauthorized' },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -82,13 +82,13 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         .returning();
 
       submitLogEvent('subscription', `Linked receipt ${receiptId} to payment ${paymentId}`, correlationId, { paymentId, receiptId });
-      
+
       return NextResponse.json(updated);
     }
 
     // Otherwise just update payment details
     const updates: Partial<typeof subscriptionPayments.$inferInsert> = {};
-    
+
     if (status !== undefined) updates.status = status;
     if (actualDate !== undefined) updates.actualDate = actualDate ? new Date(actualDate) : null;
     if (actualAmount !== undefined) updates.actualAmount = actualAmount;
@@ -101,13 +101,13 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       .returning();
 
     submitLogEvent('subscription', `Updated payment ${paymentId}`, correlationId, { paymentId });
-    
+
     return NextResponse.json(updated);
   } catch (error) {
     submitLogEvent('subscription', `Error updating payment: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: 'Failed to update payment' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -116,7 +116,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   const { paymentId } = await params;
-  
+
   try {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
@@ -130,14 +130,14 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       .where(
         and(
           eq(subscriptionPayments.id, paymentId),
-          eq(subscriptions.userId, user.id)
-        )
+          eq(subscriptions.userId, user.id),
+        ),
       );
 
     if (!payment) {
       return NextResponse.json(
         { error: 'Payment not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -154,13 +154,13 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       .returning();
 
     submitLogEvent('subscription', `Unlinked receipt from payment ${paymentId}`, correlationId, { paymentId });
-    
+
     return NextResponse.json(updated);
   } catch (error) {
     submitLogEvent('subscription', `Error unlinking payment: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: 'Failed to unlink payment' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -105,7 +105,7 @@ export function SubscriptionDetailModal({
             variant: 'destructive',
           });
         },
-      }
+      },
     );
   };
 
@@ -128,7 +128,7 @@ export function SubscriptionDetailModal({
             variant: 'destructive',
           });
         },
-      }
+      },
     );
   };
 
@@ -363,7 +363,7 @@ export function SubscriptionDetailModal({
                               <p className="font-medium">
                                 {format(
                                   new Date(payment.expectedDate),
-                                  'MMM d, yyyy'
+                                  'MMM d, yyyy',
                                 )}
                               </p>
                               <p className="text-sm text-muted-foreground">

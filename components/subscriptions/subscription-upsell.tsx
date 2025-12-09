@@ -1,9 +1,9 @@
-"use client"
+'use client';
 
-import { Crown } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
+import { Crown } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 interface SubscriptionUpsellProps {
   title?: string
@@ -13,21 +13,21 @@ interface SubscriptionUpsellProps {
 }
 
 export function SubscriptionUpsell({
-  title = "Upgrade to Premium",
-  description = "Subscribe to unlock premium features:",
+  title = 'Upgrade to Premium',
+  description = 'Subscribe to unlock premium features:',
   features = [
-    "Unlimited receipt uploads",
-    "Advanced analytics and insights",
-    "Household sharing",
-    "AI-powered spending analysis"
+    'Unlimited receipt uploads',
+    'Advanced analytics and insights',
+    'Household sharing',
+    'AI-powered spending analysis',
   ],
-  className = ""
+  className = '',
 }: SubscriptionUpsellProps) {
-  const router = useRouter()
+  const router = useRouter();
 
   const handleUpgrade = () => {
-    router.push('/settings')
-  }
+    router.push('/settings');
+  };
 
   return (
     <Card className={`border-primary/50 bg-primary/5 ${className}`}>
@@ -49,7 +49,7 @@ export function SubscriptionUpsell({
             </li>
           ))}
         </ul>
-        <Button 
+        <Button
           onClick={handleUpgrade}
           className="w-full sm:w-auto gap-2"
         >
@@ -58,5 +58,5 @@ export function SubscriptionUpsell({
         </Button>
       </CardContent>
     </Card>
-  )
+  );
 }

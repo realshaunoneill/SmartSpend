@@ -1,25 +1,25 @@
-"use client"
+'use client';
 
-import type React from "react"
-import { useState, useCallback } from "react"
-import { Upload, Loader2, CheckCircle2, XCircle, X, RefreshCw } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { upload } from "@vercel/blob/client"
+import type React from 'react';
+import { useState, useCallback } from 'react';
+import { Upload, Loader2, CheckCircle2, XCircle, X, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { upload } from '@vercel/blob/client';
 
 interface UploadItem {
   id: string
   file: File
   previewUrl: string
-  status: "pending" | "uploading" | "processing" | "completed" | "failed"
+  status: 'pending' | 'uploading' | 'processing' | 'completed' | 'failed'
   progress: number
   error?: string
   receiptId?: string
   blobUrl?: string
 }
 
-const ENV_PATH_PREFIX = process.env.NODE_ENV === "production" ? "prod" : "dev"
+const ENV_PATH_PREFIX = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
 
 export function ReceiptBatchUpload({
   clerkId,
@@ -32,122 +32,122 @@ export function ReceiptBatchUpload({
   householdId?: string
   onUploadComplete?: () => void
 }) {
-  const [uploadItems, setUploadItems] = useState<UploadItem[]>([])
+  const [uploadItems, setUploadItems] = useState<UploadItem[]>([]);
 
   const handleFilesChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    
+    const files = Array.from(e.target.files || []);
+
     const newItems: UploadItem[] = files
       .filter(file => {
         // Validate file type
-        if (!file.type.startsWith("image/")) {
-          return false
+        if (!file.type.startsWith('image/')) {
+          return false;
         }
         // Validate file size (max 15MB)
         if (file.size > 15 * 1024 * 1024) {
-          return false
+          return false;
         }
-        return true
+        return true;
       })
       .map(file => ({
         id: `${Date.now()}-${Math.random()}`,
         file,
         previewUrl: URL.createObjectURL(file),
-        status: "pending" as const,
+        status: 'pending' as const,
         progress: 0,
-      }))
+      }));
 
-    setUploadItems(prev => [...prev, ...newItems])
-    
+    setUploadItems(prev => [...prev, ...newItems]);
+
     // Auto-start processing for new items
     if (newItems.length > 0) {
-      processItems(newItems)
+      processItems(newItems);
     }
-  }, [])
+  }, []);
 
   const removeItem = useCallback((id: string) => {
     setUploadItems(prev => {
-      const item = prev.find(i => i.id === id)
+      const item = prev.find(i => i.id === id);
       if (item?.previewUrl) {
-        URL.revokeObjectURL(item.previewUrl)
+        URL.revokeObjectURL(item.previewUrl);
       }
-      return prev.filter(i => i.id !== id)
-    })
-  }, [])
+      return prev.filter(i => i.id !== id);
+    });
+  }, []);
 
   const retryItem = useCallback(async (id: string) => {
-    const item = uploadItems.find(i => i.id === id)
-    if (!item || !item.blobUrl) return
+    const item = uploadItems.find(i => i.id === id);
+    if (!item || !item.blobUrl) return;
 
     setUploadItems(prev =>
-      prev.map(i => (i.id === id ? { ...i, status: "processing" as const, progress: 50, error: undefined } : i))
-    )
+      prev.map(i => (i.id === id ? { ...i, status: 'processing' as const, progress: 50, error: undefined } : i)),
+    );
 
     try {
-      const processResponse = await fetch("/api/receipt/process", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const processResponse = await fetch('/api/receipt/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           imageUrl: item.blobUrl,
           householdId,
         }),
-      })
+      });
 
       if (!processResponse.ok) {
-        throw new Error("Failed to process receipt")
+        throw new Error('Failed to process receipt');
       }
 
       setUploadItems(prev =>
-        prev.map(i => (i.id === id ? { ...i, status: "completed" as const, progress: 100 } : i))
-      )
+        prev.map(i => (i.id === id ? { ...i, status: 'completed' as const, progress: 100 } : i)),
+      );
 
-      onUploadComplete?.()
+      onUploadComplete?.();
     } catch (error) {
       setUploadItems(prev =>
         prev.map(i =>
           i.id === id
             ? {
                 ...i,
-                status: "failed" as const,
-                error: error instanceof Error ? error.message : "Processing failed",
+                status: 'failed' as const,
+                error: error instanceof Error ? error.message : 'Processing failed',
               }
-            : i
-        )
-      )
+            : i,
+        ),
+      );
     }
-  }, [uploadItems, householdId, onUploadComplete])
+  }, [uploadItems, householdId, onUploadComplete]);
 
   const processItem = useCallback(async (item: UploadItem) => {
     try {
       // Step 1: Upload to Vercel Blob
       setUploadItems(prev =>
-        prev.map(i => (i.id === item.id ? { ...i, status: "uploading" as const, progress: 25 } : i))
-      )
+        prev.map(i => (i.id === item.id ? { ...i, status: 'uploading' as const, progress: 25 } : i)),
+      );
 
-      const receiptId = `receipt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      const receiptId = `receipt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const blob = await upload(
         `${ENV_PATH_PREFIX}/receipts/${userEmail}/${receiptId}/${item.file.name}`,
         item.file,
         {
-          access: "public",
-          handleUploadUrl: "/api/receipt/upload",
+          access: 'public',
+          handleUploadUrl: '/api/receipt/upload',
           clientPayload: JSON.stringify({ receiptId, householdId }),
-        }
-      )
+        },
+      );
 
       // Step 2: Trigger async processing (fire and forget)
       setUploadItems(prev =>
         prev.map(i =>
           i.id === item.id
-            ? { ...i, status: "processing" as const, progress: 50, blobUrl: blob.url, receiptId }
-            : i
-        )
-      )
+            ? { ...i, status: 'processing' as const, progress: 50, blobUrl: blob.url, receiptId }
+            : i,
+        ),
+      );
 
       // Start processing but don't wait for it
-      fetch("/api/receipt/process", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      fetch('/api/receipt/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           imageUrl: blob.url,
           householdId,
@@ -155,15 +155,15 @@ export function ReceiptBatchUpload({
       })
         .then(async (response) => {
           if (!response.ok) {
-            throw new Error("Failed to process receipt")
+            throw new Error('Failed to process receipt');
           }
-          
+
           setUploadItems(prev =>
-            prev.map(i => (i.id === item.id ? { ...i, status: "completed" as const, progress: 100 } : i))
-          )
-          
+            prev.map(i => (i.id === item.id ? { ...i, status: 'completed' as const, progress: 100 } : i)),
+          );
+
           // Notify parent to refresh
-          onUploadComplete?.()
+          onUploadComplete?.();
         })
         .catch((error) => {
           setUploadItems(prev =>
@@ -171,52 +171,52 @@ export function ReceiptBatchUpload({
               i.id === item.id
                 ? {
                     ...i,
-                    status: "failed" as const,
-                    error: error instanceof Error ? error.message : "Processing failed",
+                    status: 'failed' as const,
+                    error: error instanceof Error ? error.message : 'Processing failed',
                   }
-                : i
-            )
-          )
-        })
+                : i,
+            ),
+          );
+        });
 
       // Mark as uploaded (processing happens async)
       setUploadItems(prev =>
-        prev.map(i => (i.id === item.id ? { ...i, progress: 75 } : i))
-      )
+        prev.map(i => (i.id === item.id ? { ...i, progress: 75 } : i)),
+      );
     } catch (error) {
       setUploadItems(prev =>
         prev.map(i =>
           i.id === item.id
             ? {
                 ...i,
-                status: "failed" as const,
-                error: error instanceof Error ? error.message : "Upload failed",
+                status: 'failed' as const,
+                error: error instanceof Error ? error.message : 'Upload failed',
               }
-            : i
-        )
-      )
+            : i,
+        ),
+      );
     }
-  }, [userEmail, householdId, onUploadComplete])
+  }, [userEmail, householdId, onUploadComplete]);
 
   const processItems = useCallback(async (items: UploadItem[]) => {
     // Process all items in parallel (async)
     items.forEach(item => {
-      if (item.status === "pending") {
-        processItem(item)
+      if (item.status === 'pending') {
+        processItem(item);
       }
-    })
-  }, [processItem])
+    });
+  }, [processItem]);
 
   const clearCompleted = useCallback(() => {
     setUploadItems(prev => {
-      const completed = prev.filter(i => i.status === "completed")
-      completed.forEach(item => URL.revokeObjectURL(item.previewUrl))
-      return prev.filter(i => i.status !== "completed")
-    })
-  }, [])
+      const completed = prev.filter(i => i.status === 'completed');
+      completed.forEach(item => URL.revokeObjectURL(item.previewUrl));
+      return prev.filter(i => i.status !== 'completed');
+    });
+  }, []);
 
-  const completedCount = uploadItems.filter(i => i.status === "completed").length
-  const failedCount = uploadItems.filter(i => i.status === "failed").length
+  const completedCount = uploadItems.filter(i => i.status === 'completed').length;
+  const failedCount = uploadItems.filter(i => i.status === 'failed').length;
 
   return (
     <Card>
@@ -270,7 +270,7 @@ export function ReceiptBatchUpload({
                   <div
                     key={item.id}
                     className={`flex items-center gap-3 rounded-lg border p-3 ${
-                      item.status === "failed" ? "bg-destructive/5 border-destructive/20" : "bg-card"
+                      item.status === 'failed' ? 'bg-destructive/5 border-destructive/20' : 'bg-card'
                     }`}
                   >
                     {/* Preview Image */}
@@ -278,9 +278,9 @@ export function ReceiptBatchUpload({
                       <img
                         src={item.previewUrl}
                         alt="Receipt preview"
-                        className={`h-full w-full object-cover ${item.status === "failed" ? "blur-sm" : ""}`}
+                        className={`h-full w-full object-cover ${item.status === 'failed' ? 'blur-sm' : ''}`}
                       />
-                      {item.status === "failed" && (
+                      {item.status === 'failed' && (
                         <div className="absolute inset-0 flex items-center justify-center bg-destructive/20">
                           <XCircle className="h-6 w-6 text-destructive" />
                         </div>
@@ -296,23 +296,23 @@ export function ReceiptBatchUpload({
                       {item.error && (
                         <div className="text-xs text-destructive mt-1">{item.error}</div>
                       )}
-                      {(item.status === "uploading" || item.status === "processing") && (
+                      {(item.status === 'uploading' || item.status === 'processing') && (
                         <Progress value={item.progress} className="mt-2 h-1" />
                       )}
                     </div>
 
                     {/* Status Icon */}
                     <div className="shrink-0">
-                      {item.status === "pending" && (
+                      {item.status === 'pending' && (
                         <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/25" />
                       )}
-                      {(item.status === "uploading" || item.status === "processing") && (
+                      {(item.status === 'uploading' || item.status === 'processing') && (
                         <Loader2 className="h-5 w-5 animate-spin text-primary" />
                       )}
-                      {item.status === "completed" && (
+                      {item.status === 'completed' && (
                         <CheckCircle2 className="h-5 w-5 text-green-600" />
                       )}
-                      {item.status === "failed" && (
+                      {item.status === 'failed' && (
                         <Button
                           onClick={() => retryItem(item.id)}
                           variant="ghost"
@@ -325,7 +325,7 @@ export function ReceiptBatchUpload({
                     </div>
 
                     {/* Remove Button */}
-                    {item.status !== "uploading" && item.status !== "processing" && (
+                    {item.status !== 'uploading' && item.status !== 'processing' && (
                       <Button
                         onClick={() => removeItem(item.id)}
                         variant="ghost"
@@ -343,5 +343,5 @@ export function ReceiptBatchUpload({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { receipts } from "@/lib/db/schema";
-import { getAuthenticatedUser, getHouseholdMembership } from "@/lib/auth-helpers";
-import { eq } from "drizzle-orm";
-import { CorrelationId, submitLogEvent } from "@/lib/logging";
-import { randomUUID } from "crypto";
-import { invalidateInsightsCache } from "@/lib/utils/cache-helpers";
+import { type NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { receipts } from '@/lib/db/schema';
+import { getAuthenticatedUser, getHouseholdMembership } from '@/lib/auth-helpers';
+import { eq } from 'drizzle-orm';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { randomUUID } from 'crypto';
+import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 
 // Assign receipt to household
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
@@ -31,22 +31,22 @@ export async function PATCH(
       .limit(1);
 
     if (!receipt) {
-      return NextResponse.json({ error: "Receipt not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Receipt not found' }, { status: 404 });
     }
 
     // Check permissions based on current state and action
     const isOwner = receipt.userId === user.id;
-    
+
     // If receipt is currently in a household, check if user can remove it
     if (receipt.householdId && householdId === null) {
       // Removing from household - check if user is owner OR household admin
       if (!isOwner) {
         const membership = await getHouseholdMembership(receipt.householdId, user.id);
 
-        if (!membership || membership.role !== "owner") {
+        if (!membership || membership.role !== 'owner') {
           return NextResponse.json(
-            { error: "Only the receipt owner or household admin can remove receipts" },
-            { status: 403 }
+            { error: 'Only the receipt owner or household admin can remove receipts' },
+            { status: 403 },
           );
         }
       }
@@ -54,8 +54,8 @@ export async function PATCH(
       // Adding to household or changing household - only owner can do this
       if (!isOwner) {
         return NextResponse.json(
-          { error: "Only the receipt owner can assign receipts to households" },
-          { status: 403 }
+          { error: 'Only the receipt owner can assign receipts to households' },
+          { status: 403 },
         );
       }
 
@@ -65,8 +65,8 @@ export async function PATCH(
 
         if (!membership) {
           return NextResponse.json(
-            { error: "Not a member of this household" },
-            { status: 403 }
+            { error: 'Not a member of this household' },
+            { status: 403 },
           );
         }
       }
@@ -75,9 +75,9 @@ export async function PATCH(
     // Update receipt
     const [updatedReceipt] = await db
       .update(receipts)
-      .set({ 
+      .set({
         householdId: householdId || null,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(receipts.id, receiptId))
       .returning();
@@ -92,8 +92,8 @@ export async function PATCH(
   } catch (error) {
     submitLogEvent('receipt', `Error assigning receipt: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
-      { error: "Failed to assign receipt" },
-      { status: 500 }
+      { error: 'Failed to assign receipt' },
+      { status: 500 },
     );
   }
 }

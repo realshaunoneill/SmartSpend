@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { subscriptions, subscriptionPayments } from '@/lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
-import { CorrelationId, submitLogEvent } from '@/lib/logging';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 
 export const runtime = 'nodejs';
 
@@ -18,7 +18,7 @@ type RouteParams = {
 export async function GET(req: NextRequest, { params }: RouteParams) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   const { id } = await params;
-  
+
   try {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
@@ -30,14 +30,14 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       .where(
         and(
           eq(subscriptions.id, id),
-          eq(subscriptions.userId, user.id)
-        )
+          eq(subscriptions.userId, user.id),
+        ),
       );
 
     if (!subscription) {
       return NextResponse.json(
         { error: 'Subscription not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     submitLogEvent('subscription', `Error fetching subscription: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: 'Failed to fetch subscription' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   const { id } = await params;
-  
+
   try {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
@@ -79,14 +79,14 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       .where(
         and(
           eq(subscriptions.id, id),
-          eq(subscriptions.userId, user.id)
-        )
+          eq(subscriptions.userId, user.id),
+        ),
       );
 
     if (!existing) {
       return NextResponse.json(
         { error: 'Subscription not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -109,7 +109,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
     // Build update object with only provided fields
     const updates: Partial<typeof subscriptions.$inferInsert> = {};
-    
+
     if (name !== undefined) updates.name = name;
     if (description !== undefined) updates.description = description;
     if (category !== undefined) updates.category = category;
@@ -135,19 +135,19 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       .where(
         and(
           eq(subscriptions.id, id),
-          eq(subscriptions.userId, user.id)
-        )
+          eq(subscriptions.userId, user.id),
+        ),
       )
       .returning();
 
     submitLogEvent('subscription', `Updated subscription: ${id}`, correlationId, { subscriptionId: id });
-    
+
     return NextResponse.json(updated);
   } catch (error) {
     submitLogEvent('subscription', `Error updating subscription: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: 'Failed to update subscription' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -156,7 +156,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   const { id } = await params;
-  
+
   try {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
@@ -169,14 +169,14 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       .where(
         and(
           eq(subscriptions.id, id),
-          eq(subscriptions.userId, user.id)
-        )
+          eq(subscriptions.userId, user.id),
+        ),
       );
 
     if (!existing) {
       return NextResponse.json(
         { error: 'Subscription not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -191,18 +191,18 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       .where(
         and(
           eq(subscriptions.id, id),
-          eq(subscriptions.userId, user.id)
-        )
+          eq(subscriptions.userId, user.id),
+        ),
       );
 
     submitLogEvent('subscription', `Deleted subscription: ${id}`, correlationId, { subscriptionId: id });
-    
+
     return NextResponse.json({ success: true });
   } catch (error) {
     submitLogEvent('subscription', `Error deleting subscription: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: 'Failed to delete subscription' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

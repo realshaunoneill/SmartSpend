@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { HouseholdService } from '@/lib/services/household-service'
-import { getAuthenticatedUser, requireHouseholdMembership } from '@/lib/auth-helpers'
+import { type NextRequest, NextResponse } from 'next/server';
+import { HouseholdService } from '@/lib/services/household-service';
+import { getAuthenticatedUser, requireHouseholdMembership } from '@/lib/auth-helpers';
 import {
   createErrorResponse,
   ErrorCode,
   generateRequestId,
   getHttpStatusCode,
   Logger,
-} from '@/lib/errors'
-import { randomUUID } from 'crypto'
-import { CorrelationId } from '@/lib/logging'
+} from '@/lib/errors';
+import { randomUUID } from 'crypto';
+import { type CorrelationId } from '@/lib/logging';
 
 /**
  * GET /api/households/:id/members
@@ -18,9 +18,9 @@ import { CorrelationId } from '@/lib/logging'
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const requestId = generateRequestId()
+  const requestId = generateRequestId();
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
 
   try {
@@ -28,32 +28,32 @@ export async function GET(
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
-    const { id: householdId } = await params
+    const { id: householdId } = await params;
 
     // Verify user is a member of this household before showing members list
     const membershipCheck = await requireHouseholdMembership(householdId, user.id, correlationId);
     if (membershipCheck) return membershipCheck;
 
     // Get household members
-    const members = await HouseholdService.getHouseholdMembers(householdId)
+    const members = await HouseholdService.getHouseholdMembers(householdId);
 
     Logger.info('Household members fetched successfully', {
       requestId,
       userId: user.id,
       context: { householdId, memberCount: members.length },
-    })
-    return NextResponse.json(members)
+    });
+    return NextResponse.json(members);
   } catch (error) {
-    Logger.error('Error fetching household members', error as Error, { requestId })
+    Logger.error('Error fetching household members', error as Error, { requestId });
     const errorResponse = createErrorResponse(
       ErrorCode.DATABASE_ERROR,
       'Failed to fetch household members',
       undefined,
-      requestId
-    )
+      requestId,
+    );
     return NextResponse.json(errorResponse, {
       status: getHttpStatusCode(ErrorCode.DATABASE_ERROR),
-    })
+    });
   }
 }
 
@@ -64,9 +64,9 @@ export async function GET(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const requestId = generateRequestId()
+  const requestId = generateRequestId();
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
 
   try {
@@ -74,8 +74,8 @@ export async function POST(
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
-    const { id: householdId } = await params
-    const body = await req.json()
+    const { id: householdId } = await params;
+    const body = await req.json();
 
     // Validate request body
     if (!body.email || typeof body.email !== 'string' || body.email.trim() === '') {
@@ -83,31 +83,31 @@ export async function POST(
         requestId,
         userId: user.id,
         context: { householdId },
-      })
+      });
       const errorResponse = createErrorResponse(
         ErrorCode.MISSING_REQUIRED_FIELD,
         'Email is required',
         { field: 'email' },
-        requestId
-      )
+        requestId,
+      );
       return NextResponse.json(errorResponse, {
         status: getHttpStatusCode(ErrorCode.MISSING_REQUIRED_FIELD),
-      })
+      });
     }
 
     // Invite member (will verify ownership inside the service)
     const householdUser = await HouseholdService.createInvitation(
       householdId,
       body.email.trim(),
-      user.id
-    )
+      user.id,
+    );
 
     Logger.info('Member invited successfully', {
       requestId,
       userId: user.id,
       context: { householdId, invitedEmail: body.email.trim() },
-    })
-    return NextResponse.json(householdUser, { status: 201 })
+    });
+    return NextResponse.json(householdUser, { status: 201 });
   } catch (error) {
     // Handle specific error messages
     if (error instanceof Error) {
@@ -115,58 +115,58 @@ export async function POST(
         Logger.warn('Non-owner attempted to invite member', {
           requestId,
           context: { error: error.message },
-        })
+        });
         const errorResponse = createErrorResponse(
           ErrorCode.INSUFFICIENT_PERMISSIONS,
           error.message,
           undefined,
-          requestId
-        )
+          requestId,
+        );
         return NextResponse.json(errorResponse, {
           status: getHttpStatusCode(ErrorCode.INSUFFICIENT_PERMISSIONS),
-        })
+        });
       }
       if (error.message.includes('User not found')) {
         Logger.warn('Attempted to invite non-existent user', {
           requestId,
           context: { error: error.message },
-        })
+        });
         const errorResponse = createErrorResponse(
           ErrorCode.NOT_FOUND,
           error.message,
           undefined,
-          requestId
-        )
+          requestId,
+        );
         return NextResponse.json(errorResponse, {
           status: getHttpStatusCode(ErrorCode.NOT_FOUND),
-        })
+        });
       }
       if (error.message.includes('already a member')) {
         Logger.warn('Attempted to invite existing member', {
           requestId,
           context: { error: error.message },
-        })
+        });
         const errorResponse = createErrorResponse(
           ErrorCode.CONSTRAINT_VIOLATION,
           error.message,
           undefined,
-          requestId
-        )
+          requestId,
+        );
         return NextResponse.json(errorResponse, {
           status: getHttpStatusCode(ErrorCode.CONSTRAINT_VIOLATION),
-        })
+        });
       }
     }
 
-    Logger.error('Error inviting member', error as Error, { requestId })
+    Logger.error('Error inviting member', error as Error, { requestId });
     const errorResponse = createErrorResponse(
       ErrorCode.DATABASE_ERROR,
       'Failed to invite member',
       undefined,
-      requestId
-    )
+      requestId,
+    );
     return NextResponse.json(errorResponse, {
       status: getHttpStatusCode(ErrorCode.DATABASE_ERROR),
-    })
+    });
   }
 }

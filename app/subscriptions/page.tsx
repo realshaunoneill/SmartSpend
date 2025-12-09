@@ -28,7 +28,7 @@ function SubscriptionsPageContent() {
 
   // Calculate stats
   const activeSubscriptions = subscriptions?.filter(s => s.status === 'active') || [];
-  
+
   // Find next upcoming subscription
   const nextSubscription = activeSubscriptions
     .filter(s => s.nextBillingDate)
@@ -37,7 +37,7 @@ function SubscriptionsPageContent() {
       const dateB = new Date(b.nextBillingDate!).getTime();
       return dateA - dateB;
     })[0];
-  
+
   const totalMonthly = activeSubscriptions.reduce((sum, sub) => {
     const amount = parseFloat(sub.amount);
     if (sub.billingFrequency === 'monthly') return sum + amount;

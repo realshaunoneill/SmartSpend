@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { Subscription } from '@/lib/db/schema';
+import { type Subscription } from '@/lib/db/schema';
 import { differenceInDays, format, isToday, isTomorrow, addDays } from 'date-fns';
 
 type UpcomingPaymentsProps = {
@@ -14,22 +14,22 @@ type UpcomingPaymentsProps = {
   onSelectSubscription?: (id: string) => void;
 };
 
-export function UpcomingPayments({ 
-  subscriptions, 
+export function UpcomingPayments({
+  subscriptions,
   daysAhead = 7,
-  onSelectSubscription 
+  onSelectSubscription,
 }: UpcomingPaymentsProps) {
   const router = useRouter();
-  
+
   // Filter for active subscriptions with upcoming payments in the next X days
   const now = new Date();
   const futureDate = addDays(now, daysAhead);
-  
+
   const upcomingPayments = subscriptions
     .filter(sub => {
       if (sub.status !== 'active') return false;
       if (!sub.nextBillingDate) return false;
-      
+
       const billingDate = new Date(sub.nextBillingDate);
       return billingDate >= now && billingDate <= futureDate;
     })
@@ -122,10 +122,10 @@ export function UpcomingPayments({
             );
           })}
         </div>
-        
+
         <div className="mt-4 pt-4 border-t">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="w-full"
             onClick={() => router.push('/subscriptions')}
           >

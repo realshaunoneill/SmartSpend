@@ -3,7 +3,7 @@
 import { SubscriptionCard } from './subscription-card';
 import { SubscriptionListSkeleton } from './subscription-list-skeleton';
 import { SubscriptionEmptyState } from './subscription-empty-state';
-import { Subscription, SubscriptionPayment } from '@/lib/db/schema';
+import { type Subscription, type SubscriptionPayment } from '@/lib/db/schema';
 
 type SubscriptionWithPayments = Subscription & {
   missingPayments?: number;

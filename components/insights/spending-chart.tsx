@@ -1,13 +1,13 @@
-"use client"
+'use client';
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
-import { TrendingUp } from "lucide-react"
-import { useSpendingTrends } from "@/lib/hooks/use-spending-trends"
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { TrendingUp } from 'lucide-react';
+import { useSpendingTrends } from '@/lib/hooks/use-spending-trends';
 
 interface SpendingChartProps {
-  period: "week" | "month" | "year"
+  period: 'week' | 'month' | 'year'
   householdId?: string
   personalOnly?: boolean
 }
@@ -22,38 +22,38 @@ function CustomTooltip({ active, payload, label }: any) {
           <span className="font-medium">Amount:</span> ${payload[0].value?.toFixed(2)}
         </p>
       </div>
-    )
+    );
   }
-  return null
+  return null;
 }
 
 export function SpendingChart({ period, householdId, personalOnly = false }: SpendingChartProps) {
-  const { data: trendsData, isLoading, error } = useSpendingTrends(householdId, period, personalOnly)
+  const { data: trendsData, isLoading, error } = useSpendingTrends(householdId, period, personalOnly);
   const [colors, setColors] = useState({
-    primary: "#10b981",
-    border: "#e5e7eb",
-    muted: "#f3f4f6",
-    mutedForeground: "#6b7280",
-  })
+    primary: '#10b981',
+    border: '#e5e7eb',
+    muted: '#f3f4f6',
+    mutedForeground: '#6b7280',
+  });
 
   useEffect(() => {
     // Get computed CSS variables after component mounts
-    const root = document.documentElement
-    const styles = getComputedStyle(root)
-    
+    const root = document.documentElement;
+    const styles = getComputedStyle(root);
+
     setColors({
-      primary: styles.getPropertyValue("--color-primary").trim() || "#10b981",
-      border: styles.getPropertyValue("--color-border").trim() || "#e5e7eb",
-      muted: styles.getPropertyValue("--color-muted").trim() || "#f3f4f6",
-      mutedForeground: styles.getPropertyValue("--color-muted-foreground").trim() || "#6b7280",
-    })
-  }, [])
+      primary: styles.getPropertyValue('--color-primary').trim() || '#10b981',
+      border: styles.getPropertyValue('--color-border').trim() || '#e5e7eb',
+      muted: styles.getPropertyValue('--color-muted').trim() || '#f3f4f6',
+      mutedForeground: styles.getPropertyValue('--color-muted-foreground').trim() || '#6b7280',
+    });
+  }, []);
 
   const periodLabels = {
-    week: "past 7 days",
-    month: "this month",
-    year: "this year",
-  }
+    week: 'past 7 days',
+    month: 'this month',
+    year: 'this year',
+  };
 
   if (isLoading) {
     return (
@@ -71,7 +71,7 @@ export function SpendingChart({ period, householdId, personalOnly = false }: Spe
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error) {
@@ -89,7 +89,7 @@ export function SpendingChart({ period, householdId, personalOnly = false }: Spe
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (!trendsData || trendsData.chartData.length === 0) {
@@ -113,7 +113,7 @@ export function SpendingChart({ period, householdId, personalOnly = false }: Spe
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -125,25 +125,25 @@ export function SpendingChart({ period, householdId, personalOnly = false }: Spe
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={trendsData.chartData}>
-            <CartesianGrid 
-              strokeDasharray="3 3" 
+            <CartesianGrid
+              strokeDasharray="3 3"
               stroke={colors.border}
               opacity={0.5}
             />
-            <XAxis 
-              dataKey="name" 
+            <XAxis
+              dataKey="name"
               tick={{ fill: colors.mutedForeground, fontSize: 12 }}
               stroke={colors.border}
               tickLine={{ stroke: colors.border }}
             />
-            <YAxis 
+            <YAxis
               tick={{ fill: colors.mutedForeground, fontSize: 12 }}
               stroke={colors.border}
               tickLine={{ stroke: colors.border }}
             />
             <Tooltip content={<CustomTooltip />} cursor={false} />
-            <Bar 
-              dataKey="amount" 
+            <Bar
+              dataKey="amount"
               fill={colors.primary}
               radius={[4, 4, 0, 0]}
             />
@@ -151,5 +151,5 @@ export function SpendingChart({ period, householdId, personalOnly = false }: Spe
         </ResponsiveContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

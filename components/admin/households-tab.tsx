@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { HouseholdCard } from "./household-card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { HouseholdCard } from './household-card';
 
 interface HouseholdsTabProps {
   households: any[]
@@ -12,13 +12,13 @@ interface HouseholdsTabProps {
   onOpenReceipt: (receiptId: string) => void
 }
 
-export function HouseholdsTab({ 
-  households, 
-  expandedHouseholds, 
+export function HouseholdsTab({
+  households,
+  expandedHouseholds,
   householdDetails,
   householdReceipts,
-  onToggleHousehold, 
-  onOpenReceipt 
+  onToggleHousehold,
+  onOpenReceipt,
 }: HouseholdsTabProps) {
   return (
     <Card>
@@ -42,5 +42,5 @@ export function HouseholdsTab({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

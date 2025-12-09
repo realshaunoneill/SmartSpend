@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import type React from "react"
+import type React from 'react';
 
-import { useState } from "react"
-import { Plus, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react';
+import { Plus, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -13,10 +13,10 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { createHousehold } from "@/lib/household-actions"
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { createHousehold } from '@/lib/household-actions';
 
 interface CreateHouseholdDialogProps {
   userId: string
@@ -24,26 +24,26 @@ interface CreateHouseholdDialogProps {
 }
 
 export function CreateHouseholdDialog({ userId, onHouseholdCreated }: CreateHouseholdDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState("")
-  const [isCreating, setIsCreating] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
+    e.preventDefault();
+    if (!name.trim()) return;
 
-    setIsCreating(true)
+    setIsCreating(true);
     try {
-      await createHousehold({ name: name.trim(), userId })
-      onHouseholdCreated()
-      setOpen(false)
-      setName("")
+      await createHousehold({ name: name.trim(), userId });
+      onHouseholdCreated();
+      setOpen(false);
+      setName('');
     } catch (error) {
-      alert("Failed to create household")
+      alert('Failed to create household');
     } finally {
-      setIsCreating(false)
+      setIsCreating(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -81,12 +81,12 @@ export function CreateHouseholdDialog({ userId, onHouseholdCreated }: CreateHous
                   Creating...
                 </>
               ) : (
-                "Create"
+                'Create'
               )}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

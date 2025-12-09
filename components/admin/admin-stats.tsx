@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Receipt, Home } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Receipt, Home } from 'lucide-react';
 
 interface AdminStatsProps {
   users: any[]
@@ -46,10 +46,10 @@ export function AdminStats({ users, households, receipts }: AdminStatsProps) {
         <CardContent>
           <div className="text-2xl font-bold">{receipts.length}</div>
           <p className="text-xs text-muted-foreground">
-            {receipts.filter(r => r.processingStatus === "completed").length} processed
+            {receipts.filter(r => r.processingStatus === 'completed').length} processed
           </p>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

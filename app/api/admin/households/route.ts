@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { households, householdUsers, receipts, users } from "@/lib/db/schema";
-import { getAuthenticatedUser, requireAdmin } from "@/lib/auth-helpers";
-import { sql } from "drizzle-orm";
-import { CorrelationId, submitLogEvent } from "@/lib/logging";
-import { randomUUID } from "crypto";
+import { type NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { households, householdUsers, receipts, users } from '@/lib/db/schema';
+import { getAuthenticatedUser, requireAdmin } from '@/lib/auth-helpers';
+import { sql } from 'drizzle-orm';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { randomUUID } from 'crypto';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
-  
+
   try {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
@@ -52,8 +52,8 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     submitLogEvent('admin', `Error fetching households: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
-      { error: "Failed to fetch households" },
-      { status: 500 }
+      { error: 'Failed to fetch households' },
+      { status: 500 },
     );
   }
 }

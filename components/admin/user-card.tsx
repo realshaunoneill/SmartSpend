@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { Badge } from "@/components/ui/badge"
-import { Loader2, Receipt, Home, Calendar, CreditCard, Mail, Eye, ChevronDown, ChevronUp } from "lucide-react"
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Receipt, Home, Calendar, CreditCard, Mail, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface UserCardProps {
   user: {
@@ -79,13 +79,13 @@ export function UserCard({ user, isExpanded, onToggle, userReceipts, onOpenRecei
                     key={receipt.id}
                     className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-md bg-background p-3 hover:bg-muted/50 cursor-pointer transition-colors"
                     onClick={(e) => {
-                      e.stopPropagation()
-                      onOpenReceipt(receipt.id)
+                      e.stopPropagation();
+                      onOpenReceipt(receipt.id);
                     }}
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <Receipt className="h-3 w-3 text-muted-foreground shrink-0" />
-                      <span className="text-sm truncate">{receipt.merchantName || "Unknown"}</span>
+                      <span className="text-sm truncate">{receipt.merchantName || 'Unknown'}</span>
                       <Badge variant="outline" className="text-xs shrink-0">
                         {receipt.processingStatus}
                       </Badge>
@@ -110,5 +110,5 @@ export function UserCard({ user, isExpanded, onToggle, userReceipts, onOpenRecei
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { Utensils, Hash, UserCheck, Users } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
+import { Utensils, Hash, UserCheck, Users } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface ReceiptServiceDetailsProps {
   ocrData: any
@@ -9,7 +9,7 @@ interface ReceiptServiceDetailsProps {
 
 export function ReceiptServiceDetails({ ocrData }: ReceiptServiceDetailsProps) {
   if (!ocrData?.tableNumber && !ocrData?.serverName && !ocrData?.customerCount) {
-    return null
+    return null;
   }
 
   return (
@@ -39,5 +39,5 @@ export function ReceiptServiceDetails({ ocrData }: ReceiptServiceDetailsProps) {
           )}
         </div>
       </div>
-  )
+  );
 }

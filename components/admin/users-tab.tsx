@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { UserCard } from "./user-card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { UserCard } from './user-card';
 
 interface UsersTabProps {
   users: any[]
@@ -11,12 +11,12 @@ interface UsersTabProps {
   onOpenReceipt: (receiptId: string) => void
 }
 
-export function UsersTab({ 
-  users, 
-  expandedUsers, 
-  userReceipts, 
-  onToggleUser, 
-  onOpenReceipt 
+export function UsersTab({
+  users,
+  expandedUsers,
+  userReceipts,
+  onToggleUser,
+  onOpenReceipt,
 }: UsersTabProps) {
   return (
     <Card>
@@ -39,5 +39,5 @@ export function UsersTab({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

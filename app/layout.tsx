@@ -1,29 +1,29 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
-import { ClerkProvider } from "@clerk/nextjs"
-import { ThemeProvider } from "@/components/layout/theme-provider"
-import { Footer } from "@/components/layout/footer"
-import { QueryProvider } from "@/lib/providers/query-provider"
-import { Toaster } from "sonner"
-import "./globals.css"
+import type React from 'react';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
+import { ClerkProvider } from '@clerk/nextjs';
+import { ThemeProvider } from '@/components/layout/theme-provider';
+import { Footer } from '@/components/layout/footer';
+import { QueryProvider } from '@/lib/providers/query-provider';
+import { Toaster } from 'sonner';
+import './globals.css';
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "ReceiptWise - Receipt & Expense Tracker",
-  description: "Track receipts, manage spending, and sync your bank accounts in one place",
-  generator: "v0.app",
+  title: 'ReceiptWise - Receipt & Expense Tracker',
+  description: 'Track receipts, manage spending, and sync your bank accounts in one place',
+  generator: 'v0.app',
   icons: {
     icon: [
       {
-        url: "/logo.png",
+        url: '/logo.png',
       },
     ],
-    apple: "/logo.png",
+    apple: '/logo.png',
   },
-}
+};
 
 export default function RootLayout({
   children,
@@ -47,5 +47,5 @@ export default function RootLayout({
         </body>
       </html>
     </ClerkProvider>
-  )
+  );
 }

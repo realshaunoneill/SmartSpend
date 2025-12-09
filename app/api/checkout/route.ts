@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createCheckoutSession } from "@/lib/stripe";
-import { getAuthenticatedUser } from "@/lib/auth-helpers";
-import Stripe from "stripe";
-import { CorrelationId, submitLogEvent } from "@/lib/logging";
-import { randomUUID } from "crypto";
+import { type NextRequest, NextResponse } from 'next/server';
+import { createCheckoutSession } from '@/lib/stripe';
+import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import Stripe from 'stripe';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { randomUUID } from 'crypto';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2025-11-17.clover",
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2025-11-17.clover',
 });
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 export const maxDuration = 30;
 
 /**
@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
 
     if (!priceId) {
       return NextResponse.json(
-        { error: "Price ID not configured" },
-        { status: 400 }
+        { error: 'Price ID not configured' },
+        { status: 400 },
       );
     }
 
@@ -37,13 +37,13 @@ export async function POST(request: NextRequest) {
     // Verify the price exists and is active
     try {
       const price = await stripe.prices.retrieve(priceId, {
-        expand: ["product"],
+        expand: ['product'],
       });
 
       if (!price.active) {
         return NextResponse.json(
-          { error: "This subscription plan is not available" },
-          { status: 400 }
+          { error: 'This subscription plan is not available' },
+          { status: 400 },
         );
       }
 
@@ -51,8 +51,8 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       submitLogEvent('checkout', `Error retrieving price: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { userId: user.id, priceId }, true);
       return NextResponse.json(
-        { error: "Invalid price ID" },
-        { status: 400 }
+        { error: 'Invalid price ID' },
+        { status: 400 },
       );
     }
 
@@ -65,17 +65,17 @@ export async function POST(request: NextRequest) {
       user.stripeCustomerId,
       body.successUrl,
       body.cancelUrl,
-      correlationId
+      correlationId,
     );
 
     if (!checkoutSession || !checkoutSession.url) {
       return NextResponse.json(
-        { error: "Failed to create checkout session" },
-        { status: 500 }
+        { error: 'Failed to create checkout session' },
+        { status: 500 },
       );
     }
 
-    submitLogEvent('checkout', "Checkout session created", correlationId, {
+    submitLogEvent('checkout', 'Checkout session created', correlationId, {
       sessionId: checkoutSession.id,
       userId: user.id,
       priceId,
@@ -86,16 +86,16 @@ export async function POST(request: NextRequest) {
         url: checkoutSession.url,
         sessionId: checkoutSession.id,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     submitLogEvent('checkout', `Error creating checkout session: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { error: error instanceof Error ? error.message : undefined }, true);
     return NextResponse.json(
       {
-        error: "Failed to create checkout session",
+        error: 'Failed to create checkout session',
         details: error instanceof Error ? error.message : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

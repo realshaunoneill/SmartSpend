@@ -1,14 +1,14 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Users, Crown, MoreVertical, Trash2, LogOut } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { InviteMemberDialog } from "@/components/households/invite-member-dialog"
-import type { Household } from "@/lib/types"
-import { leaveHousehold, deleteHousehold } from "@/lib/household-actions"
+import { useState } from 'react';
+import { Users, Crown, MoreVertical, Trash2, LogOut } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { InviteMemberDialog } from '@/components/households/invite-member-dialog';
+import type { Household } from '@/lib/types';
+import { leaveHousehold, deleteHousehold } from '@/lib/household-actions';
 
 interface HouseholdCardProps {
   household: Household & {
@@ -21,35 +21,35 @@ interface HouseholdCardProps {
 }
 
 export function HouseholdCard({ household, currentUserId, isSubscribed = false, onUpdate }: HouseholdCardProps) {
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLeave = async () => {
-    if (!confirm("Are you sure you want to leave this household?")) return
+    if (!confirm('Are you sure you want to leave this household?')) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await leaveHousehold({ householdId: household.id, userId: currentUserId })
-      onUpdate()
+      await leaveHousehold({ householdId: household.id, userId: currentUserId });
+      onUpdate();
     } catch (error) {
-      alert("Failed to leave household")
+      alert('Failed to leave household');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this household? This action cannot be undone.")) return
+    if (!confirm('Are you sure you want to delete this household? This action cannot be undone.')) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await deleteHousehold(household.id)
-      onUpdate()
+      await deleteHousehold(household.id);
+      onUpdate();
     } catch (error) {
-      alert("Failed to delete household")
+      alert('Failed to delete household');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Card>
@@ -70,7 +70,7 @@ export function HouseholdCard({ household, currentUserId, isSubscribed = false, 
                 )}
               </CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
-                {household.memberCount} {household.memberCount === 1 ? "member" : "members"}
+                {household.memberCount} {household.memberCount === 1 ? 'member' : 'members'}
               </p>
             </div>
           </div>
@@ -111,5 +111,5 @@ export function HouseholdCard({ household, currentUserId, isSubscribed = false, 
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

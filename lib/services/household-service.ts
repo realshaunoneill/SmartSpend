@@ -1,7 +1,7 @@
-import { db } from '@/lib/db'
-import { households, householdUsers, householdInvitations, users, type Household, type HouseholdUser, type HouseholdInvitation, type HouseholdMember, type NewHousehold, type NewHouseholdUser } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
-import { randomBytes } from 'crypto'
+import { db } from '@/lib/db';
+import { households, householdUsers, householdInvitations, users, type Household, type HouseholdInvitation, type HouseholdMember, type NewHousehold, type NewHouseholdUser } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
+import { randomBytes } from 'crypto';
 
 export class HouseholdService {
   /**
@@ -14,23 +14,23 @@ export class HouseholdService {
       // Create the household
       const newHousehold: NewHousehold = {
         name,
-      }
-      
-      const [household] = await tx.insert(households).values(newHousehold).returning()
-      
+      };
+
+      const [household] = await tx.insert(households).values(newHousehold).returning();
+
       // Assign creator as owner
       const newHouseholdUser: NewHouseholdUser = {
         householdId: household.id,
         userId,
         role: 'owner',
-      }
-      
-      await tx.insert(householdUsers).values(newHouseholdUser)
-      
-      return household
-    })
-    
-    return result
+      };
+
+      await tx.insert(householdUsers).values(newHouseholdUser);
+
+      return household;
+    });
+
+    return result;
   }
 
   /**
@@ -47,9 +47,9 @@ export class HouseholdService {
       })
       .from(households)
       .innerJoin(householdUsers, eq(households.id, householdUsers.householdId))
-      .where(eq(householdUsers.userId, userId))
-    
-    return result
+      .where(eq(householdUsers.userId, userId));
+
+    return result;
   }
 
   /**
@@ -66,14 +66,14 @@ export class HouseholdService {
       })
       .from(householdUsers)
       .innerJoin(users, eq(householdUsers.userId, users.id))
-      .where(eq(householdUsers.householdId, householdId))
-    
+      .where(eq(householdUsers.householdId, householdId));
+
     return result.map(row => ({
       userId: row.userId,
       email: row.email,
       role: row.role as 'owner' | 'member',
       joinedAt: row.joinedAt,
-    }))
+    }));
   }
 
   /**
@@ -88,32 +88,32 @@ export class HouseholdService {
       .from(householdUsers)
       .where(and(
         eq(householdUsers.householdId, householdId),
-        eq(householdUsers.userId, invitedBy)
+        eq(householdUsers.userId, invitedBy),
       ))
-      .limit(1)
-    
+      .limit(1);
+
     if (!membership) {
-      throw new Error('Only household members can invite others')
+      throw new Error('Only household members can invite others');
     }
-    
+
     // Check if user exists and is already a member
-    const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1)
-    
+    const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+
     if (existingUser) {
       const [existingMember] = await db
         .select()
         .from(householdUsers)
         .where(and(
           eq(householdUsers.householdId, householdId),
-          eq(householdUsers.userId, existingUser.id)
+          eq(householdUsers.userId, existingUser.id),
         ))
-        .limit(1)
-      
+        .limit(1);
+
       if (existingMember) {
-        throw new Error('User is already a member of this household')
+        throw new Error('User is already a member of this household');
       }
     }
-    
+
     // Check for existing pending invitation
     const [existingInvitation] = await db
       .select()
@@ -121,27 +121,27 @@ export class HouseholdService {
       .where(and(
         eq(householdInvitations.householdId, householdId),
         eq(householdInvitations.invitedEmail, email),
-        eq(householdInvitations.status, 'pending')
+        eq(householdInvitations.status, 'pending'),
       ))
-      .limit(1)
-    
+      .limit(1);
+
     if (existingInvitation) {
-      throw new Error('Invitation already sent to this email')
+      throw new Error('Invitation already sent to this email');
     }
-    
+
     // Create invitation
-    const token = randomBytes(32).toString('hex')
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-    
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
     const [invitation] = await db.insert(householdInvitations).values({
       householdId,
       invitedByUserId: invitedBy,
       invitedEmail: email,
       token,
       expiresAt,
-    }).returning()
-    
-    return invitation
+    }).returning();
+
+    return invitation;
   }
 
   /**
@@ -150,23 +150,23 @@ export class HouseholdService {
    */
   static async removeMember(householdId: string, userId: string, removedBy: string): Promise<void> {
     // Verify the remover is the owner
-    const isOwnerResult = await this.isOwner(householdId, removedBy)
+    const isOwnerResult = await this.isOwner(householdId, removedBy);
     if (!isOwnerResult) {
-      throw new Error('Only household owners can remove members')
+      throw new Error('Only household owners can remove members');
     }
-    
+
     // Prevent owner from removing themselves
     if (userId === removedBy) {
-      throw new Error('Owners cannot remove themselves. Delete the household instead.')
+      throw new Error('Owners cannot remove themselves. Delete the household instead.');
     }
-    
+
     // Delete the household_users record
     await db
       .delete(householdUsers)
       .where(and(
         eq(householdUsers.householdId, householdId),
-        eq(householdUsers.userId, userId)
-      ))
+        eq(householdUsers.userId, userId),
+      ));
   }
 
   /**
@@ -175,13 +175,13 @@ export class HouseholdService {
    */
   static async deleteHousehold(householdId: string, userId: string): Promise<void> {
     // Verify the user is the owner
-    const isOwnerResult = await this.isOwner(householdId, userId)
+    const isOwnerResult = await this.isOwner(householdId, userId);
     if (!isOwnerResult) {
-      throw new Error('Only household owners can delete households')
+      throw new Error('Only household owners can delete households');
     }
-    
+
     // Delete the household (cascade will handle household_users)
-    await db.delete(households).where(eq(households.id, householdId))
+    await db.delete(households).where(eq(households.id, householdId));
   }
 
   /**
@@ -189,18 +189,18 @@ export class HouseholdService {
    */
   static async leaveMember(householdId: string, userId: string): Promise<void> {
     // Check if user is owner
-    const isOwnerResult = await this.isOwner(householdId, userId)
+    const isOwnerResult = await this.isOwner(householdId, userId);
     if (isOwnerResult) {
-      throw new Error('Owners cannot leave the household. Delete the household instead.')
+      throw new Error('Owners cannot leave the household. Delete the household instead.');
     }
-    
+
     // Delete the household_users record
     await db
       .delete(householdUsers)
       .where(and(
         eq(householdUsers.householdId, householdId),
-        eq(householdUsers.userId, userId)
-      ))
+        eq(householdUsers.userId, userId),
+      ));
   }
 
   /**
@@ -213,10 +213,10 @@ export class HouseholdService {
       .where(and(
         eq(householdUsers.householdId, householdId),
         eq(householdUsers.userId, userId),
-        eq(householdUsers.role, 'owner')
+        eq(householdUsers.role, 'owner'),
       ))
-      .limit(1)
-    
-    return !!householdUser
+      .limit(1);
+
+    return !!householdUser;
   }
 }

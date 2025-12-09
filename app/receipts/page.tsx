@@ -1,182 +1,182 @@
-"use client"
+'use client';
 
-import { Suspense, useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
-import { useQueryClient } from "@tanstack/react-query"
-import { Navigation } from "@/components/layout/navigation"
-import { ReceiptBatchUpload } from "@/components/receipts/receipt-batch-upload"
-import { ReceiptList } from "@/components/receipts/receipt-list"
-import { ReceiptListSkeleton } from "@/components/receipts/receipt-list-skeleton"
-import { HouseholdSelector } from "@/components/households/household-selector"
-import { Pagination } from "@/components/layout/pagination"
-import { ReceiptDetailModal } from "@/components/receipts/receipt-detail-modal"
-import { ReceiptSearchFilters, ReceiptFilters } from "@/components/receipts/receipt-search-filters"
-import { SubscriptionGate } from "@/components/subscriptions/subscription-gate"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Store, Tag, ShoppingCart } from "lucide-react"
-import { useUser as useClerkUser } from "@clerk/nextjs"
-import { useUser } from "@/lib/hooks/use-user"
-import { useReceipts, useRecentReceipts } from "@/lib/hooks/use-receipts"
-import { useHouseholds } from "@/lib/hooks/use-households"
-import { formatCategory } from "@/lib/utils/format-category"
-import { ReceiptTimeline } from "@/components/receipts/receipt-timeline"
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
+import { Navigation } from '@/components/layout/navigation';
+import { ReceiptBatchUpload } from '@/components/receipts/receipt-batch-upload';
+import { ReceiptList } from '@/components/receipts/receipt-list';
+import { ReceiptListSkeleton } from '@/components/receipts/receipt-list-skeleton';
+import { HouseholdSelector } from '@/components/households/household-selector';
+import { Pagination } from '@/components/layout/pagination';
+import { ReceiptDetailModal } from '@/components/receipts/receipt-detail-modal';
+import { ReceiptSearchFilters, type ReceiptFilters } from '@/components/receipts/receipt-search-filters';
+import { SubscriptionGate } from '@/components/subscriptions/subscription-gate';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Store, Tag, ShoppingCart } from 'lucide-react';
+import { useUser as useClerkUser } from '@clerk/nextjs';
+import { useUser } from '@/lib/hooks/use-user';
+import { useReceipts, useRecentReceipts } from '@/lib/hooks/use-receipts';
+import { useHouseholds } from '@/lib/hooks/use-households';
+import { formatCategory } from '@/lib/utils/format-category';
+import { ReceiptTimeline } from '@/components/receipts/receipt-timeline';
 
 // Helper function to determine why a receipt matched the search
 function getSearchMatchReason(receipt: any, searchTerm: string): { type: string; icon: any; label: string } | null {
   if (!searchTerm) return null;
-  
+
   const search = searchTerm.toLowerCase();
-  
+
   // Check merchant name
   if (receipt.merchantName?.toLowerCase().includes(search)) {
-    return { type: "merchant", icon: Store, label: `Merchant: ${receipt.merchantName}` };
+    return { type: 'merchant', icon: Store, label: `Merchant: ${receipt.merchantName}` };
   }
-  
+
   // Check category
   if (receipt.category?.toLowerCase().includes(search)) {
-    return { type: "category", icon: Tag, label: `Category: ${formatCategory(receipt.category)}` };
+    return { type: 'category', icon: Tag, label: `Category: ${formatCategory(receipt.category)}` };
   }
-  
+
   // Check line items
   if (receipt.items && Array.isArray(receipt.items)) {
-    const matchingItems = receipt.items.filter((item: any) => 
-      item.name?.toLowerCase().includes(search)
+    const matchingItems = receipt.items.filter((item: any) =>
+      item.name?.toLowerCase().includes(search),
     );
     if (matchingItems.length > 0) {
-      return { 
-        type: "item", 
-        icon: ShoppingCart, 
-        label: `Item: ${matchingItems[0].name}${matchingItems.length > 1 ? ` +${matchingItems.length - 1} more` : ''}` 
+      return {
+        type: 'item',
+        icon: ShoppingCart,
+        label: `Item: ${matchingItems[0].name}${matchingItems.length > 1 ? ` +${matchingItems.length - 1} more` : ''}`,
       };
     }
   }
-  
+
   return null;
 }
 
 function ReceiptsPageContent() {
-  const { user: clerkUser } = useClerkUser()
-  const { user } = useUser()
-  const queryClient = useQueryClient()
-  const searchParams = useSearchParams()
-  const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>()
-  const [currentPage, setCurrentPage] = useState(1)
-  const [selectedReceipt, setSelectedReceipt] = useState<any>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { user: clerkUser } = useClerkUser();
+  const { user } = useUser();
+  const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [filters, setFilters] = useState<ReceiptFilters>({
-    sortBy: "date",
-    sortOrder: "desc",
-  })
-  const pageSize = 12
-  
-  const { data: households = [] } = useHouseholds()
-  
+    sortBy: 'date',
+    sortOrder: 'desc',
+  });
+  const pageSize = 12;
+
+  const { data: households = [] } = useHouseholds();
+
   // Get recent receipts for the top section
-  const { receipts: recentReceipts, isLoading: recentLoading, refetch: refetchRecent } = useRecentReceipts(selectedHouseholdId, 5)
-  
+  const { receipts: recentReceipts, isLoading: recentLoading, refetch: refetchRecent } = useRecentReceipts(selectedHouseholdId, 5);
+
   // Get paginated receipts for the main list
   const { receipts: allReceipts, pagination, isLoading: allLoading, error, refetch: refetchAll } = useReceipts(
-    selectedHouseholdId, 
-    currentPage, 
+    selectedHouseholdId,
+    currentPage,
     pageSize,
-    filters
-  )
+    filters,
+  );
 
   // Reset page when household or filters change
   useEffect(() => {
-    setCurrentPage(1)
-  }, [selectedHouseholdId, filters])
+    setCurrentPage(1);
+  }, [selectedHouseholdId, filters]);
 
   // Handle selected query parameter from URL
   useEffect(() => {
-    const selectedId = searchParams.get('selected')
+    const selectedId = searchParams.get('selected');
     if (selectedId) {
       // Find the receipt in either recent or all receipts
-      const receiptsToSearch = [...(recentReceipts || []), ...(allReceipts || [])]
-      const receipt = receiptsToSearch.find(r => r.id === selectedId)
-      
+      const receiptsToSearch = [...(recentReceipts || []), ...(allReceipts || [])];
+      const receipt = receiptsToSearch.find(r => r.id === selectedId);
+
       if (receipt) {
-        setSelectedReceipt(receipt)
-        setIsModalOpen(true)
+        setSelectedReceipt(receipt);
+        setIsModalOpen(true);
       } else {
         // Receipt not yet loaded, fetch it using queryClient
         queryClient.fetchQuery({
           queryKey: ['receipt', selectedId],
           queryFn: async () => {
-            const res = await fetch(`/api/receipts/${selectedId}`)
-            if (!res.ok) throw new Error('Receipt not found')
-            return res.json()
+            const res = await fetch(`/api/receipts/${selectedId}`);
+            if (!res.ok) throw new Error('Receipt not found');
+            return res.json();
           },
           staleTime: 5 * 60 * 1000,
         }).then(receipt => {
-          setSelectedReceipt(receipt)
-          setIsModalOpen(true)
+          setSelectedReceipt(receipt);
+          setIsModalOpen(true);
         }).catch(err => {
-          console.error('Failed to fetch receipt:', err)
-        })
+          console.error('Failed to fetch receipt:', err);
+        });
       }
     }
-  }, [searchParams, recentReceipts, allReceipts, queryClient])
+  }, [searchParams, recentReceipts, allReceipts, queryClient]);
 
   // Prefetch subscription data for all receipts when they load
   useEffect(() => {
     const prefetchSubscriptions = async () => {
-      const receiptsToCheck = [...(recentReceipts || []), ...(allReceipts || [])]
-      
+      const receiptsToCheck = [...(recentReceipts || []), ...(allReceipts || [])];
+
       for (const receipt of receiptsToCheck) {
         // Prefetch subscription data for each receipt
         queryClient.prefetchQuery({
           queryKey: ['receipt-subscription', receipt.id],
           queryFn: async () => {
-            const res = await fetch(`/api/receipts/${receipt.id}/subscription`)
+            const res = await fetch(`/api/receipts/${receipt.id}/subscription`);
             if (!res.ok) {
-              if (res.status === 404) return null
-              throw new Error('Failed to fetch subscription link')
+              if (res.status === 404) return null;
+              throw new Error('Failed to fetch subscription link');
             }
-            return res.json()
+            return res.json();
           },
           staleTime: 5 * 60 * 1000, // 5 minutes
-        })
+        });
       }
-    }
+    };
 
     if (recentReceipts || allReceipts) {
-      prefetchSubscriptions()
+      prefetchSubscriptions();
     }
-  }, [recentReceipts, allReceipts, queryClient])
+  }, [recentReceipts, allReceipts, queryClient]);
 
   const handleUploadComplete = () => {
-    refetchRecent()
-    refetchAll()
-  }
+    refetchRecent();
+    refetchAll();
+  };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-  }
+    setCurrentPage(page);
+  };
 
   const handleFiltersChange = (newFilters: ReceiptFilters) => {
-    setFilters(newFilters)
-  }
+    setFilters(newFilters);
+  };
 
   const handleClearFilters = () => {
     setFilters({
-      sortBy: "date",
-      sortOrder: "desc",
-    })
-  }
+      sortBy: 'date',
+      sortOrder: 'desc',
+    });
+  };
 
   const handleReceiptClick = (receipt: any) => {
-    setSelectedReceipt(receipt)
-    setIsModalOpen(true)
-  }
+    setSelectedReceipt(receipt);
+    setIsModalOpen(true);
+  };
 
   const handleModalClose = () => {
-    setIsModalOpen(false)
-    setSelectedReceipt(null)
-  }
+    setIsModalOpen(false);
+    setSelectedReceipt(null);
+  };
 
   // Clerk middleware ensures user is authenticated
-  if (!clerkUser) return null
+  if (!clerkUser) return null;
 
   return (
     <>
@@ -191,15 +191,15 @@ function ReceiptsPageContent() {
               Upload and manage your receipts with automatic scanning
             </p>
           </div>
-          
+
           {households.length > 0 && (
             <div className="flex items-center gap-4">
               <HouseholdSelector
                 households={[
-                  { id: "", name: "Personal Receipts" },
-                  ...households
+                  { id: '', name: 'Personal Receipts' },
+                  ...households,
                 ]}
-                selectedHouseholdId={selectedHouseholdId || ""}
+                selectedHouseholdId={selectedHouseholdId || ''}
                 onSelect={(id) => setSelectedHouseholdId(id || undefined)}
               />
             </div>
@@ -212,7 +212,7 @@ function ReceiptsPageContent() {
             <SubscriptionGate feature="upload">
               <ReceiptBatchUpload
                 clerkId={clerkUser.id}
-                userEmail={clerkUser.emailAddresses[0]?.emailAddress || ""}
+                userEmail={clerkUser.emailAddresses[0]?.emailAddress || ''}
                 householdId={selectedHouseholdId}
                 onUploadComplete={handleUploadComplete}
               />
@@ -249,7 +249,7 @@ function ReceiptsPageContent() {
             <div>
               <h2 className="text-2xl font-bold tracking-tight text-foreground">All Receipts</h2>
               <p className="text-muted-foreground">
-                {pagination ? `${pagination.total} total receipts` : "Loading..."}
+                {pagination ? `${pagination.total} total receipts` : 'Loading...'}
               </p>
             </div>
           </div>
@@ -308,7 +308,7 @@ function ReceiptsPageContent() {
         onOpenChange={handleModalClose}
       />
     </>
-  )
+  );
 }
 
 export default function ReceiptsPage() {
@@ -316,5 +316,5 @@ export default function ReceiptsPage() {
     <Suspense fallback={<ReceiptListSkeleton />}>
       <ReceiptsPageContent />
     </Suspense>
-  )
+  );
 }

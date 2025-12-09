@@ -1,20 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
-export type EventType = 
-  | 'ratelimit' 
-  | 'generate' 
-  | 'generate-complete' 
-  | 'generate-error' 
-  | 'generate-retry' 
-  | 'credits' 
+
+export type EventType =
+  | 'ratelimit'
+  | 'generate'
+  | 'generate-complete'
+  | 'generate-error'
+  | 'generate-retry'
+  | 'credits'
   | 'cache'
   | 'cache-error'
-  | 'image' 
-  | 'image-proxy' 
-  | 'image-metadata' 
-  | 'users' 
-  | 'stripe' 
-  | 'purchases' 
+  | 'image'
+  | 'image-proxy'
+  | 'image-metadata'
+  | 'users'
+  | 'stripe'
+  | 'purchases'
   | 'upload'
   | 'receipt'
   | 'receipt-process'
@@ -55,11 +55,11 @@ export const submitLogEvent =(
     const logEvent = async () => {
       try {
         simpleLog(event, logLine, correlationId, data);
-    
+
         if ((!LOG_TOKEN || !LOG_REGION) || process.env.NODE_ENV === 'development') {
           return true;
         }
-    
+
         const response = await fetch(`https://${LOG_REGION.toLowerCase()}.webhook.logs.insight.rapid7.com/v1/noformat/${LOG_TOKEN}`, {
           method: 'POST',
           headers: {
@@ -72,22 +72,22 @@ export const submitLogEvent =(
             data,
           }),
         });
-    
+
         if (!response.ok) {
           console.error('Failed to log event', response.statusText);
         }
-  
+
         if (alert) {
           await submitAlert(event, logLine, correlationId, data);
         }
-    
+
         return true;
       } catch (error: any) {
         console.error('Failed to log event', error.message);
-    
+
         return false;
       }
-    }
+    };
 
     void logEvent();
 };
@@ -99,9 +99,9 @@ const submitAlert = async (
   data?: any,
 ) => {
   try {
-    const message = `🚨 <b>${event.toUpperCase()}</b>\n` +
+    const _message = `🚨 <b>${event.toUpperCase()}</b>\n` +
       `Message: ${logLine}\n` +
-      (data.userId ? `User ID: <pre>${data.userId}</pre>` : '')
+      (data.userId ? `User ID: <pre>${data.userId}</pre>` : '');
 
     // await sendTelegramAlert(message);
   } catch (error) {

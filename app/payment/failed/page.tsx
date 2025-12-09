@@ -1,43 +1,43 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { AlertTriangle, ArrowLeft, Mail, RefreshCw, CreditCard, HelpCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Navigation } from "@/components/layout/navigation"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { AlertTriangle, ArrowLeft, Mail, RefreshCw, CreditCard, HelpCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Navigation } from '@/components/layout/navigation';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export default function PaymentFailedPage() {
-  const router = useRouter()
+  const router = useRouter();
 
   const commonErrorReasons = [
     {
-      title: "Insufficient funds",
+      title: 'Insufficient funds',
       content:
         "Your card doesn't have enough funds to complete this purchase. Please try a different payment method or contact your bank.",
     },
     {
-      title: "Card declined",
+      title: 'Card declined',
       content:
-        "Your card was declined by the issuing bank. This could be due to temporary holds, daily spending limits, or fraud protection measures.",
+        'Your card was declined by the issuing bank. This could be due to temporary holds, daily spending limits, or fraud protection measures.',
     },
     {
-      title: "Incorrect card information",
+      title: 'Incorrect card information',
       content:
         "The card details you entered (number, expiration date, CVV, or billing address) don't match what your bank has on file.",
     },
     {
-      title: "Expired card",
-      content: "Your card has expired. Please update your payment information with a valid card.",
+      title: 'Expired card',
+      content: 'Your card has expired. Please update your payment information with a valid card.',
     },
     {
-      title: "Technical issue",
+      title: 'Technical issue',
       content:
-        "We encountered a technical issue while processing your payment. This is usually temporary and resolves quickly.",
+        'We encountered a technical issue while processing your payment. This is usually temporary and resolves quickly.',
     },
-  ]
+  ];
 
   return (
     <>
@@ -91,18 +91,18 @@ export default function PaymentFailedPage() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-            <Button 
-              onClick={() => router.push('/settings')} 
-              className="flex-1 gap-2" 
+            <Button
+              onClick={() => router.push('/settings')}
+              className="flex-1 gap-2"
               size="lg"
             >
               <RefreshCw className="h-4 w-4" />
               Try Again
             </Button>
-            <Button 
+            <Button
               asChild
-              variant="outline" 
-              className="flex-1 gap-2" 
+              variant="outline"
+              className="flex-1 gap-2"
               size="lg"
             >
               <Link href="/dashboard">
@@ -149,5 +149,5 @@ export default function PaymentFailedPage() {
         </div>
       </main>
     </>
-  )
+  );
 }

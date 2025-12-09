@@ -1,15 +1,15 @@
-"use client"
+'use client';
 
-import { Receipt as ReceiptIcon, Maximize2, X } from "lucide-react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Receipt as ReceiptIcon, Maximize2, X } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface ReceiptImageProps {
   imageUrl?: string
 }
 
 export function ReceiptImage({ imageUrl }: ReceiptImageProps) {
-  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   return (
     <>
@@ -49,7 +49,7 @@ export function ReceiptImage({ imageUrl }: ReceiptImageProps) {
 
       {/* Fullscreen Modal */}
       {isFullscreen && imageUrl && (
-        <div 
+        <div
           className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center"
           onClick={() => setIsFullscreen(false)}
         >
@@ -69,5 +69,5 @@ export function ReceiptImage({ imageUrl }: ReceiptImageProps) {
         </div>
       )}
     </>
-  )
+  );
 }

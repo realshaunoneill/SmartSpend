@@ -1,17 +1,17 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Search, Filter, X, Calendar, DollarSign, Store, Tag } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useState } from 'react';
+import { Search, Filter, X, Calendar, DollarSign, Store, Tag } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select';
 import {
   Sheet,
   SheetContent,
@@ -19,8 +19,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
-import { Badge } from "@/components/ui/badge"
+} from '@/components/ui/sheet';
+import { Badge } from '@/components/ui/badge';
 
 export interface ReceiptFilters {
   search?: string
@@ -45,32 +45,32 @@ export function ReceiptSearchFilters({
   onFiltersChange,
   onClearFilters,
 }: ReceiptSearchFiltersProps) {
-  const [localFilters, setLocalFilters] = useState<ReceiptFilters>(filters)
-  const [isOpen, setIsOpen] = useState(false)
+  const [localFilters, setLocalFilters] = useState<ReceiptFilters>(filters);
+  const [isOpen, setIsOpen] = useState(false);
 
   const activeFilterCount = Object.entries(filters).filter(
-    ([key, value]) => value && key !== 'sortBy' && key !== 'sortOrder' && key !== 'search'
-  ).length
+    ([key, value]) => value && key !== 'sortBy' && key !== 'sortOrder' && key !== 'search',
+  ).length;
 
   const handleApplyFilters = () => {
-    onFiltersChange(localFilters)
-    setIsOpen(false)
-  }
+    onFiltersChange(localFilters);
+    setIsOpen(false);
+  };
 
   const handleClearAll = () => {
     const clearedFilters = {
       sortBy: filters.sortBy,
       sortOrder: filters.sortOrder,
-    }
-    setLocalFilters(clearedFilters)
-    onClearFilters()
-    setIsOpen(false)
-  }
+    };
+    setLocalFilters(clearedFilters);
+    onClearFilters();
+    setIsOpen(false);
+  };
 
   const handleSearchChange = (value: string) => {
-    const newFilters = { ...filters, search: value || undefined }
-    onFiltersChange(newFilters)
-  }
+    const newFilters = { ...filters, search: value || undefined };
+    onFiltersChange(newFilters);
+  };
 
   return (
     <div className="space-y-3">
@@ -80,7 +80,7 @@ export function ReceiptSearchFilters({
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search receipts, merchants, or items..."
-            value={filters.search || ""}
+            value={filters.search || ''}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
           />
@@ -118,11 +118,11 @@ export function ReceiptSearchFilters({
                 Category
               </Label>
               <Select
-                value={localFilters.category || "all"}
+                value={localFilters.category || 'all'}
                 onValueChange={(value) =>
                   setLocalFilters({
                     ...localFilters,
-                    category: value === "all" ? undefined : value,
+                    category: value === 'all' ? undefined : value,
                   })
                 }
               >
@@ -152,7 +152,7 @@ export function ReceiptSearchFilters({
               <Input
                 id="merchant"
                 placeholder="e.g., Walmart, Target..."
-                value={localFilters.merchant || ""}
+                value={localFilters.merchant || ''}
                 onChange={(e) =>
                   setLocalFilters({
                     ...localFilters,
@@ -173,7 +173,7 @@ export function ReceiptSearchFilters({
                   <Input
                     type="number"
                     placeholder="Min"
-                    value={localFilters.minAmount || ""}
+                    value={localFilters.minAmount || ''}
                     onChange={(e) =>
                       setLocalFilters({
                         ...localFilters,
@@ -188,7 +188,7 @@ export function ReceiptSearchFilters({
                   <Input
                     type="number"
                     placeholder="Max"
-                    value={localFilters.maxAmount || ""}
+                    value={localFilters.maxAmount || ''}
                     onChange={(e) =>
                       setLocalFilters({
                         ...localFilters,
@@ -212,7 +212,7 @@ export function ReceiptSearchFilters({
                 <div>
                   <Input
                     type="date"
-                    value={localFilters.startDate || ""}
+                    value={localFilters.startDate || ''}
                     onChange={(e) =>
                       setLocalFilters({
                         ...localFilters,
@@ -224,7 +224,7 @@ export function ReceiptSearchFilters({
                 <div>
                   <Input
                     type="date"
-                    value={localFilters.endDate || ""}
+                    value={localFilters.endDate || ''}
                     onChange={(e) =>
                       setLocalFilters({
                         ...localFilters,
@@ -241,7 +241,7 @@ export function ReceiptSearchFilters({
               <Label>Sort By</Label>
               <div className="grid grid-cols-2 gap-2">
                 <Select
-                  value={localFilters.sortBy || "date"}
+                  value={localFilters.sortBy || 'date'}
                   onValueChange={(value) =>
                     setLocalFilters({ ...localFilters, sortBy: value })
                   }
@@ -256,7 +256,7 @@ export function ReceiptSearchFilters({
                   </SelectContent>
                 </Select>
                 <Select
-                  value={localFilters.sortOrder || "desc"}
+                  value={localFilters.sortOrder || 'desc'}
                   onValueChange={(value) =>
                     setLocalFilters({ ...localFilters, sortOrder: value })
                   }
@@ -294,7 +294,7 @@ export function ReceiptSearchFilters({
 
         {/* Sort Quick Controls */}
         <Select
-          value={filters.sortBy || "date"}
+          value={filters.sortBy || 'date'}
           onValueChange={(value) =>
             onFiltersChange({ ...filters, sortBy: value })
           }
@@ -327,5 +327,5 @@ export function ReceiptSearchFilters({
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -1,24 +1,24 @@
-import { auth, clerkClient } from '@clerk/nextjs/server'
-import { NextResponse } from 'next/server'
-import { CorrelationId, submitLogEvent } from '@/lib/logging'
-import { UserService } from '@/lib/services/user-service'
-import { randomUUID } from 'crypto'
-import { db } from '@/lib/db'
-import { householdUsers } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
-import type { User } from '@/lib/db/schema'
+import { auth, clerkClient } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { UserService } from '@/lib/services/user-service';
+import { randomUUID } from 'crypto';
+import { db } from '@/lib/db';
+import { householdUsers } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
+import type { User } from '@/lib/db/schema';
 
 /**
  * Get user email from Clerk
  */
 export async function getClerkUserEmail(clerkId: string, correlationId?: CorrelationId): Promise<string | null> {
   try {
-    const client = await clerkClient()
-    const user = await client.users.getUser(clerkId)
-    return user.emailAddresses[0]?.emailAddress ?? null
+    const client = await clerkClient();
+    const user = await client.users.getUser(clerkId);
+    return user.emailAddresses[0]?.emailAddress ?? null;
   } catch (error) {
-    submitLogEvent('auth', `Error fetching Clerk user: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId || randomUUID() as CorrelationId, { clerkId }, true)
-    return null
+    submitLogEvent('auth', `Error fetching Clerk user: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId || randomUUID() as CorrelationId, { clerkId }, true);
+    return null;
   }
 }
 
@@ -27,24 +27,24 @@ export async function getClerkUserEmail(clerkId: string, correlationId?: Correla
  * Returns user object or NextResponse error
  */
 export async function getAuthenticatedUser(correlationId?: CorrelationId) {
-  const cid = correlationId || randomUUID() as CorrelationId
-  const { userId: clerkId } = await auth()
+  const cid = correlationId || randomUUID() as CorrelationId;
+  const { userId: clerkId } = await auth();
 
   if (!clerkId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const email = await getClerkUserEmail(clerkId, cid)
+  const email = await getClerkUserEmail(clerkId, cid);
   if (!email) {
-    return NextResponse.json({ error: "User email not found" }, { status: 400 })
+    return NextResponse.json({ error: 'User email not found' }, { status: 400 });
   }
 
   try {
-    const user = await UserService.getOrCreateUser(clerkId, email)
-    return { user, clerkId, email, correlationId: cid }
+    const user = await UserService.getOrCreateUser(clerkId, email);
+    return { user, clerkId, email, correlationId: cid };
   } catch (error) {
-    submitLogEvent('auth', `Error getting/creating user: ${error instanceof Error ? error.message : 'Unknown error'}`, cid, { clerkId }, true)
-    return NextResponse.json({ error: "Failed to authenticate user" }, { status: 500 })
+    submitLogEvent('auth', `Error getting/creating user: ${error instanceof Error ? error.message : 'Unknown error'}`, cid, { clerkId }, true);
+    return NextResponse.json({ error: 'Failed to authenticate user' }, { status: 500 });
   }
 }
 
@@ -55,21 +55,21 @@ export async function getAuthenticatedUser(correlationId?: CorrelationId) {
 export async function requireSubscription(userOrResult: any) {
   // If it's already an error response, return it
   if (userOrResult instanceof NextResponse) {
-    return userOrResult
+    return userOrResult;
   }
 
-  const user = userOrResult.user || userOrResult
+  const user = userOrResult.user || userOrResult;
 
-  const skipSubscriptionCheck = process.env.SKIP_SUBSCRIPTION_CHECK === "true"
-  
+  const skipSubscriptionCheck = process.env.SKIP_SUBSCRIPTION_CHECK === 'true';
+
   if (!skipSubscriptionCheck && !user.subscribed) {
     return NextResponse.json(
-      { error: "Active subscription required" },
-      { status: 403 }
-    )
+      { error: 'Active subscription required' },
+      { status: 403 },
+    );
   }
 
-  return null
+  return null;
 }
 
 /**
@@ -81,8 +81,8 @@ export async function requireAdmin(user: User, correlationId: CorrelationId) {
   if (!isAdmin) {
     submitLogEvent('admin', 'Unauthorized admin access attempt', correlationId, { userId: user.id }, true);
     return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 403 }
+      { error: 'Unauthorized' },
+      { status: 403 },
     );
   }
   return null;
@@ -99,8 +99,8 @@ export async function getHouseholdMembership(householdId: string, userId: string
     .where(
       and(
         eq(householdUsers.householdId, householdId),
-        eq(householdUsers.userId, userId)
-      )
+        eq(householdUsers.userId, userId),
+      ),
     )
     .limit(1);
   return membership || null;
@@ -113,14 +113,14 @@ export async function getHouseholdMembership(householdId: string, userId: string
 export async function requireHouseholdMembership(
   householdId: string,
   userId: string,
-  correlationId: CorrelationId
+  correlationId: CorrelationId,
 ) {
   const membership = await getHouseholdMembership(householdId, userId);
   if (!membership) {
     submitLogEvent('household', 'Unauthorized household access attempt', correlationId, { userId, householdId }, true);
     return NextResponse.json(
-      { error: "Not a member of this household" },
-      { status: 403 }
+      { error: 'Not a member of this household' },
+      { status: 403 },
     );
   }
   return null;
@@ -133,14 +133,14 @@ export async function requireHouseholdMembership(
 export async function requireReceiptAccess(
   receipt: any,
   user: User,
-  correlationId: CorrelationId
+  correlationId: CorrelationId,
 ) {
   const isAdmin = await UserService.isAdmin(user.id);
   if (receipt.userId !== user.id && !isAdmin) {
     submitLogEvent('receipt', 'Unauthorized receipt access attempt', correlationId, { userId: user.id, receiptId: receipt.id }, true);
     return NextResponse.json(
       { error: "You don't have permission to access this receipt" },
-      { status: 403 }
+      { status: 403 },
     );
   }
   return null;

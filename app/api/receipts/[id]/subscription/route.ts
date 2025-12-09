@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { subscriptions, subscriptionPayments, receipts } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
-import { CorrelationId, submitLogEvent } from '@/lib/logging';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 
 export const runtime = 'nodejs';
 
@@ -18,7 +18,7 @@ type RouteParams = {
 export async function GET(req: NextRequest, { params }: RouteParams) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   const { id: receiptId } = await params;
-  
+
   try {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
@@ -33,14 +33,14 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     if (!receipt) {
       return NextResponse.json(
         { error: 'Receipt not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     if (receipt.userId !== user.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -69,14 +69,14 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       .where(
         and(
           eq(subscriptionPayments.receiptId, receiptId),
-          eq(subscriptions.userId, user.id)
-        )
+          eq(subscriptions.userId, user.id),
+        ),
       );
 
     if (!payment) {
       return NextResponse.json(
         { error: 'No subscription linked to this receipt' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     submitLogEvent('subscription', `Error fetching receipt subscription link: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: 'Failed to fetch subscription link' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

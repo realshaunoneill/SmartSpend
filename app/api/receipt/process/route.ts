@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { receipts, receiptItems } from "@/lib/db/schema";
-import { getAuthenticatedUser, requireSubscription } from "@/lib/auth-helpers";
-import { analyzeReceiptWithGPT4o } from "@/lib/openai";
-import { CorrelationId, submitLogEvent } from "@/lib/logging";
-import { randomUUID } from "crypto";
-import { invalidateInsightsCache } from "@/lib/utils/cache-helpers";
+import { type NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { receipts, receiptItems } from '@/lib/db/schema';
+import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers';
+import { analyzeReceiptWithGPT4o } from '@/lib/openai';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { randomUUID } from 'crypto';
+import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     if (!imageUrl) {
       return NextResponse.json(
-        { error: "Image URL is required" },
+        { error: 'Image URL is required' },
         { status: 400 },
       );
     }
@@ -34,12 +34,12 @@ export async function POST(req: NextRequest) {
     // If no householdId provided, use the user's default household (if set)
     if (!householdId && user.defaultHouseholdId) {
       householdId = user.defaultHouseholdId;
-      submitLogEvent('receipt-process', "Using default household for receipt", correlationId, { 
-        defaultHouseholdId: user.defaultHouseholdId 
+      submitLogEvent('receipt-process', 'Using default household for receipt', correlationId, {
+        defaultHouseholdId: user.defaultHouseholdId,
       });
     }
 
-    submitLogEvent('receipt-process', "Processing receipt", correlationId, { imageUrl, userId: user.id, householdId });
+    submitLogEvent('receipt-process', 'Processing receipt', correlationId, { imageUrl, userId: user.id, householdId });
 
     // Analyze receipt with OpenAI
     let ocrData, usage;
@@ -60,14 +60,14 @@ export async function POST(req: NextRequest) {
         })
         .returning();
 
-      submitLogEvent('receipt-error', `Receipt processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { 
+      submitLogEvent('receipt-error', `Receipt processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {
         receiptId: failedReceipt.id,
-        error: error instanceof Error ? error.stack : undefined 
+        error: error instanceof Error ? error.stack : undefined,
       }, true);
 
       return NextResponse.json(
         {
-          error: "Failed to process receipt",
+          error: 'Failed to process receipt',
           message: error instanceof Error ? error.message : 'Unknown error',
           receiptId: failedReceipt.id,
         },
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    submitLogEvent('receipt-process', "Receipt analyzed with enhanced data", correlationId, {
+    submitLogEvent('receipt-process', 'Receipt analyzed with enhanced data', correlationId, {
       merchant: ocrData.merchant,
       total: ocrData.total,
       currency: ocrData.currency,
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    submitLogEvent('receipt', "Receipt saved to database", correlationId, {
+    submitLogEvent('receipt', 'Receipt saved to database', correlationId, {
       receiptId: receipt.id,
       tokenUsage: usage,
       userEmail: user.email,
@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
         const quantity = item.quantity || 1;
         const totalPrice = item.price || 0; // This is the total price for the line item
         const unitPrice = quantity > 0 ? totalPrice / quantity : totalPrice;
-        
+
         return {
           receiptId: receipt.id,
           name: item.name || 'Unknown Item',
@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    submitLogEvent('receipt-process', "Receipt processing completed successfully", correlationId, { receiptId: receipt.id, userId: user.id });
+    submitLogEvent('receipt-process', 'Receipt processing completed successfully', correlationId, { receiptId: receipt.id, userId: user.id });
 
     // Invalidate insights cache for this user
     await invalidateInsightsCache(user.id, householdId, correlationId);
@@ -211,20 +211,20 @@ export async function POST(req: NextRequest) {
         currency: ocrData.currency,
         category: ocrData.category,
         date: ocrData.date,
-        
+
         // Business details
         merchantType: ocrData.merchantType,
         location: ocrData.location,
         phoneNumber: ocrData.phoneNumber,
         website: ocrData.website,
         vatNumber: ocrData.vatNumber,
-        
+
         // Transaction details
         paymentMethod: ocrData.paymentMethod,
         receiptNumber: ocrData.receiptNumber,
         orderNumber: ocrData.orderNumber,
         timeOfDay: ocrData.timeOfDay,
-        
+
         // Financial breakdown
         subtotal: ocrData.subtotal,
         tax: ocrData.tax,
@@ -233,20 +233,20 @@ export async function POST(req: NextRequest) {
         discount: ocrData.discount,
         deliveryFee: ocrData.deliveryFee,
         packagingFee: ocrData.packagingFee,
-        
+
         // Service details
         tableNumber: ocrData.tableNumber,
         serverName: ocrData.serverName,
         customerCount: ocrData.customerCount,
-        
+
         // Loyalty & promotions
         loyaltyNumber: ocrData.loyaltyNumber,
         specialOffers: ocrData.specialOffers,
-        
+
         // Items with enhanced details
         items: items,
         itemCount: items.length,
-      }
+      },
     });
   } catch (error) {
     submitLogEvent('receipt-error', `Receipt processing error: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { error: error instanceof Error ? error.stack : undefined }, true);

@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Receipt, CreditCard, TrendingUp, Wallet } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Receipt, CreditCard, TrendingUp, Wallet } from 'lucide-react';
 
 interface QuickStatsProps {
   stats: {
@@ -57,5 +57,5 @@ export function QuickStats({ stats }: QuickStatsProps) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

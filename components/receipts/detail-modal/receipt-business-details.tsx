@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { Building2, Phone, Globe, Hash, ExternalLink } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
+import { Building2, Phone, Globe, Hash, ExternalLink } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface ReceiptBusinessDetailsProps {
   ocrData: any
@@ -9,7 +9,7 @@ interface ReceiptBusinessDetailsProps {
 
 export function ReceiptBusinessDetails({ ocrData }: ReceiptBusinessDetailsProps) {
   if (!ocrData?.phoneNumber && !ocrData?.website && !ocrData?.vatNumber) {
-    return null
+    return null;
   }
 
   return (
@@ -28,7 +28,7 @@ export function ReceiptBusinessDetails({ ocrData }: ReceiptBusinessDetailsProps)
           {ocrData?.website && (
             <div className="flex items-center gap-2 text-sm">
               <Globe className="h-4 w-4 text-muted-foreground" />
-              <a 
+              <a
                 href={ocrData.website.startsWith('http') ? ocrData.website : `https://${ocrData.website}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -47,5 +47,5 @@ export function ReceiptBusinessDetails({ ocrData }: ReceiptBusinessDetailsProps)
           )}
         </div>
       </div>
-  )
+  );
 }

@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Bell, Check, X, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Bell, Check, X, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { useInvitations, useAcceptInvitation } from "@/lib/hooks/use-invitations";
-import { toast } from "sonner";
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { useInvitations, useAcceptInvitation } from '@/lib/hooks/use-invitations';
+import { toast } from 'sonner';
 
 export function InvitationNotifications() {
   const { data: invitations = [], isLoading } = useInvitations();
@@ -20,21 +20,21 @@ export function InvitationNotifications() {
 
   const handleInvitationAction = async (
     invitationId: string,
-    action: "accept" | "decline",
-    householdName: string
+    action: 'accept' | 'decline',
+    householdName: string,
   ) => {
     try {
       await acceptInvitation.mutateAsync({ invitationId, action });
-      
-      if (action === "accept") {
+
+      if (action === 'accept') {
         toast.success(`Joined ${householdName} successfully!`);
       } else {
-        toast.success("Invitation declined");
+        toast.success('Invitation declined');
       }
-      
+
       setIsOpen(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to process invitation");
+      toast.error(error instanceof Error ? error.message : 'Failed to process invitation');
     }
   };
 
@@ -88,8 +88,8 @@ export function InvitationNotifications() {
                     onClick={() =>
                       handleInvitationAction(
                         invitation.id,
-                        "accept",
-                        invitation.householdName
+                        'accept',
+                        invitation.householdName,
                       )
                     }
                     disabled={acceptInvitation.isPending}
@@ -104,8 +104,8 @@ export function InvitationNotifications() {
                     onClick={() =>
                       handleInvitationAction(
                         invitation.id,
-                        "decline",
-                        invitation.householdName
+                        'decline',
+                        invitation.householdName,
                       )
                     }
                     disabled={acceptInvitation.isPending}

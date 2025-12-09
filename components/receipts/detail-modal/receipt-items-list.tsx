@@ -1,9 +1,9 @@
-"use client"
+'use client';
 
-import { ShoppingBag, TrendingUp, Percent, Tag, Info } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { capitalizeText } from "@/lib/utils/format-category"
+import { ShoppingBag, TrendingUp, Percent, Tag, Info } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { capitalizeText } from '@/lib/utils/format-category';
 
 interface ReceiptItemsListProps {
   items: any[]
@@ -13,7 +13,7 @@ interface ReceiptItemsListProps {
 
 export function ReceiptItemsList({ items, currency, onAnalyzeItem }: ReceiptItemsListProps) {
   if (!items || items.length === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -24,10 +24,10 @@ export function ReceiptItemsList({ items, currency, onAnalyzeItem }: ReceiptItem
       </div>
       <div className="space-y-1 pr-2">
         {items.map((item: any, index: number) => {
-          const quantity = parseFloat(item.quantity) || 1
-          const totalPrice = parseFloat(item.price) || 0
-          const unitPrice = quantity > 1 ? totalPrice / quantity : null
-          const hasModifiers = item.modifiers && Array.isArray(item.modifiers) && item.modifiers.length > 0
+          const quantity = parseFloat(item.quantity) || 1;
+          const totalPrice = parseFloat(item.price) || 0;
+          const unitPrice = quantity > 1 ? totalPrice / quantity : null;
+          const hasModifiers = item.modifiers && Array.isArray(item.modifiers) && item.modifiers.length > 0;
 
           return (
             <div
@@ -83,10 +83,10 @@ export function ReceiptItemsList({ items, currency, onAnalyzeItem }: ReceiptItem
               {hasModifiers && (
                 <div className="mt-2 ml-4 space-y-1 border-l-2 border-muted pl-3">
                   {item.modifiers.map((modifier: any, modIndex: number) => {
-                    const isDiscount = modifier.type === 'discount' || modifier.price < 0
-                    const isDeposit = modifier.type === 'deposit'
-                    const isFee = modifier.type === 'fee'
-                    
+                    const isDiscount = modifier.type === 'discount' || modifier.price < 0;
+                    const isDeposit = modifier.type === 'deposit';
+                    const isFee = modifier.type === 'fee';
+
                     return (
                       <div
                         key={modIndex}
@@ -99,8 +99,8 @@ export function ReceiptItemsList({ items, currency, onAnalyzeItem }: ReceiptItem
                           <span className={`${isDiscount ? 'text-green-600' : 'text-muted-foreground'}`}>
                             {modifier.name}
                           </span>
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className={`text-[10px] px-1 py-0 h-4 ${
                               isDiscount ? 'border-green-600/30 text-green-600' :
                               isDeposit ? 'border-blue-600/30 text-blue-600' :
@@ -115,14 +115,14 @@ export function ReceiptItemsList({ items, currency, onAnalyzeItem }: ReceiptItem
                           {modifier.price >= 0 ? '+' : ''}{currency} {Math.abs(modifier.price).toFixed(2)}
                         </span>
                       </div>
-                    )
+                    );
                   })}
                 </div>
               )}
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }

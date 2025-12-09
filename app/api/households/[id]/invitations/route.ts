@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { households, householdUsers, householdInvitations, users } from "@/lib/db/schema";
-import { HouseholdService } from "@/lib/services/household-service";
-import { getAuthenticatedUser } from "@/lib/auth-helpers";
-import { eq, and } from "drizzle-orm";
-import { CorrelationId, submitLogEvent } from "@/lib/logging";
-import { randomUUID } from "crypto";
+import { type NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { households, householdUsers, householdInvitations, users } from '@/lib/db/schema';
+import { HouseholdService } from '@/lib/services/household-service';
+import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { eq, and } from 'drizzle-orm';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { randomUUID } from 'crypto';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 
 // Send invitation
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
@@ -25,8 +25,8 @@ export async function POST(
 
     if (!email) {
       return NextResponse.json(
-        { error: "Email is required" },
-        { status: 400 }
+        { error: 'Email is required' },
+        { status: 400 },
       );
     }
 
@@ -34,7 +34,7 @@ export async function POST(
     const invitation = await HouseholdService.createInvitation(
       householdId,
       email,
-      user.id
+      user.id,
     );
 
     // Get household info for the response
@@ -44,24 +44,24 @@ export async function POST(
       .where(eq(households.id, householdId))
       .limit(1);
 
-    submitLogEvent('invitation', `Invitation created for ${email}`, correlationId, { 
-      householdId, 
+    submitLogEvent('invitation', `Invitation created for ${email}`, correlationId, {
+      householdId,
       invitationId: invitation.id,
-      invitedEmail: email 
+      invitedEmail: email,
     });
 
     return NextResponse.json({
       id: invitation.id,
       householdName: household?.name,
       invitedEmail: email,
-      status: "pending",
+      status: 'pending',
       expiresAt: invitation.expiresAt,
     });
   } catch (error) {
     submitLogEvent('invitation', `Error sending invitation: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to send invitation" },
-      { status: 500 }
+      { error: error instanceof Error ? error.message : 'Failed to send invitation' },
+      { status: 500 },
     );
   }
 }
@@ -69,7 +69,7 @@ export async function POST(
 // Get invitations for household
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
@@ -86,15 +86,15 @@ export async function GET(
       .where(
         and(
           eq(householdUsers.householdId, householdId),
-          eq(householdUsers.userId, user.id)
-        )
+          eq(householdUsers.userId, user.id),
+        ),
       )
       .limit(1);
 
     if (!membership) {
       return NextResponse.json(
-        { error: "Not authorized to view invitations" },
-        { status: 403 }
+        { error: 'Not authorized to view invitations' },
+        { status: 403 },
       );
     }
 
@@ -116,8 +116,8 @@ export async function GET(
   } catch (error) {
     submitLogEvent('invitation', `Error fetching invitations: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
-      { error: "Failed to fetch invitations" },
-      { status: 500 }
+      { error: 'Failed to fetch invitations' },
+      { status: 500 },
     );
   }
 }

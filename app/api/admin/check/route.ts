@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth-helpers";
-import { UserService } from "@/lib/services/user-service";
-import { CorrelationId } from "@/lib/logging";
-import { randomUUID } from "crypto";
+import { type NextRequest, NextResponse } from 'next/server';
+import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { UserService } from '@/lib/services/user-service';
+import { type CorrelationId } from '@/lib/logging';
+import { randomUUID } from 'crypto';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
-  
+
   try {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
@@ -18,16 +18,16 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(
       { isAdmin },
-      { 
+      {
         headers: {
           'Cache-Control': 'private, max-age=300', // Cache for 5 minutes
-        }
-      }
+        },
+      },
     );
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to check admin status" },
-      { status: 500 }
+      { error: 'Failed to check admin status' },
+      { status: 500 },
     );
   }
 }

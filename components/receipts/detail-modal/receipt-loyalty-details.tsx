@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { Gift, Tag, Percent } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
+import { Gift, Tag, Percent } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface ReceiptLoyaltyDetailsProps {
   ocrData: any
@@ -9,7 +9,7 @@ interface ReceiptLoyaltyDetailsProps {
 
 export function ReceiptLoyaltyDetails({ ocrData }: ReceiptLoyaltyDetailsProps) {
   if (!ocrData?.loyaltyNumber && !ocrData?.specialOffers) {
-    return null
+    return null;
   }
 
   return (
@@ -33,5 +33,5 @@ export function ReceiptLoyaltyDetails({ ocrData }: ReceiptLoyaltyDetailsProps) {
           )}
         </div>
       </div>
-  )
+  );
 }

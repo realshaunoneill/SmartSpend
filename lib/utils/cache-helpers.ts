@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { insightsCache } from '@/lib/db/schema';
 import { eq, or } from 'drizzle-orm';
-import { CorrelationId, submitLogEvent } from '@/lib/logging';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 
 /**
  * Invalidate insights cache for user and optionally household
@@ -10,7 +10,7 @@ import { CorrelationId, submitLogEvent } from '@/lib/logging';
 export async function invalidateInsightsCache(
   userId: string,
   householdId: string | null | undefined,
-  correlationId: CorrelationId
+  correlationId: CorrelationId,
 ) {
   try {
     await db
@@ -18,8 +18,8 @@ export async function invalidateInsightsCache(
       .where(
         or(
           eq(insightsCache.userId, userId),
-          householdId ? eq(insightsCache.householdId, householdId) : undefined
-        )
+          householdId ? eq(insightsCache.householdId, householdId) : undefined,
+        ),
       );
     submitLogEvent('cache', 'Invalidated insights cache', correlationId, { userId, householdId });
   } catch (error) {
@@ -28,7 +28,7 @@ export async function invalidateInsightsCache(
       `Failed to invalidate insights cache: ${error instanceof Error ? error.message : 'Unknown error'}`,
       correlationId,
       { userId, householdId },
-      true
+      true,
     );
   }
 }

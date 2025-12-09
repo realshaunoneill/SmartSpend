@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { ReceiptList } from "@/components/receipts/receipt-list";
-import { ReceiptListSkeleton } from "@/components/receipts/receipt-list-skeleton";
-import { useReceipts } from "@/lib/hooks/use-receipts";
+import { ReceiptList } from '@/components/receipts/receipt-list';
+import { ReceiptListSkeleton } from '@/components/receipts/receipt-list-skeleton';
+import { useReceipts } from '@/lib/hooks/use-receipts';
 
 interface HouseholdReceiptsProps {
   householdId: string;

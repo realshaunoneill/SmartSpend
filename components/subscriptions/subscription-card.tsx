@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LinkReceiptDialog } from './link-receipt-dialog';
 import { NextPaymentBadge } from './next-payment-badge';
-import { Subscription, SubscriptionPayment } from '@/lib/db/schema';
+import { type Subscription, type SubscriptionPayment } from '@/lib/db/schema';
 import { cn } from '@/lib/utils';
 
 type SubscriptionWithPayments = Subscription & {
@@ -21,10 +21,10 @@ type SubscriptionCardProps = {
 
 export function SubscriptionCard({ subscription, onClick }: SubscriptionCardProps) {
   return (
-    <Card 
+    <Card
       className={cn(
-        "group relative overflow-hidden transition-all duration-300 cursor-pointer",
-        "hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1",
+        'group relative overflow-hidden transition-all duration-300 cursor-pointer',
+        'hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1',
       )}
       onClick={onClick}
     >
@@ -42,7 +42,7 @@ export function SubscriptionCard({ subscription, onClick }: SubscriptionCardProp
               <p className="text-sm text-muted-foreground line-clamp-1">{subscription.description}</p>
             )}
           </div>
-          <Badge 
+          <Badge
             variant={subscription.status === 'active' ? 'default' : 'secondary'}
             className="capitalize shrink-0"
           >
@@ -94,9 +94,9 @@ export function SubscriptionCard({ subscription, onClick }: SubscriptionCardProp
 
         {/* Action Buttons */}
         <div className="flex gap-2">
-          <Button 
-            variant="default" 
-            size="sm" 
+          <Button
+            variant="default"
+            size="sm"
             className="flex-1"
             onClick={(e) => {
               e.stopPropagation();
@@ -109,9 +109,9 @@ export function SubscriptionCard({ subscription, onClick }: SubscriptionCardProp
             subscription={subscription}
             payments={subscription.recentPayments || []}
           >
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="flex-1"
               onClick={(e) => {
                 e.stopPropagation();

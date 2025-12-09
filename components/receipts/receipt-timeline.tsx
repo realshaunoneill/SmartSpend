@@ -46,20 +46,20 @@ function getDateLabel(date: Date): string {
 
 function groupReceiptsByDate(receipts: Receipt[]) {
   const groups: Record<string, Receipt[]> = {};
-  
+
   receipts.forEach(receipt => {
     const dateStr = receipt.transactionDate || receipt.created_at;
     if (!dateStr) return;
-    
+
     const date = parseISO(dateStr);
     const label = getDateLabel(date);
-    
+
     if (!groups[label]) {
       groups[label] = [];
     }
     groups[label].push(receipt);
   });
-  
+
   return groups;
 }
 
@@ -96,7 +96,7 @@ export function ReceiptTimeline({ receipts, onReceiptClick }: ReceiptTimelinePro
           <div className="ml-16 space-y-4">
             {groupedReceipts[dateLabel].map((receipt) => {
               const categoryClass = categoryColors[receipt.category?.toLowerCase() || 'other'] || categoryColors.other;
-              
+
               return (
                 <div
                   key={receipt.id}
@@ -105,7 +105,7 @@ export function ReceiptTimeline({ receipts, onReceiptClick }: ReceiptTimelinePro
                 >
                   {/* Timeline connector dot */}
                   <div className="absolute -left-[45px] top-6 h-3 w-3 rounded-full border-2 border-primary bg-background group-hover:bg-primary transition-colors" />
-                  
+
                   <div className="flex items-start gap-4">
                     {/* Receipt thumbnail */}
                     <div className="shrink-0">

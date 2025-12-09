@@ -1,37 +1,37 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Navigation } from "@/components/layout/navigation"
-import { QuickStats } from "@/components/insights/quick-stats"
-import { SpendingSummary } from "@/components/insights/spending-summary"
-import { SpendingChart } from "@/components/insights/spending-chart"
-import { ReceiptList } from "@/components/receipts/receipt-list"
-import { HouseholdSelector } from "@/components/households/household-selector"
-import { SubscriptionGate } from "@/components/subscriptions/subscription-gate"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { useUser } from "@clerk/nextjs"
-import { useDashboardStats } from "@/lib/hooks/use-dashboard-stats"
-import { useHouseholds } from "@/lib/hooks/use-households"
-import { Upload, Receipt, BarChart3, ArrowRight } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { UpcomingPayments } from "@/components/subscriptions/upcoming-payments"
-import { useSubscriptions } from "@/hooks/use-subscriptions"
+import { useState } from 'react';
+import { Navigation } from '@/components/layout/navigation';
+import { QuickStats } from '@/components/insights/quick-stats';
+import { SpendingSummary } from '@/components/insights/spending-summary';
+import { SpendingChart } from '@/components/insights/spending-chart';
+import { ReceiptList } from '@/components/receipts/receipt-list';
+import { HouseholdSelector } from '@/components/households/household-selector';
+import { SubscriptionGate } from '@/components/subscriptions/subscription-gate';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useUser } from '@clerk/nextjs';
+import { useDashboardStats } from '@/lib/hooks/use-dashboard-stats';
+import { useHouseholds } from '@/lib/hooks/use-households';
+import { Upload, Receipt, BarChart3, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { UpcomingPayments } from '@/components/subscriptions/upcoming-payments';
+import { useSubscriptions } from '@/hooks/use-subscriptions';
 
 export default function DashboardPage() {
-  const [period, setPeriod] = useState<"week" | "month" | "year">("month")
-  const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>()
-  const { isLoaded, user } = useUser()
-  const router = useRouter()
-  
-  const { data: households = [] } = useHouseholds()
-  const { data: subscriptions = [] } = useSubscriptions(undefined, 'active', false)
-  
+  const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month');
+  const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>();
+  const { isLoaded, user } = useUser();
+  const router = useRouter();
+
+  const { data: households = [] } = useHouseholds();
+  const { data: subscriptions = [] } = useSubscriptions(undefined, 'active', false);
+
   // Determine view mode based on selection
-  const isPersonalOnly = selectedHouseholdId === "personal"
-  const actualHouseholdId = isPersonalOnly ? undefined : selectedHouseholdId
-  
-  const { stats, isLoading: statsLoading } = useDashboardStats(actualHouseholdId, isPersonalOnly)
+  const isPersonalOnly = selectedHouseholdId === 'personal';
+  const actualHouseholdId = isPersonalOnly ? undefined : selectedHouseholdId;
+
+  const { stats, isLoading: statsLoading } = useDashboardStats(actualHouseholdId, isPersonalOnly);
 
   // Show loading state while Clerk is loading
   if (!isLoaded) {
@@ -42,12 +42,12 @@ export default function DashboardPage() {
           <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   // User will be redirected by middleware if not authenticated
   if (!user) {
-    return null
+    return null;
   }
 
   // Show loading state while stats are loading
@@ -70,7 +70,7 @@ export default function DashboardPage() {
           </div>
         </main>
       </>
-    )
+    );
   }
 
   const quickStats = stats ? {
@@ -82,8 +82,8 @@ export default function DashboardPage() {
     totalReceipts: 0,
     totalTransactions: 0,
     avgSpending: 0,
-    topCategory: "No data",
-  }
+    topCategory: 'No data',
+  };
 
   return (
     <>
@@ -94,15 +94,15 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Dashboard</h1>
             <p className="mt-1 text-sm text-muted-foreground sm:mt-2">Track your spending and manage your receipts</p>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <HouseholdSelector
               households={[
-                { id: "", name: "All Receipts" },
-                { id: "personal", name: "Personal Only" },
-                ...households
+                { id: '', name: 'All Receipts' },
+                { id: 'personal', name: 'Personal Only' },
+                ...households,
               ]}
-              selectedHouseholdId={selectedHouseholdId || ""}
+              selectedHouseholdId={selectedHouseholdId || ''}
               onSelect={(id) => setSelectedHouseholdId(id || undefined)}
             />
           </div>
@@ -112,16 +112,16 @@ export default function DashboardPage() {
           <QuickStats stats={quickStats} />
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <SpendingSummary 
-              period={period} 
-              onPeriodChange={setPeriod} 
-              householdId={actualHouseholdId} 
-              personalOnly={isPersonalOnly} 
+            <SpendingSummary
+              period={period}
+              onPeriodChange={setPeriod}
+              householdId={actualHouseholdId}
+              personalOnly={isPersonalOnly}
             />
-            <SpendingChart 
-              period={period} 
-              householdId={actualHouseholdId} 
-              personalOnly={isPersonalOnly} 
+            <SpendingChart
+              period={period}
+              householdId={actualHouseholdId}
+              personalOnly={isPersonalOnly}
             />
           </div>
         </SubscriptionGate>
@@ -136,7 +136,7 @@ export default function DashboardPage() {
             <ReceiptList receipts={stats.recentReceipts} />
           </div>
         )}
-        
+
         {(!stats || stats.totalReceipts === 0) && (
           <Card className="border-2 border-dashed">
             <CardHeader className="text-center pb-4">
@@ -178,7 +178,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
-              
+
               <div className="text-center pt-4 border-t">
                 <p className="text-sm text-muted-foreground mb-4">
                   Ready to get started? Upload your first receipt now
@@ -194,5 +194,5 @@ export default function DashboardPage() {
         )}
       </main>
     </>
-  )
+  );
 }

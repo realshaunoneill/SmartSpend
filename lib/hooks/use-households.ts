@@ -1,12 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 
 export function useHouseholds() {
   return useQuery({
-    queryKey: ["households"],
+    queryKey: ['households'],
     queryFn: async () => {
-      const response = await fetch("/api/households");
+      const response = await fetch('/api/households');
       if (!response.ok) {
-        throw new Error("Failed to fetch households");
+        throw new Error('Failed to fetch households');
       }
       return response.json();
     },

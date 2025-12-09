@@ -1,25 +1,25 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Check, Users, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Check, Users, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useHouseholds } from "@/lib/hooks/use-households";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+} from '@/components/ui/select';
+import { useHouseholds } from '@/lib/hooks/use-households';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 interface ReceiptAssignmentDialogProps {
   receiptId: string;
@@ -38,30 +38,30 @@ export function ReceiptAssignmentDialog({
 }: ReceiptAssignmentDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>(
-    currentHouseholdId || "__personal__"
+    currentHouseholdId || '__personal__',
   );
-  
+
   const { data: households = [] } = useHouseholds();
   const queryClient = useQueryClient();
 
   const assignReceipt = useMutation({
     mutationFn: async (householdId: string | null) => {
       const response = await fetch(`/api/receipts/${receiptId}/assign`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ householdId }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to assign receipt");
+        throw new Error(error.error || 'Failed to assign receipt');
       }
 
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["receipts"] });
-      toast.success("Receipt assignment updated!");
+      queryClient.invalidateQueries({ queryKey: ['receipts'] });
+      toast.success('Receipt assignment updated!');
       setOpen(false);
     },
     onError: (error) => {
@@ -70,7 +70,7 @@ export function ReceiptAssignmentDialog({
   });
 
   const handleAssign = () => {
-    const householdId = selectedHouseholdId === "__personal__" ? null : selectedHouseholdId;
+    const householdId = selectedHouseholdId === '__personal__' ? null : selectedHouseholdId;
     assignReceipt.mutate(householdId);
   };
 
@@ -81,22 +81,22 @@ export function ReceiptAssignmentDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            {canRemoveOnly ? "Remove Receipt from Household" : "Assign Receipt to Household"}
+            {canRemoveOnly ? 'Remove Receipt from Household' : 'Assign Receipt to Household'}
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           <div className="space-y-3">
             <label className="text-sm font-medium">
-              {canRemoveOnly 
-                ? "Remove this receipt from the household?" 
-                : "Choose where to share this receipt"
+              {canRemoveOnly
+                ? 'Remove this receipt from the household?'
+                : 'Choose where to share this receipt'
               }
             </label>
             <div className="space-y-2">
               {/* Current Selection Display */}
               <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50">
-                {selectedHouseholdId === "__personal__" ? (
+                {selectedHouseholdId === '__personal__' ? (
                   <>
                     <div className="p-1.5 rounded-md bg-muted">
                       <User className="h-4 w-4" />
@@ -113,7 +113,7 @@ export function ReceiptAssignmentDialog({
                     </div>
                     <div>
                       <p className="font-medium">
-                        {households.find((h: any) => h.id === selectedHouseholdId)?.name || "Unknown Household"}
+                        {households.find((h: any) => h.id === selectedHouseholdId)?.name || 'Unknown Household'}
                       </p>
                       <p className="text-xs text-muted-foreground">Shared with household</p>
                     </div>
@@ -127,11 +127,11 @@ export function ReceiptAssignmentDialog({
                 {(isOwner || canRemoveOnly) && (
                   <button
                     type="button"
-                    onClick={() => setSelectedHouseholdId("__personal__")}
+                    onClick={() => setSelectedHouseholdId('__personal__')}
                     className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                      selectedHouseholdId === "__personal__"
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:bg-muted/50"
+                      selectedHouseholdId === '__personal__'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:bg-muted/50'
                     }`}
                   >
                     <div className="p-1.5 rounded-md bg-muted">
@@ -139,13 +139,13 @@ export function ReceiptAssignmentDialog({
                     </div>
                     <div className="text-left">
                       <p className="font-medium">
-                        {canRemoveOnly ? "Remove from Household" : "Personal Receipt"}
+                        {canRemoveOnly ? 'Remove from Household' : 'Personal Receipt'}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {canRemoveOnly ? "Make this receipt private" : "Only visible to you"}
+                        {canRemoveOnly ? 'Make this receipt private' : 'Only visible to you'}
                       </p>
                     </div>
-                    {selectedHouseholdId === "__personal__" && (
+                    {selectedHouseholdId === '__personal__' && (
                       <Check className="h-4 w-4 text-primary ml-auto" />
                     )}
                   </button>
@@ -159,8 +159,8 @@ export function ReceiptAssignmentDialog({
                     onClick={() => setSelectedHouseholdId(household.id)}
                     className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
                       selectedHouseholdId === household.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:bg-muted/50"
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:bg-muted/50'
                     }`}
                   >
                     <div className="p-1.5 rounded-md bg-primary/10">
@@ -184,12 +184,12 @@ export function ReceiptAssignmentDialog({
               onClick={handleAssign}
               disabled={assignReceipt.isPending}
               className="flex-1"
-              variant={canRemoveOnly ? "destructive" : "default"}
+              variant={canRemoveOnly ? 'destructive' : 'default'}
             >
               <Check className="h-4 w-4 mr-2" />
-              {assignReceipt.isPending 
-                ? (canRemoveOnly ? "Removing..." : "Assigning...") 
-                : (canRemoveOnly ? "Remove Receipt" : "Save Changes")
+              {assignReceipt.isPending
+                ? (canRemoveOnly ? 'Removing...' : 'Assigning...')
+                : (canRemoveOnly ? 'Remove Receipt' : 'Save Changes')
               }
             </Button>
             <Button

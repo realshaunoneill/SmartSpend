@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { subscriptions, subscriptionPayments } from '@/lib/db/schema';
 import { eq, and, or, desc, isNull, gte, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
-import { CorrelationId, submitLogEvent } from '@/lib/logging';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 
 export const runtime = 'nodejs';
 
 // GET /api/subscriptions - List all subscriptions
 export async function GET(req: NextRequest) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
-  
+
   try {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
@@ -24,11 +24,11 @@ export async function GET(req: NextRequest) {
 
     // Build query conditions
     const conditions = [eq(subscriptions.userId, user.id)];
-    
+
     if (householdId) {
       conditions.push(eq(subscriptions.householdId, householdId));
     }
-    
+
     if (status) {
       conditions.push(eq(subscriptions.status, status));
     }
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     if (includePayments) {
       // Get all subscription IDs
       const subscriptionIds = userSubscriptions.map(s => s.id);
-      
+
       // Fetch all payments in one query
       const allPayments = subscriptionIds.length > 0 ? await db
         .select()
@@ -54,9 +54,9 @@ export async function GET(req: NextRequest) {
             sql`${subscriptionPayments.subscriptionId} = ANY(${subscriptionIds})`,
             or(
               eq(subscriptionPayments.status, 'pending'),
-              eq(subscriptionPayments.status, 'missed')
-            )
-          )
+              eq(subscriptionPayments.status, 'missed'),
+            ),
+          ),
         )
         .orderBy(desc(subscriptionPayments.expectedDate))
         .limit(12 * subscriptionIds.length) : [];
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
           recentPayments: payments,
         };
       });
-      
+
       return NextResponse.json(subsWithPayments);
     }
 
@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
     submitLogEvent('subscription', `Error fetching subscriptions: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: 'Failed to fetch subscriptions' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
 // POST /api/subscriptions - Create new subscription
 export async function POST(req: NextRequest) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
-  
+
   try {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
@@ -126,14 +126,14 @@ export async function POST(req: NextRequest) {
     if (!name || !amount || !billingFrequency || !billingDay || !startDate) {
       return NextResponse.json(
         { error: 'Missing required fields: name, amount, billingFrequency, billingDay, startDate' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Calculate next billing date
     const start = new Date(startDate);
     const nextBilling = new Date(start);
-    
+
     if (billingFrequency === 'monthly') {
       nextBilling.setMonth(nextBilling.getMonth() + 1);
     } else if (billingFrequency === 'quarterly') {
@@ -175,13 +175,13 @@ export async function POST(req: NextRequest) {
     });
 
     submitLogEvent('subscription', `Created subscription: ${name}`, correlationId, { subscriptionId: newSubscription.id });
-    
+
     return NextResponse.json(newSubscription, { status: 201 });
   } catch (error) {
     submitLogEvent('subscription', `Error creating subscription: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: 'Failed to create subscription' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

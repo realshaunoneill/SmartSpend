@@ -1,141 +1,141 @@
-"use client"
+'use client';
 
-import type React from "react"
+import type React from 'react';
 
-import { useState } from "react"
-import { Upload, Loader2, CheckCircle2, XCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from 'react';
+import { Upload, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-import { upload } from "@vercel/blob/client"
+import { upload } from '@vercel/blob/client';
 
 interface UploadState {
-  status: "idle" | "uploading" | "scanning" | "success" | "error"
+  status: 'idle' | 'uploading' | 'scanning' | 'success' | 'error'
   message?: string
   receiptData?: any
 }
 
 const ENV_PATH_PREFIX =
-  process.env.NODE_ENV === "production" ? "prod" : "dev"
+  process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
 
-export function ReceiptUpload({ 
-  clerkId, 
-  userEmail, 
+export function ReceiptUpload({
+  clerkId,
+  userEmail,
   householdId,
-  onUploadComplete 
-}: { 
-  clerkId: string; 
-  userEmail: string; 
+  onUploadComplete,
+}: {
+  clerkId: string;
+  userEmail: string;
   householdId?: string;
   onUploadComplete?: () => void;
 }) {
-  const [uploadState, setUploadState] = useState<UploadState>({ status: "idle" })
-  const [previewUrl, setPreviewUrl] = useState<string>()
+  const [uploadState, setUploadState] = useState<UploadState>({ status: 'idle' });
+  const [previewUrl, setPreviewUrl] = useState<string>();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith("image/")) {
+    if (!file.type.startsWith('image/')) {
       setUploadState({
-        status: "error",
-        message: "Please upload an image file",
-      })
-      return
+        status: 'error',
+        message: 'Please upload an image file',
+      });
+      return;
     }
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       setUploadState({
-        status: "error",
-        message: "File size must be less than 10MB",
-      })
-      return
+        status: 'error',
+        message: 'File size must be less than 10MB',
+      });
+      return;
     }
 
     // Create preview
-    const url = URL.createObjectURL(file)
-    setPreviewUrl(url)
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
 
     try {
       // Step 1: Upload to Vercel Blob
       setUploadState({
-        status: "uploading",
-        message: "Uploading image...",
-      })
+        status: 'uploading',
+        message: 'Uploading image...',
+      });
 
-      const receiptId = `receipt-${Date.now()}`
+      const receiptId = `receipt-${Date.now()}`;
       const blob = await upload(
         `${ENV_PATH_PREFIX}/receipts/${userEmail}/${receiptId}/${file.name}`,
         file,
         {
-          access: "public",
-          handleUploadUrl: "/api/receipt/upload",
+          access: 'public',
+          handleUploadUrl: '/api/receipt/upload',
           clientPayload: JSON.stringify({
             receiptId,
             householdId,
           }),
         },
-      )
+      );
 
-      console.log("Upload completed:", blob.url)
+      console.log('Upload completed:', blob.url);
 
       // Step 2: Process receipt with OpenAI
       setUploadState({
-        status: "scanning",
-        message: "Analyzing receipt...",
-      })
+        status: 'scanning',
+        message: 'Analyzing receipt...',
+      });
 
-      const processResponse = await fetch("/api/receipt/process", {
-        method: "POST",
+      const processResponse = await fetch('/api/receipt/process', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           imageUrl: blob.url,
           householdId,
         }),
-      })
+      });
 
       if (!processResponse.ok) {
-        throw new Error("Failed to process receipt")
+        throw new Error('Failed to process receipt');
       }
 
-      const receiptData = await processResponse.json()
+      const receiptData = await processResponse.json();
 
-      console.log("Receipt processed:", receiptData)
+      console.log('Receipt processed:', receiptData);
 
       setUploadState({
-        status: "success",
-        message: "Receipt uploaded and processed successfully!",
+        status: 'success',
+        message: 'Receipt uploaded and processed successfully!',
         receiptData,
-      })
+      });
 
       // Call the callback to refresh the list
       if (onUploadComplete) {
-        onUploadComplete()
+        onUploadComplete();
       }
 
       // Reset after 5 seconds
       setTimeout(() => {
-        setUploadState({ status: "idle" })
-        setPreviewUrl(undefined)
-      }, 5000)
+        setUploadState({ status: 'idle' });
+        setPreviewUrl(undefined);
+      }, 5000);
     } catch (error) {
-      console.error("Receipt upload error:", error)
+      console.error('Receipt upload error:', error);
       setUploadState({
-        status: "error",
+        status: 'error',
         message:
-          error instanceof Error ? error.message : "Failed to process receipt",
-      })
+          error instanceof Error ? error.message : 'Failed to process receipt',
+      });
     }
-  }
+  };
 
   const resetUpload = () => {
-    setUploadState({ status: "idle" })
-    setPreviewUrl(undefined)
-  }
+    setUploadState({ status: 'idle' });
+    setPreviewUrl(undefined);
+  };
 
   return (
     <Card>
@@ -150,10 +150,10 @@ export function ReceiptUpload({
             {previewUrl ? (
               <div className="relative w-full max-w-sm">
                 <img
-                  src={previewUrl || "/placeholder.svg"}
+                  src={previewUrl || '/placeholder.svg'}
                   alt="Receipt preview"
                   className="w-full rounded-lg border-2 border-border object-contain"
-                  style={{ maxHeight: "300px" }}
+                  style={{ maxHeight: '300px' }}
                 />
               </div>
             ) : (
@@ -166,26 +166,26 @@ export function ReceiptUpload({
                   className="hidden"
                   accept="image/*"
                   onChange={handleFileChange}
-                  disabled={uploadState.status !== "idle"}
+                  disabled={uploadState.status !== 'idle'}
                 />
               </label>
             )}
           </div>
 
           {/* Status Messages */}
-          {uploadState.status !== "idle" && (
+          {uploadState.status !== 'idle' && (
             <div
               className={`flex items-center gap-3 rounded-lg p-4 ${
-                uploadState.status === "success"
-                  ? "bg-primary/10 text-primary"
-                  : uploadState.status === "error"
-                    ? "bg-destructive/10 text-destructive"
-                    : "bg-muted text-muted-foreground"
+                uploadState.status === 'success'
+                  ? 'bg-primary/10 text-primary'
+                  : uploadState.status === 'error'
+                    ? 'bg-destructive/10 text-destructive'
+                    : 'bg-muted text-muted-foreground'
               }`}
             >
-              {uploadState.status === "uploading" || uploadState.status === "scanning" ? (
+              {uploadState.status === 'uploading' || uploadState.status === 'scanning' ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
-              ) : uploadState.status === "success" ? (
+              ) : uploadState.status === 'success' ? (
                 <CheckCircle2 className="h-5 w-5" />
               ) : (
                 <XCircle className="h-5 w-5" />
@@ -195,7 +195,7 @@ export function ReceiptUpload({
           )}
 
           {/* Receipt Data Preview */}
-          {uploadState.status === "success" && uploadState.receiptData && (
+          {uploadState.status === 'success' && uploadState.receiptData && (
             <div className="space-y-4">
               <div className="rounded-lg border bg-card p-4">
                 <h4 className="mb-3 text-sm font-semibold text-foreground">Receipt Details</h4>
@@ -298,7 +298,7 @@ export function ReceiptUpload({
 
 
           {/* Action Buttons */}
-          {uploadState.status === "error" && (
+          {uploadState.status === 'error' && (
             <Button onClick={resetUpload} variant="outline" className="w-full bg-transparent">
               Try Again
             </Button>
@@ -306,5 +306,5 @@ export function ReceiptUpload({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

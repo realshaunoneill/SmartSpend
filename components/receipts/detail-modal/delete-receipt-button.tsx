@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { useQueryClient } from "@tanstack/react-query"
-import { Trash2, Loader2 } from "lucide-react"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Trash2, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog';
 
 interface DeleteReceiptButtonProps {
   receiptId: string
@@ -23,36 +23,36 @@ interface DeleteReceiptButtonProps {
 }
 
 export function DeleteReceiptButton({ receiptId, onDeleted }: DeleteReceiptButtonProps) {
-  const [isDeleting, setIsDeleting] = useState(false)
-  const queryClient = useQueryClient()
+  const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleDelete = async () => {
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
       const response = await fetch(`/api/receipts/${receiptId}`, {
-        method: "DELETE",
-      })
+        method: 'DELETE',
+      });
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Failed to delete receipt")
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete receipt');
       }
 
       // Invalidate queries to refresh the list
-      queryClient.invalidateQueries({ queryKey: ["receipts"] })
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })
-      queryClient.invalidateQueries({ queryKey: ["recent-receipts"] })
-      queryClient.invalidateQueries({ queryKey: ["spending-trends"] })
+      queryClient.invalidateQueries({ queryKey: ['receipts'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-receipts'] });
+      queryClient.invalidateQueries({ queryKey: ['spending-trends'] });
 
-      toast.success("Receipt deleted successfully")
-      onDeleted()
+      toast.success('Receipt deleted successfully');
+      onDeleted();
     } catch (error) {
-      console.error("Error deleting receipt:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to delete receipt")
+      console.error('Error deleting receipt:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete receipt');
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   return (
     <AlertDialog>
@@ -85,5 +85,5 @@ export function DeleteReceiptButton({ receiptId, onDeleted }: DeleteReceiptButto
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

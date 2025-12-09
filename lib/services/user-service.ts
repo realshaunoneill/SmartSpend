@@ -1,6 +1,6 @@
-import { db } from '@/lib/db'
-import { users, type User, type NewUser } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db';
+import { users, type User, type NewUser } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export class UserService {
   /**
@@ -11,18 +11,18 @@ export class UserService {
       clerkId,
       email,
       subscribed: false,
-    }
+    };
 
-    const [user] = await db.insert(users).values(newUser).returning()
-    return user
+    const [user] = await db.insert(users).values(newUser).returning();
+    return user;
   }
 
   /**
    * Get user by Clerk ID
    */
   static async getUserByClerkId(clerkId: string): Promise<User | null> {
-    const [user] = await db.select().from(users).where(eq(users.clerkId, clerkId)).limit(1)
-    return user || null
+    const [user] = await db.select().from(users).where(eq(users.clerkId, clerkId)).limit(1);
+    return user || null;
   }
 
   /**
@@ -32,14 +32,14 @@ export class UserService {
    */
   static async getOrCreateUser(clerkId: string, email: string): Promise<User> {
     // Try to find existing user
-    let user = await this.getUserByClerkId(clerkId)
+    let user = await this.getUserByClerkId(clerkId);
 
     // If user doesn't exist, create them
     if (!user) {
-      user = await this.createUser(clerkId, email)
+      user = await this.createUser(clerkId, email);
     }
 
-    return user
+    return user;
   }
 
   /**
@@ -50,24 +50,24 @@ export class UserService {
       .update(users)
       .set({ subscribed, updatedAt: new Date() })
       .where(eq(users.id, userId))
-      .returning()
-    return user
+      .returning();
+    return user;
   }
 
   /**
    * Get user profile by user ID
    */
   static async getUserProfile(userId: string): Promise<User | null> {
-    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
-    return user || null
+    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    return user || null;
   }
 
   /**
    * Get user by email address
    */
   static async getUserByEmail(email: string): Promise<User | null> {
-    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1)
-    return user || null
+    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return user || null;
   }
 
   /**
@@ -78,8 +78,8 @@ export class UserService {
       .update(users)
       .set({ stripeCustomerId, updatedAt: new Date() })
       .where(eq(users.id, userId))
-      .returning()
-    return user
+      .returning();
+    return user;
   }
 
   /**
@@ -90,15 +90,15 @@ export class UserService {
       .select()
       .from(users)
       .where(eq(users.stripeCustomerId, stripeCustomerId))
-      .limit(1)
-    return user || null
+      .limit(1);
+    return user || null;
   }
 
   /**
    * Check if a user is an admin
    */
   static async isAdmin(userId: string): Promise<boolean> {
-    const user = await this.getUserProfile(userId)
-    return user?.isAdmin || false
+    const user = await this.getUserProfile(userId);
+    return user?.isAdmin || false;
   }
 }

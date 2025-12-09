@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useSpendingSummary } from "@/hooks/use-spending-summary";
-import { Loader2, Sparkles, RefreshCw, TrendingUp, ShoppingBag, Store } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useSpendingSummary } from '@/hooks/use-spending-summary';
+import { Loader2, Sparkles, RefreshCw, TrendingUp, ShoppingBag, Store } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface SpendingSummaryCardProps {
   householdId?: string;
@@ -54,7 +54,7 @@ export function SpendingSummaryCard({ householdId, autoLoad = false }: SpendingS
               onClick={handleGenerate}
               disabled={isLoading}
               size="sm"
-              variant={summary ? "outline" : "default"}
+              variant={summary ? 'outline' : 'default'}
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -83,7 +83,7 @@ export function SpendingSummaryCard({ householdId, autoLoad = false }: SpendingS
 
         {error && (
           <div className="rounded-lg bg-destructive/10 p-4 text-destructive">
-            {error.message || "An error occurred"}
+            {error.message || 'An error occurred'}
           </div>
         )}
 

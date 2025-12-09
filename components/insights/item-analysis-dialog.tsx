@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useItemAnalysis, type ItemAnalysis } from "@/hooks/use-item-analysis";
-import { Loader2, TrendingUp, ShoppingCart, Calendar, Store, ShoppingBag, AlertCircle, RefreshCcw } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useItemAnalysis, type ItemAnalysis } from '@/hooks/use-item-analysis';
+import { Loader2, TrendingUp, ShoppingCart, Calendar, Store, ShoppingBag, AlertCircle, RefreshCcw } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ItemAnalysisDialogProps {
   itemName: string;
@@ -41,13 +41,13 @@ export function ItemAnalysisDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
+      <DialogContent
         className="p-0 overflow-hidden border-0"
         style={{
-          maxWidth: "1200px",
-          width: "90vw",
-          maxHeight: "90vh",
-          height: "90vh",
+          maxWidth: '1200px',
+          width: '90vw',
+          maxHeight: '90vh',
+          height: '90vh',
         }}
       >
         <div className="h-full overflow-y-auto p-6">
@@ -82,10 +82,10 @@ export function ItemAnalysisDialog({
                 <div className="rounded-md bg-background/50 p-4 space-y-2">
                   <p className="text-sm font-medium">Error Details:</p>
                   <p className="text-sm text-muted-foreground">
-                    {error.message || "An unexpected error occurred"}
+                    {error.message || 'An unexpected error occurred'}
                   </p>
                 </div>
-                
+
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Possible reasons:</p>
                   <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
@@ -96,18 +96,18 @@ export function ItemAnalysisDialog({
                 </div>
 
                 <div className="flex gap-2">
-                  <Button 
-                    onClick={handleRefresh} 
-                    variant="outline" 
+                  <Button
+                    onClick={handleRefresh}
+                    variant="outline"
                     size="sm"
                     className="gap-2"
                   >
                     <RefreshCcw className="h-4 w-4" />
                     Try Again
                   </Button>
-                  <Button 
-                    onClick={() => onOpenChange(false)} 
-                    variant="secondary" 
+                  <Button
+                    onClick={() => onOpenChange(false)}
+                    variant="secondary"
                     size="sm"
                   >
                     Close
@@ -175,8 +175,8 @@ export function ItemAnalysisDialog({
                     Item Variants
                   </CardTitle>
                   <CardDescription>
-                    {analysis.itemVariants.length === 1 
-                      ? "Single item found" 
+                    {analysis.itemVariants.length === 1
+                      ? 'Single item found'
                       : `${analysis.itemVariants.length} related items found`}
                   </CardDescription>
                 </CardHeader>
@@ -204,7 +204,7 @@ export function ItemAnalysisDialog({
                           <div className="flex items-center gap-2 pt-2 border-t">
                             <Store className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                             <div className="text-xs text-muted-foreground truncate">
-                              {variant.merchants.join(", ")}
+                              {variant.merchants.join(', ')}
                             </div>
                           </div>
                         )}

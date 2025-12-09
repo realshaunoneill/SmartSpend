@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Subscription, SubscriptionPayment } from '@/lib/db/schema';
+import { type Subscription, type SubscriptionPayment } from '@/lib/db/schema';
 
 type LinkReceiptDialogProps = {
   subscription: Subscription;
@@ -62,7 +62,7 @@ export function LinkReceiptDialog({ subscription, payments, children }: LinkRece
   // Get all payments (show linked ones for unlinking)
   const allPayments = payments;
   const unlinkablePayments = payments.filter(
-    (p) => p.status === 'pending' || p.status === 'missed' || !p.receiptId
+    (p) => p.status === 'pending' || p.status === 'missed' || !p.receiptId,
   );
 
   // Filter receipts by search query
@@ -109,7 +109,7 @@ export function LinkReceiptDialog({ subscription, payments, children }: LinkRece
             variant: 'destructive',
           });
         },
-      }
+      },
     );
   };
 
@@ -195,10 +195,10 @@ export function LinkReceiptDialog({ subscription, payments, children }: LinkRece
                             <div className="flex items-center gap-2">
                               <Badge
                                 variant={
-                                  payment.status === 'paid' 
+                                  payment.status === 'paid'
                                     ? 'default'
-                                    : payment.status === 'missed' 
-                                    ? 'destructive' 
+                                    : payment.status === 'missed'
+                                    ? 'destructive'
                                     : 'secondary'
                                 }
                               >

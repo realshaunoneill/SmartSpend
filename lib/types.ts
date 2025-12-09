@@ -20,7 +20,7 @@ export interface HouseholdMember {
   id: string
   household_id: string
   user_id: string
-  role: "admin" | "member"
+  role: 'admin' | 'member'
   joined_at: string
 }
 
@@ -55,7 +55,7 @@ export interface ReceiptItem {
 export interface BankConnection {
   id: string
   user_id: string
-  provider: "revolut" | "plaid"
+  provider: 'revolut' | 'plaid'
   account_id: string
   account_name?: string
   institution_name?: string
@@ -86,8 +86,8 @@ export interface Subscription {
   user_id: string
   stripe_customer_id?: string
   stripe_subscription_id?: string
-  plan_type: "free" | "pro"
-  status: "active" | "canceled" | "past_due"
+  plan_type: 'free' | 'pro'
+  status: 'active' | 'canceled' | 'past_due'
   current_period_start?: string
   current_period_end?: string
   created_at: string
@@ -95,12 +95,12 @@ export interface Subscription {
 }
 
 export type SpendingCategory =
-  | "groceries"
-  | "dining"
-  | "transportation"
-  | "utilities"
-  | "entertainment"
-  | "shopping"
-  | "healthcare"
-  | "travel"
-  | "other"
+  | 'groceries'
+  | 'dining'
+  | 'transportation'
+  | 'utilities'
+  | 'entertainment'
+  | 'shopping'
+  | 'healthcare'
+  | 'travel'
+  | 'other'

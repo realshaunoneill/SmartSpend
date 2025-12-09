@@ -1,9 +1,9 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Navigation } from "@/components/layout/navigation"
-import { Mail, ExternalLink, MessageCircle, ArrowRight, FileText } from "lucide-react"
-import Link from "next/link"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Navigation } from '@/components/layout/navigation';
+import { Mail, ExternalLink, MessageCircle, ArrowRight, FileText } from 'lucide-react';
+import Link from 'next/link';
 
 export default function SupportPage() {
   return (
@@ -25,7 +25,7 @@ export default function SupportPage() {
               <CardDescription>Choose how you'd like to get support</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <a 
+              <a
                 href="mailto:support@receiptwise.com"
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
@@ -39,7 +39,7 @@ export default function SupportPage() {
                 <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
               </a>
 
-              <a 
+              <a
                 href="https://github.com/realshaunoneill/SmartSpend/issues"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -76,14 +76,14 @@ export default function SupportPage() {
                       Navigate to the Receipts page and use the upload button to select receipt images.
                     </p>
                   </div>
-                  
+
                   <div className="space-y-1">
                     <p className="text-sm font-medium">What payment methods are accepted?</p>
                     <p className="text-xs text-muted-foreground">
                       We accept all major credit cards through Stripe.
                     </p>
                   </div>
-                  
+
                   <div className="space-y-1">
                     <p className="text-sm font-medium">How do I manage my subscription?</p>
                     <p className="text-xs text-muted-foreground">
@@ -91,7 +91,7 @@ export default function SupportPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <p className="text-xs text-muted-foreground pt-2 border-t">
                   Can't find what you're looking for? Contact our support team for personalized assistance.
                 </p>
@@ -119,7 +119,7 @@ export default function SupportPage() {
                   <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </div>
               </Link>
-              
+
               <Link href="/privacy" className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group">
                 <div className="flex items-start gap-3">
                   <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" />
@@ -130,7 +130,7 @@ export default function SupportPage() {
                   <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </div>
               </Link>
-              
+
               <Link href="/refund" className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group">
                 <div className="flex items-start gap-3">
                   <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" />
@@ -141,7 +141,7 @@ export default function SupportPage() {
                   <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </div>
               </Link>
-              
+
               <Link href="/settings" className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group">
                 <div className="flex items-start gap-3">
                   <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" />
@@ -152,9 +152,9 @@ export default function SupportPage() {
                   <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </div>
               </Link>
-              
-              <a 
-                href="mailto:support@receiptwise.com?subject=Account%20Help" 
+
+              <a
+                href="mailto:support@receiptwise.com?subject=Account%20Help"
                 className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
                 <div className="flex items-start gap-3">
@@ -171,5 +171,5 @@ export default function SupportPage() {
         </Card>
       </main>
     </>
-  )
+  );
 }

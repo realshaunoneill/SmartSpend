@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { Navigation } from "@/components/layout/navigation";
-import { SpendingSummaryCard } from "@/components/insights/spending-summary-card";
-import { TopItemsList } from "@/components/insights/top-items-list";
-import { ItemSearchAnalysis } from "@/components/insights/item-search-analysis";
-import { SubscriptionUpsell } from "@/components/subscriptions/subscription-upsell";
-import { useUser } from "@/lib/hooks/use-user";
-import { Loader2 } from "lucide-react";
+import { Navigation } from '@/components/layout/navigation';
+import { SpendingSummaryCard } from '@/components/insights/spending-summary-card';
+import { TopItemsList } from '@/components/insights/top-items-list';
+import { ItemSearchAnalysis } from '@/components/insights/item-search-analysis';
+import { SubscriptionUpsell } from '@/components/subscriptions/subscription-upsell';
+import { useUser } from '@/lib/hooks/use-user';
+import { Loader2 } from 'lucide-react';
 
 export default function InsightsPage() {
   // Get current user data to check subscription
@@ -36,11 +36,11 @@ export default function InsightsPage() {
             title="Premium Insights Locked"
             description="Upgrade to Premium to unlock powerful spending insights:"
             features={[
-              "AI-powered spending summaries",
-              "Top items and purchase trends",
-              "Advanced item search and analysis",
-              "Custom time period comparisons",
-              "Export capabilities"
+              'AI-powered spending summaries',
+              'Top items and purchase trends',
+              'Advanced item search and analysis',
+              'Custom time period comparisons',
+              'Export capabilities',
             ]}
           />
         ) : (

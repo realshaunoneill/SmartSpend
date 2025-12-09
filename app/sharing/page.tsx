@@ -1,19 +1,19 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { useUser as useClerkUser } from "@clerk/nextjs"
-import { useUser } from "@/lib/hooks/use-user"
-import { Navigation } from "@/components/layout/navigation"
-import { CreateHouseholdDialog } from "@/components/households/create-household-dialog"
-import { HouseholdList } from "@/components/households/household-list"
-import { HouseholdSelector } from "@/components/households/household-selector"
-import { HouseholdMembersList } from "@/components/households/household-members-list"
-import { SubscriptionGate } from "@/components/subscriptions/subscription-gate"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useHouseholds } from "@/lib/hooks/use-households"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { Users } from "lucide-react"
-import { HouseholdReceipts } from "@/components/households/household-receipts"
+import { useState, useEffect } from 'react';
+import { useUser as useClerkUser } from '@clerk/nextjs';
+import { useUser } from '@/lib/hooks/use-user';
+import { Navigation } from '@/components/layout/navigation';
+import { CreateHouseholdDialog } from '@/components/households/create-household-dialog';
+import { HouseholdList } from '@/components/households/household-list';
+import { HouseholdSelector } from '@/components/households/household-selector';
+import { HouseholdMembersList } from '@/components/households/household-members-list';
+import { SubscriptionGate } from '@/components/subscriptions/subscription-gate';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useHouseholds } from '@/lib/hooks/use-households';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Users } from 'lucide-react';
+import { HouseholdReceipts } from '@/components/households/household-receipts';
 
 interface Member {
   id: string
@@ -21,33 +21,33 @@ interface Member {
   full_name: string
   email: string
   avatar_url?: string
-  role: "admin" | "member"
+  role: 'admin' | 'member'
   joined_at: string
 }
 
 export default function SharingPage() {
-  const { user: clerkUser, isLoaded } = useClerkUser()
-  const { user, isSubscribed } = useUser()
-  const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>()
-  const queryClient = useQueryClient()
+  const { user: clerkUser, isLoaded } = useClerkUser();
+  const { user, isSubscribed } = useUser();
+  const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>();
+  const queryClient = useQueryClient();
 
   // Get households
-  const { data: households = [], isLoading: householdsLoading } = useHouseholds()
+  const { data: households = [], isLoading: householdsLoading } = useHouseholds();
 
   const handleHouseholdCreated = () => {
-    queryClient.invalidateQueries({ queryKey: ["households"] })
-  }
+    queryClient.invalidateQueries({ queryKey: ['households'] });
+  };
 
   // Get members for selected household
   const { data: members = [], isLoading: membersLoading } = useQuery({
-    queryKey: ["household-members", selectedHouseholdId],
+    queryKey: ['household-members', selectedHouseholdId],
     queryFn: async () => {
-      if (!selectedHouseholdId) return []
-      
-      const response = await fetch(`/api/households/${selectedHouseholdId}/members`)
-      if (!response.ok) throw new Error("Failed to fetch members")
-      
-      const data = await response.json()
+      if (!selectedHouseholdId) return [];
+
+      const response = await fetch(`/api/households/${selectedHouseholdId}/members`);
+      if (!response.ok) throw new Error('Failed to fetch members');
+
+      const data = await response.json();
       return data.map((member: any) => ({
         id: member.userId,
         user_id: member.userId,
@@ -55,22 +55,22 @@ export default function SharingPage() {
         email: member.email,
         role: member.role === 'owner' ? 'admin' : 'member',
         joined_at: member.joinedAt,
-      }))
+      }));
     },
     enabled: !!selectedHouseholdId,
-  })
+  });
 
   // Select first household by default
   useEffect(() => {
     if (households.length > 0 && !selectedHouseholdId) {
-      setSelectedHouseholdId(households[0].id)
+      setSelectedHouseholdId(households[0].id);
     }
-  }, [households, selectedHouseholdId])
+  }, [households, selectedHouseholdId]);
 
-  const selectedHousehold = households.find((h: any) => h.id === selectedHouseholdId)
-  const currentUserId = user?.id
-  const isCurrentUserAdmin = selectedHousehold && user ? 
-    members.find((m: any) => m.user_id === user.id)?.role === 'admin' : false
+  const selectedHousehold = households.find((h: any) => h.id === selectedHouseholdId);
+  const currentUserId = user?.id;
+  const isCurrentUserAdmin = selectedHousehold && user ?
+    members.find((m: any) => m.user_id === user.id)?.role === 'admin' : false;
 
   if (!isLoaded || !user) {
     return (
@@ -79,12 +79,12 @@ export default function SharingPage() {
         <main className="container mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
           <div className="text-center">
             <p className="text-muted-foreground">
-              {!isLoaded ? "Loading..." : "Please sign in to manage households"}
+              {!isLoaded ? 'Loading...' : 'Please sign in to manage households'}
             </p>
           </div>
         </main>
       </>
-    )
+    );
   }
 
   return (
@@ -95,9 +95,9 @@ export default function SharingPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Sharing</h1>
             <p className="mt-1 text-sm text-muted-foreground sm:mt-2">
-              {isSubscribed 
-                ? "Manage households and share receipts with family or roommates"
-                : "View your households and shared receipts"
+              {isSubscribed
+                ? 'Manage households and share receipts with family or roommates'
+                : 'View your households and shared receipts'
               }
             </p>
           </div>
@@ -110,15 +110,15 @@ export default function SharingPage() {
               />
             )}
             {isSubscribed ? (
-              <CreateHouseholdDialog 
-                userId={currentUserId!} 
-                onHouseholdCreated={handleHouseholdCreated} 
+              <CreateHouseholdDialog
+                userId={currentUserId!}
+                onHouseholdCreated={handleHouseholdCreated}
               />
             ) : (
               <SubscriptionGate feature="sharing">
-                <CreateHouseholdDialog 
-                  userId={currentUserId!} 
-                  onHouseholdCreated={handleHouseholdCreated} 
+                <CreateHouseholdDialog
+                  userId={currentUserId!}
+                  onHouseholdCreated={handleHouseholdCreated}
                 />
               </SubscriptionGate>
             )}
@@ -143,20 +143,20 @@ export default function SharingPage() {
             </div>
             <h3 className="text-2xl font-semibold mb-2">No households yet</h3>
             <p className="text-muted-foreground mb-6 max-w-md">
-              {isSubscribed 
-                ? "Create your first household to start sharing receipts with family members or roommates."
+              {isSubscribed
+                ? 'Create your first household to start sharing receipts with family members or roommates.'
                 : "You're not part of any households yet. Upgrade to Premium to create and manage households."
               }
             </p>
             {isSubscribed ? (
-              <CreateHouseholdDialog 
-                userId={currentUserId!} 
+              <CreateHouseholdDialog
+                userId={currentUserId!}
                 onHouseholdCreated={handleHouseholdCreated}
               />
             ) : (
               <SubscriptionGate feature="sharing">
-                <CreateHouseholdDialog 
-                  userId={currentUserId!} 
+                <CreateHouseholdDialog
+                  userId={currentUserId!}
                   onHouseholdCreated={handleHouseholdCreated}
                 />
               </SubscriptionGate>
@@ -172,7 +172,7 @@ export default function SharingPage() {
                   currentUserId={currentUserId!}
                   isSubscribed={isSubscribed}
                   onUpdate={() => {
-                    queryClient.invalidateQueries({ queryKey: ["households"] })
+                    queryClient.invalidateQueries({ queryKey: ['households'] });
                   }}
                   onSelect={(household: any) => setSelectedHouseholdId(household.id)}
                   selectedId={selectedHouseholdId}
@@ -192,7 +192,7 @@ export default function SharingPage() {
                         isCurrentUserAdmin={isCurrentUserAdmin}
                         isSubscribed={isSubscribed}
                         onUpdate={() => {
-                          queryClient.invalidateQueries({ queryKey: ["household-members", selectedHouseholdId] })
+                          queryClient.invalidateQueries({ queryKey: ['household-members', selectedHouseholdId] });
                         }}
                       />
                     )}
@@ -214,5 +214,5 @@ export default function SharingPage() {
         )}
       </main>
     </>
-  )
+  );
 }

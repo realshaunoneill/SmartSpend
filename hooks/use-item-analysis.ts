@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 
 export interface ItemAnalysis {
   itemName: string;
@@ -55,12 +55,12 @@ async function analyzeItem(
   options?: {
     householdId?: string;
     months?: number;
-  }
+  },
 ): Promise<ItemAnalysis> {
       // Use the top items endpoint to get all items
       const params = new URLSearchParams({
-        limit: "200", // Get more items to find all related ones
-        sortBy: "frequency",
+        limit: '200', // Get more items to find all related ones
+        sortBy: 'frequency',
         ...(options?.householdId && { householdId: options.householdId }),
         ...(options?.months && { months: options.months.toString() }),
       });
@@ -68,14 +68,14 @@ async function analyzeItem(
       const response = await fetch(`/api/receipts/items/top?${params}`);
 
       if (!response.ok) {
-        throw new Error("Failed to analyze item");
+        throw new Error('Failed to analyze item');
       }
 
       const data = await response.json();
-      
+
       // Find all related items (case-insensitive, partial match)
       const normalizedSearchName = itemName.toLowerCase().trim();
-      
+
       // Try exact match first
       let matchedItems = data.topItems.filter((item: any) => {
         return item.name.toLowerCase().trim() === normalizedSearchName;
@@ -84,7 +84,7 @@ async function analyzeItem(
       // If no exact match, try partial matching with all words
       if (matchedItems.length === 0) {
         const searchTerms = normalizedSearchName.split(/\s+/).filter(w => w.length > 0);
-        
+
         matchedItems = data.topItems.filter((item: any) => {
           const itemNameLower = item.name.toLowerCase().trim();
           // Match if item contains all search words or search term contains the item name
@@ -116,7 +116,7 @@ async function analyzeItem(
         totalSpent += item.totalSpent;
         totalQuantity += item.totalQuantity;
         item.merchants.forEach((m: string) => merchantsSet.add(m));
-        
+
         itemVariants.push({
           name: item.name,
           count: item.count,
@@ -134,8 +134,8 @@ async function analyzeItem(
 
       // Transform the data to match the expected ItemAnalysis format
       const transformedData: ItemAnalysis = {
-        itemName: matchedItems.length > 1 
-          ? `${itemName} (${matchedItems.length} variants)` 
+        itemName: matchedItems.length > 1
+          ? `${itemName} (${matchedItems.length} variants)`
           : matchedItems[0].name,
         searchPeriod: data.summary.period,
         summary: {
@@ -155,10 +155,10 @@ async function analyzeItem(
         monthlyTrend: [],
         recentPurchases: [{
           date: matchedItems[0].lastPurchased,
-          merchant: matchedItems[0].merchants[0] || "Unknown",
+          merchant: matchedItems[0].merchants[0] || 'Unknown',
           quantity: totalQuantity.toString(),
           price: totalSpent.toString(),
-          receiptId: "",
+          receiptId: '',
         }],
         itemVariants, // Add variants to the response
       };
@@ -170,7 +170,7 @@ export function useItemAnalysis(options: UseItemAnalysisOptions) {
   const { itemName, enabled = true, ...fetchOptions } = options;
 
   return useQuery({
-    queryKey: ["itemAnalysis", itemName, fetchOptions],
+    queryKey: ['itemAnalysis', itemName, fetchOptions],
     queryFn: () => analyzeItem(itemName, fetchOptions),
     enabled: enabled && !!itemName,
     staleTime: 5 * 60 * 1000, // 5 minutes

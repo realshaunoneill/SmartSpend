@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ItemAnalysisDialog } from "@/components/insights/item-analysis-dialog";
-import { Search, TrendingUp } from "lucide-react";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ItemAnalysisDialog } from '@/components/insights/item-analysis-dialog';
+import { Search, TrendingUp } from 'lucide-react';
 
 interface ItemSearchAnalysisProps {
   householdId?: string;
 }
 
 export function ItemSearchAnalysis({ householdId }: ItemSearchAnalysisProps) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [showAnalysis, setShowAnalysis] = useState(false);
-  const [itemToAnalyze, setItemToAnalyze] = useState("");
+  const [itemToAnalyze, setItemToAnalyze] = useState('');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

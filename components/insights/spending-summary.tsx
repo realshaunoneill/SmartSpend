@@ -1,24 +1,24 @@
-"use client"
-import { TrendingUp, TrendingDown, DollarSign } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useSpendingTrends } from "@/lib/hooks/use-spending-trends"
+'use client';
+import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSpendingTrends } from '@/lib/hooks/use-spending-trends';
 
 interface SpendingSummaryProps {
-  period: "week" | "month" | "year"
-  onPeriodChange: (period: "week" | "month" | "year") => void
+  period: 'week' | 'month' | 'year'
+  onPeriodChange: (period: 'week' | 'month' | 'year') => void
   householdId?: string
   personalOnly?: boolean
 }
 
 export function SpendingSummary({ period, onPeriodChange, householdId, personalOnly = false }: SpendingSummaryProps) {
-  const { data: trendsData, isLoading, error } = useSpendingTrends(householdId, period, personalOnly)
-  
+  const { data: trendsData, isLoading, error } = useSpendingTrends(householdId, period, personalOnly);
+
   const periodLabels = {
-    week: "This Week",
-    month: "This Month", 
-    year: "This Year",
-  }
+    week: 'This Week',
+    month: 'This Month',
+    year: 'This Year',
+  };
 
   if (isLoading) {
     return (
@@ -47,7 +47,7 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error) {
@@ -76,7 +76,7 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (!trendsData || trendsData.totalSpent === 0) {
@@ -111,10 +111,10 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
-  const isPositiveChange = trendsData.change >= 0
+  const isPositiveChange = trendsData.change >= 0;
 
   return (
     <Card>
@@ -137,12 +137,12 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
         {/* Total Amount */}
         <div className="flex items-baseline gap-2">
           <span className="text-4xl font-bold text-foreground">
-            ${trendsData.totalSpent.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ${trendsData.totalSpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
           {trendsData.change !== 0 && (
             <div
               className={`flex items-center gap-1 text-sm font-medium ${
-                isPositiveChange ? "text-destructive" : "text-primary"
+                isPositiveChange ? 'text-destructive' : 'text-primary'
               }`}
             >
               {isPositiveChange ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
@@ -163,9 +163,9 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
                     <span className="font-medium text-foreground">${item.amount.toFixed(2)}</span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-muted/50">
-                    <div 
-                      className="h-full rounded-full bg-primary transition-all" 
-                      style={{ width: `${item.percentage}%` }} 
+                    <div
+                      className="h-full rounded-full bg-primary transition-all"
+                      style={{ width: `${item.percentage}%` }}
                     />
                   </div>
                 </div>
@@ -180,5 +180,5 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

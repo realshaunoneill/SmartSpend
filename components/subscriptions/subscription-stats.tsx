@@ -22,8 +22,8 @@ type StatCardProps = {
 function StatCard({ label, value, icon, iconColor, alert }: StatCardProps) {
   return (
     <Card className={cn(
-      "transition-all duration-300 hover:shadow-lg",
-      alert && "border-yellow-500/50"
+      'transition-all duration-300 hover:shadow-lg',
+      alert && 'border-yellow-500/50',
     )}>
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
@@ -34,7 +34,7 @@ function StatCard({ label, value, icon, iconColor, alert }: StatCardProps) {
               {alert && <AlertCircle className="w-5 h-5 text-yellow-500" />}
             </div>
           </div>
-          <div className={cn("p-3 rounded-xl bg-muted", iconColor)}>
+          <div className={cn('p-3 rounded-xl bg-muted', iconColor)}>
             {icon}
           </div>
         </div>
@@ -57,21 +57,21 @@ export function SubscriptionStats({
         icon={<TrendingUp className="w-5 h-5" />}
         iconColor="text-blue-600 dark:text-blue-400"
       />
-      
+
       <StatCard
         label="Monthly Cost"
         value={`€${monthlyTotal.toFixed(2)}`}
         icon={<Calendar className="w-5 h-5" />}
         iconColor="text-green-600 dark:text-green-400"
       />
-      
+
       <StatCard
         label="Yearly Cost"
         value={`€${yearlyTotal.toFixed(2)}`}
         icon={<DollarSign className="w-5 h-5" />}
         iconColor="text-purple-600 dark:text-purple-400"
       />
-      
+
       <StatCard
         label="Missing Receipts"
         value={missingPayments}

@@ -1,16 +1,16 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Crown, User, MoreVertical, Trash2, UserPlus, Mail } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { removeMember, updateMemberRole } from "@/lib/household-actions"
-import { useSendInvitation, useHouseholdInvitations } from "@/lib/hooks/use-invitations"
-import { toast } from "sonner"
+import { useState } from 'react';
+import { Crown, User, MoreVertical, Trash2, UserPlus, Mail } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { removeMember, updateMemberRole } from '@/lib/household-actions';
+import { useSendInvitation, useHouseholdInvitations } from '@/lib/hooks/use-invitations';
+import { toast } from 'sonner';
 
 interface Member {
   id: string
@@ -18,7 +18,7 @@ interface Member {
   full_name: string
   email: string
   avatar_url?: string
-  role: "admin" | "member"
+  role: 'admin' | 'member'
   joined_at: string
 }
 
@@ -39,59 +39,59 @@ export function HouseholdMembersList({
   isSubscribed = false,
   onUpdate,
 }: HouseholdMembersListProps) {
-  const [loadingMemberId, setLoadingMemberId] = useState<string>()
-  const [inviteEmail, setInviteEmail] = useState("")
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
-  
-  const sendInvitation = useSendInvitation()
-  const { data: invitations = [] } = useHouseholdInvitations(householdId)
+  const [loadingMemberId, setLoadingMemberId] = useState<string>();
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+
+  const sendInvitation = useSendInvitation();
+  const { data: invitations = [] } = useHouseholdInvitations(householdId);
 
   const handleRemove = async (userId: string) => {
-    if (!confirm("Remove this member from the household?")) return
+    if (!confirm('Remove this member from the household?')) return;
 
-    setLoadingMemberId(userId)
+    setLoadingMemberId(userId);
     try {
-      await removeMember({ householdId, userId })
-      onUpdate()
+      await removeMember({ householdId, userId });
+      onUpdate();
     } catch (error) {
-      alert("Failed to remove member")
+      alert('Failed to remove member');
     } finally {
-      setLoadingMemberId(undefined)
+      setLoadingMemberId(undefined);
     }
-  }
+  };
 
-  const handleToggleRole = async (userId: string, currentRole: "admin" | "member") => {
-    const newRole = currentRole === "admin" ? "member" : "admin"
-    setLoadingMemberId(userId)
+  const handleToggleRole = async (userId: string, currentRole: 'admin' | 'member') => {
+    const newRole = currentRole === 'admin' ? 'member' : 'admin';
+    setLoadingMemberId(userId);
     try {
-      await updateMemberRole({ householdId, userId, role: newRole })
-      onUpdate()
+      await updateMemberRole({ householdId, userId, role: newRole });
+      onUpdate();
     } catch (error) {
-      alert("Failed to update role")
+      alert('Failed to update role');
     } finally {
-      setLoadingMemberId(undefined)
+      setLoadingMemberId(undefined);
     }
-  }
+  };
 
   const handleSendInvitation = async () => {
     if (!inviteEmail.trim()) {
-      toast.error("Please enter an email address")
-      return
+      toast.error('Please enter an email address');
+      return;
     }
 
     try {
       await sendInvitation.mutateAsync({
         householdId,
         email: inviteEmail.trim(),
-      })
-      
-      toast.success("Invitation sent successfully!")
-      setInviteEmail("")
-      setInviteDialogOpen(false)
+      });
+
+      toast.success('Invitation sent successfully!');
+      setInviteEmail('');
+      setInviteDialogOpen(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to send invitation")
+      toast.error(error instanceof Error ? error.message : 'Failed to send invitation');
     }
-  }
+  };
 
   return (
     <Card>
@@ -119,8 +119,8 @@ export function HouseholdMembersList({
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          handleSendInvitation()
+                        if (e.key === 'Enter') {
+                          handleSendInvitation();
                         }
                       }}
                     />
@@ -150,8 +150,8 @@ export function HouseholdMembersList({
       <CardContent>
         <div className="space-y-3">
           {members.map((member) => {
-            const isCurrentUser = member.user_id === currentUserId
-            const canManage = isCurrentUserAdmin && !isCurrentUser && isSubscribed
+            const isCurrentUser = member.user_id === currentUserId;
+            const canManage = isCurrentUserAdmin && !isCurrentUser && isSubscribed;
 
             return (
               <div key={member.id} className="flex items-center justify-between rounded-lg border bg-card p-4">
@@ -159,7 +159,7 @@ export function HouseholdMembersList({
                   <div className="h-10 w-10 overflow-hidden rounded-full bg-primary/10">
                     {member.avatar_url ? (
                       <img
-                        src={member.avatar_url || "/placeholder.svg"}
+                        src={member.avatar_url || '/placeholder.svg'}
                         alt={member.full_name}
                         className="h-full w-full object-cover"
                       />
@@ -182,16 +182,16 @@ export function HouseholdMembersList({
 
                 <div className="flex items-center gap-2">
                   <Badge
-                    variant={member.role === "admin" ? "default" : "secondary"}
-                    className={member.role === "admin" ? "bg-primary" : ""}
+                    variant={member.role === 'admin' ? 'default' : 'secondary'}
+                    className={member.role === 'admin' ? 'bg-primary' : ''}
                   >
-                    {member.role === "admin" ? (
+                    {member.role === 'admin' ? (
                       <>
                         <Crown className="mr-1 h-3 w-3" />
                         Admin
                       </>
                     ) : (
-                      "Member"
+                      'Member'
                     )}
                   </Badge>
 
@@ -204,7 +204,7 @@ export function HouseholdMembersList({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleToggleRole(member.user_id, member.role)}>
-                          {member.role === "admin" ? "Remove Admin" : "Make Admin"}
+                          {member.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleRemove(member.user_id)} className="text-destructive">
                           <Trash2 className="mr-2 h-4 w-4" />
@@ -215,7 +215,7 @@ export function HouseholdMembersList({
                   )}
                 </div>
               </div>
-            )
+            );
           })}
 
           {/* Pending Invitations */}
@@ -250,5 +250,5 @@ export function HouseholdMembersList({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

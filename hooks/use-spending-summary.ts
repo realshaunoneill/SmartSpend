@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 
 export interface SpendingSummary {
   summary: string;
@@ -49,7 +49,7 @@ async function fetchSpendingSummary(options: UseSpendingSummaryOptions): Promise
   const response = await fetch(`/api/receipts/items/summary?${params}`);
 
   if (!response.ok) {
-    throw new Error("Failed to fetch spending summary");
+    throw new Error('Failed to fetch spending summary');
   }
 
   return response.json();
@@ -59,7 +59,7 @@ export function useSpendingSummary(options: UseSpendingSummaryOptions = {}) {
   const { enabled = true, ...fetchOptions } = options;
 
   return useQuery({
-    queryKey: ["spendingSummary", fetchOptions],
+    queryKey: ['spendingSummary', fetchOptions],
     queryFn: () => fetchSpendingSummary(fetchOptions),
     enabled,
     staleTime: 10 * 60 * 1000, // 10 minutes (AI responses are expensive)

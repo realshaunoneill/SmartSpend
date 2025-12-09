@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { HouseholdService } from '@/lib/services/household-service'
-import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers'
+import { type NextRequest, NextResponse } from 'next/server';
+import { HouseholdService } from '@/lib/services/household-service';
+import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers';
 import {
   createErrorResponse,
   ErrorCode,
   generateRequestId,
   getHttpStatusCode,
   Logger,
-} from '@/lib/errors'
-import { randomUUID } from 'crypto'
-import { CorrelationId } from '@/lib/logging'
+} from '@/lib/errors';
+import { randomUUID } from 'crypto';
+import { type CorrelationId } from '@/lib/logging';
 
 /**
  * GET /api/households
@@ -17,43 +17,43 @@ import { CorrelationId } from '@/lib/logging'
  * Validates: Requirements 3.6
  */
 export async function GET(request: NextRequest) {
-  const requestId = generateRequestId()
+  const requestId = generateRequestId();
   const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
 
   try {
-    const authResult = await getAuthenticatedUser(correlationId)
+    const authResult = await getAuthenticatedUser(correlationId);
 
     if (authResult instanceof NextResponse) {
-      Logger.warn('Unauthenticated request to GET /api/households', { requestId })
-      return authResult
+      Logger.warn('Unauthenticated request to GET /api/households', { requestId });
+      return authResult;
     }
 
-    const { user } = authResult
+    const { user } = authResult;
 
     // Get all households for the user
-    const households = await HouseholdService.getHouseholdsByUser(user.id)
+    const households = await HouseholdService.getHouseholdsByUser(user.id);
 
     Logger.info('Households fetched successfully', {
       requestId,
       userId: user.id,
       context: { count: households.length },
-    })
+    });
     return NextResponse.json(households, {
       headers: {
         'Cache-Control': 'private, max-age=300', // Cache for 5 minutes
-      }
-    })
+      },
+    });
   } catch (error) {
-    Logger.error('Error fetching households', error as Error, { requestId })
+    Logger.error('Error fetching households', error as Error, { requestId });
     const errorResponse = createErrorResponse(
       ErrorCode.DATABASE_ERROR,
       'Failed to fetch households',
       undefined,
-      requestId
-    )
+      requestId,
+    );
     return NextResponse.json(errorResponse, {
       status: getHttpStatusCode(ErrorCode.DATABASE_ERROR),
-    })
+    });
   }
 }
 
@@ -63,70 +63,70 @@ export async function GET(request: NextRequest) {
  * Validates: Requirements 3.1, 3.2
  */
 export async function POST(req: NextRequest) {
-  const requestId = generateRequestId()
+  const requestId = generateRequestId();
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
 
   try {
-    const authResult = await getAuthenticatedUser(correlationId)
+    const authResult = await getAuthenticatedUser(correlationId);
 
     if (authResult instanceof NextResponse) {
-      Logger.warn('Unauthenticated request to POST /api/households', { requestId })
-      return authResult
+      Logger.warn('Unauthenticated request to POST /api/households', { requestId });
+      return authResult;
     }
 
-    const { user } = authResult
+    const { user } = authResult;
 
     // Check subscription for household creation
-    const subCheck = await requireSubscription(user)
+    const subCheck = await requireSubscription(user);
     if (subCheck) {
       Logger.warn('Subscription required for household creation', {
         requestId,
         userId: user.id,
-      })
-      return subCheck
+      });
+      return subCheck;
     }
 
-    const body = await req.json()
+    const body = await req.json();
 
     // Validate request body
     if (!body.name || typeof body.name !== 'string' || body.name.trim() === '') {
       Logger.warn('Invalid household name provided', {
         requestId,
         userId: user.id,
-      })
+      });
       const errorResponse = createErrorResponse(
         ErrorCode.MISSING_REQUIRED_FIELD,
         'Household name is required',
         { field: 'name' },
-        requestId
-      )
+        requestId,
+      );
       return NextResponse.json(errorResponse, {
         status: getHttpStatusCode(ErrorCode.MISSING_REQUIRED_FIELD),
-      })
+      });
     }
 
     // Create household with user as owner
     const household = await HouseholdService.createHousehold(
       user.id,
-      body.name.trim()
-    )
+      body.name.trim(),
+    );
 
     Logger.info('Household created successfully', {
       requestId,
       userId: user.id,
       context: { householdId: household.id, householdName: household.name },
-    })
-    return NextResponse.json(household, { status: 201 })
+    });
+    return NextResponse.json(household, { status: 201 });
   } catch (error) {
-    Logger.error('Error creating household', error as Error, { requestId })
+    Logger.error('Error creating household', error as Error, { requestId });
     const errorResponse = createErrorResponse(
       ErrorCode.DATABASE_ERROR,
       'Failed to create household',
       undefined,
-      requestId
-    )
+      requestId,
+    );
     return NextResponse.json(errorResponse, {
       status: getHttpStatusCode(ErrorCode.DATABASE_ERROR),
-    })
+    });
   }
 }

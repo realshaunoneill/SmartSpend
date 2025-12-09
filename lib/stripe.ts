@@ -1,11 +1,11 @@
-"use server";
+'use server';
 
-import Stripe from "stripe";
-import { UserService } from "./services/user-service";
-import { CorrelationId, submitLogEvent } from "@/lib/logging";
+import Stripe from 'stripe';
+import { UserService } from './services/user-service';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2025-11-17.clover",
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2025-11-17.clover',
 });
 
 /**
@@ -13,32 +13,32 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
  * and updates the database with the customer ID
  */
 async function createStripeCustomer(
-  userId: string, 
-  email: string, 
+  userId: string,
+  email: string,
   clerkId: string,
-  correlationId: CorrelationId
+  correlationId: CorrelationId,
 ): Promise<string> {
   try {
-    const { UserService } = await import("@/lib/services/user-service");
+    const { UserService } = await import('@/lib/services/user-service');
 
     // Check if customer already exists in Stripe by email
     const existingCustomer = await stripe.customers.search({
       query: `email:'${email}'`,
     });
-    
+
     if (existingCustomer.data.length > 0) {
       const customerId = existingCustomer.data[0].id;
       submitLogEvent('stripe', `Found existing Stripe customer ${customerId} for ${email}`, correlationId, { userId, customerId, email });
-      
+
       // Update user record with the existing Stripe customer ID
       // This ensures the database stays in sync even if the customer was created elsewhere
       await UserService.updateStripeCustomerId(userId, customerId);
 
       submitLogEvent('stripe', `Updated database with existing Stripe customer ID for user ${userId}`, correlationId, { userId, customerId });
-      
+
       return customerId;
     }
-    
+
     // Create new Stripe customer with comprehensive metadata
     const customer = await stripe.customers.create({
       email: email,
@@ -48,18 +48,18 @@ async function createStripeCustomer(
         email: email,
       },
     });
-    
+
     submitLogEvent('stripe', `Created new Stripe customer ${customer.id} for user ${userId}`, correlationId, { userId, customerId: customer.id, email });
-    
+
     // Update user record with Stripe customer ID
     await UserService.updateStripeCustomerId(userId, customer.id);
 
     submitLogEvent('stripe', `Updated database with Stripe customer ID for user ${userId}`, correlationId, { userId, customerId: customer.id });
-    
+
     return customer.id;
   } catch (error) {
     submitLogEvent('stripe', `Failed to create Stripe customer: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { userId, email }, true);
-    throw new Error("Failed to create Stripe customer");
+    throw new Error('Failed to create Stripe customer');
   }
 }
 
@@ -71,7 +71,7 @@ export async function getOrCreateStripeCustomer(
   email: string,
   clerkId: string,
   stripeCustomerId: string | null | undefined,
-  correlationId: CorrelationId
+  correlationId: CorrelationId,
 ): Promise<string> {
   try {
     // If user already has a Stripe customer ID, verify it exists
@@ -83,7 +83,7 @@ export async function getOrCreateStripeCustomer(
           return stripeCustomerId;
         }
       } catch (error) {
-        submitLogEvent('stripe', "Existing Stripe customer not found, creating new one", correlationId, { userId, stripeCustomerId });
+        submitLogEvent('stripe', 'Existing Stripe customer not found, creating new one', correlationId, { userId, stripeCustomerId });
       }
     }
 
@@ -108,7 +108,7 @@ export async function createCheckoutSession(
   stripeCustomerId: string | null | undefined,
   successUrl: string | undefined,
   cancelUrl: string | undefined,
-  correlationId: CorrelationId
+  correlationId: CorrelationId,
 ) {
   try {
     // Get or create Stripe customer
@@ -117,33 +117,33 @@ export async function createCheckoutSession(
       email,
       clerkId,
       stripeCustomerId,
-      correlationId
+      correlationId,
     );
 
     // Parse trial days from environment variable
-    const trialDays = process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS 
-      ? parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS, 10) 
+    const trialDays = process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS
+      ? parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS, 10)
       : 0;
-    
+
     const hasValidTrial = trialDays > 0 && !isNaN(trialDays);
 
     if (hasValidTrial) {
-      submitLogEvent('checkout', `Creating checkout session with ${trialDays} day free trial`, correlationId, { 
-        userId, 
-        priceId, 
-        trialDays 
+      submitLogEvent('checkout', `Creating checkout session with ${trialDays} day free trial`, correlationId, {
+        userId,
+        priceId,
+        trialDays,
       });
     }
 
     // Calculate trial end timestamp (current time + trial days + 5 minutes buffer)
     // The 5 minute buffer gives users time to complete the checkout process
-    const trialEnd = hasValidTrial 
+    const trialEnd = hasValidTrial
       ? Math.floor(Date.now() / 1000) + (trialDays * 24 * 60 * 60) + (5 * 60)
       : undefined;
 
     // Create checkout session with the customer
     const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
+      mode: 'subscription',
       customer: customerId,
       line_items: [
         {
@@ -188,11 +188,11 @@ export async function syncStripeDataToDatabase(customerId: string, correlationId
     // Verify customer exists in Stripe
     const customer = await stripe.customers.retrieve(customerId);
     if (!customer || customer.deleted) {
-      throw new Error("Customer not found in Stripe");
+      throw new Error('Customer not found in Stripe');
     }
 
     // Get user from database by Stripe customer ID
-    const user = await UserService.getUserByStripeCustomerId(customerId)
+    const user = await UserService.getUserByStripeCustomerId(customerId);
 
     if (!user) {
       throw new Error(`User not found for Stripe customer ${customerId}`);
@@ -202,8 +202,8 @@ export async function syncStripeDataToDatabase(customerId: string, correlationId
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       limit: 1,
-      status: "all",
-      expand: ["data.default_payment_method"],
+      status: 'all',
+      expand: ['data.default_payment_method'],
     });
 
     // No active subscriptions
@@ -213,7 +213,7 @@ export async function syncStripeDataToDatabase(customerId: string, correlationId
 
       submitLogEvent('subscription', `Updated user ${user.id} subscription status to false (no subscriptions)`, correlationId, { userId: user.id, customerId });
 
-      const subData = { status: "none" };
+      const subData = { status: 'none' };
       return subData;
     }
 
@@ -222,7 +222,7 @@ export async function syncStripeDataToDatabase(customerId: string, correlationId
 
     // Determine if user should be considered subscribed
     // Active statuses: active, trialing
-    const isSubscribed = subscription.status === "active" || subscription.status === "trialing";
+    const isSubscribed = subscription.status === 'active' || subscription.status === 'trialing';
 
     // Update user subscription status in database
     await UserService.updateSubscriptionStatus(user.id, isSubscribed);
@@ -239,7 +239,7 @@ export async function syncStripeDataToDatabase(customerId: string, correlationId
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
       paymentMethod:
         subscription.default_payment_method &&
-        typeof subscription.default_payment_method !== "string"
+        typeof subscription.default_payment_method !== 'string'
           ? {
               brand: subscription.default_payment_method.card?.brand ?? null,
               last4: subscription.default_payment_method.card?.last4 ?? null,
@@ -260,7 +260,7 @@ export async function syncStripeDataToDatabase(customerId: string, correlationId
 export async function createBillingPortalSession(
   customerId: string,
   returnUrl: string,
-  correlationId: CorrelationId
+  correlationId: CorrelationId,
 ): Promise<string> {
   try {
     const session = await stripe.billingPortal.sessions.create({
@@ -269,7 +269,7 @@ export async function createBillingPortalSession(
     });
 
     submitLogEvent('stripe', `Created billing portal session for customer ${customerId}`, correlationId, { customerId });
-    
+
     return session.url;
   } catch (error) {
     submitLogEvent('stripe', `Error creating billing portal session: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { customerId }, true);

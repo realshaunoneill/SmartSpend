@@ -1,9 +1,9 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Navigation } from "@/components/layout/navigation"
-import { Mail, ExternalLink, CreditCard, Clock, AlertCircle, HelpCircle, RefreshCcw, XCircle } from "lucide-react"
-import Link from "next/link"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Navigation } from '@/components/layout/navigation';
+import { Mail, ExternalLink, CreditCard, Clock, AlertCircle, HelpCircle, RefreshCcw, XCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function RefundPage() {
   return (
@@ -17,7 +17,7 @@ export default function RefundPage() {
               Learn about our refund process and subscription management
             </p>
           </div>
-          <Link 
+          <Link
             href="/support"
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
           >
@@ -120,7 +120,7 @@ export default function RefundPage() {
                 </ul>
               </div>
 
-              <Link 
+              <Link
                 href="/settings"
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
@@ -153,7 +153,7 @@ export default function RefundPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
-              <a 
+              <a
                 href="mailto:support@receiptwise.com?subject=Refund%20Request"
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
@@ -167,7 +167,7 @@ export default function RefundPage() {
                 <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
               </a>
 
-              <Link 
+              <Link
                 href="/support"
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
@@ -220,28 +220,28 @@ export default function RefundPage() {
               </p>
               <ul className="list-disc pl-4 space-y-2">
                 <li>
-                  <strong>7-Day Window:</strong> Refund requests must be submitted within 7 days of subscription 
+                  <strong>7-Day Window:</strong> Refund requests must be submitted within 7 days of subscription
                   purchase or renewal. Refunds will be pro-rated based on the unused portion of your subscription.
                 </li>
                 <li>
-                  <strong>Cancellation vs Refund:</strong> You can cancel your subscription at any time without 
+                  <strong>Cancellation vs Refund:</strong> You can cancel your subscription at any time without
                   requesting a refund. When you cancel, you'll continue to have access until your billing period ends.
                 </li>
                 <li>
-                  <strong>Technical Issues:</strong> If you experience problems preventing you from using the service, 
+                  <strong>Technical Issues:</strong> If you experience problems preventing you from using the service,
                   contact us immediately. We'll work to resolve the issue or process a refund if necessary.
                 </li>
                 <li>
-                  <strong>Processing Time:</strong> Approved refunds are processed within 5-7 business days through 
+                  <strong>Processing Time:</strong> Approved refunds are processed within 5-7 business days through
                   Stripe. The time for the refund to appear in your account depends on your bank or card issuer.
                 </li>
                 <li>
-                  <strong>Refund Method:</strong> Refunds are issued to the original payment method used for the 
+                  <strong>Refund Method:</strong> Refunds are issued to the original payment method used for the
                   subscription purchase.
                 </li>
               </ul>
               <p className="text-sm text-muted-foreground mt-4">
-                For any questions about our refund policy, please contact us at{" "}
+                For any questions about our refund policy, please contact us at{' '}
                 <a href="mailto:support@receiptwise.com" className="text-primary hover:underline">
                   support@receiptwise.com
                 </a>
@@ -251,5 +251,5 @@ export default function RefundPage() {
         </Card>
       </main>
     </>
-  )
+  );
 }

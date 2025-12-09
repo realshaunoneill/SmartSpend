@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { Badge } from "@/components/ui/badge"
-import { Receipt, Home, Calendar, Mail, Eye } from "lucide-react"
+import { Badge } from '@/components/ui/badge';
+import { Receipt, Home, Calendar, Mail, Eye } from 'lucide-react';
 
 interface ReceiptCardProps {
   receipt: {
@@ -27,14 +27,14 @@ export function ReceiptCard({ receipt, onOpenReceipt }: ReceiptCardProps) {
       <div className="space-y-1 flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <Receipt className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="font-medium break-all">{receipt.merchantName || "Unknown Merchant"}</span>
+          <span className="font-medium break-all">{receipt.merchantName || 'Unknown Merchant'}</span>
           <Badge
             variant={
-              receipt.processingStatus === "completed"
-                ? "default"
-                : receipt.processingStatus === "failed"
-                ? "destructive"
-                : "secondary"
+              receipt.processingStatus === 'completed'
+                ? 'default'
+                : receipt.processingStatus === 'failed'
+                ? 'destructive'
+                : 'secondary'
             }
             className="shrink-0"
           >
@@ -70,5 +70,5 @@ export function ReceiptCard({ receipt, onOpenReceipt }: ReceiptCardProps) {
         <Eye className="h-5 w-5 text-muted-foreground shrink-0" />
       </div>
     </div>
-  )
+  );
 }

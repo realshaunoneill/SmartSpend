@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import type React from "react"
+import type React from 'react';
 
-import { useState } from "react"
-import { UserPlus, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react';
+import { UserPlus, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -13,10 +13,10 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { inviteMember } from "@/lib/household-actions"
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { inviteMember } from '@/lib/household-actions';
 
 interface InviteMemberDialogProps {
   householdId: string
@@ -24,32 +24,32 @@ interface InviteMemberDialogProps {
 }
 
 export function InviteMemberDialog({ householdId, onMemberInvited }: InviteMemberDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [email, setEmail] = useState("")
-  const [isInviting, setIsInviting] = useState(false)
-  const [successMessage, setSuccessMessage] = useState("")
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [isInviting, setIsInviting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email.trim()) return
+    e.preventDefault();
+    if (!email.trim()) return;
 
-    setIsInviting(true)
-    setSuccessMessage("")
+    setIsInviting(true);
+    setSuccessMessage('');
     try {
-      await inviteMember({ householdId, email: email.trim() })
-      setSuccessMessage(`Invitation sent to ${email}. They will need to accept it to join.`)
-      setEmail("")
+      await inviteMember({ householdId, email: email.trim() });
+      setSuccessMessage(`Invitation sent to ${email}. They will need to accept it to join.`);
+      setEmail('');
       setTimeout(() => {
-        onMemberInvited()
-        setOpen(false)
-        setSuccessMessage("")
-      }, 2000)
+        onMemberInvited();
+        setOpen(false);
+        setSuccessMessage('');
+      }, 2000);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to send invitation")
+      alert(error instanceof Error ? error.message : 'Failed to send invitation');
     } finally {
-      setIsInviting(false)
+      setIsInviting(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -93,12 +93,12 @@ export function InviteMemberDialog({ householdId, onMemberInvited }: InviteMembe
                   Sending...
                 </>
               ) : (
-                "Send Invitation"
+                'Send Invitation'
               )}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

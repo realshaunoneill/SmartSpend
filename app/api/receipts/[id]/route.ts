@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedUser, requireReceiptAccess } from "@/lib/auth-helpers";
-import { CorrelationId, submitLogEvent } from "@/lib/logging";
-import { getReceiptById, deleteReceipt } from "@/lib/receipt-scanner";
-import { db } from "@/lib/db";
-import { receipts } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { randomUUID } from "crypto";
-import { invalidateInsightsCache } from "@/lib/utils/cache-helpers";
+import { type NextRequest, NextResponse } from 'next/server';
+import { getAuthenticatedUser, requireReceiptAccess } from '@/lib/auth-helpers';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { getReceiptById, deleteReceipt } from '@/lib/receipt-scanner';
+import { db } from '@/lib/db';
+import { receipts } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
+import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
@@ -24,8 +24,8 @@ export async function GET(
 
     if (!receipt) {
       return NextResponse.json(
-        { error: "Receipt not found" },
-        { status: 404 }
+        { error: 'Receipt not found' },
+        { status: 404 },
       );
     }
 
@@ -35,21 +35,21 @@ export async function GET(
 
     return NextResponse.json(receipt);
   } catch (error) {
-    console.error("Error fetching receipt:", error);
-    
+    console.error('Error fetching receipt:', error);
+
     submitLogEvent(
-      "receipt-error",
-      "Failed to fetch receipt",
+      'receipt-error',
+      'Failed to fetch receipt',
       correlationId,
       {
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
-      true
+      true,
     );
 
     return NextResponse.json(
-      { error: "Failed to fetch receipt" },
-      { status: 500 }
+      { error: 'Failed to fetch receipt' },
+      { status: 500 },
     );
   }
 }
@@ -57,7 +57,7 @@ export async function GET(
 // PATCH /api/receipts/[id] - Update receipt (e.g., business expense fields)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
@@ -71,16 +71,16 @@ export async function PATCH(
 
     if (!receipt) {
       return NextResponse.json(
-        { error: "Receipt not found" },
-        { status: 404 }
+        { error: 'Receipt not found' },
+        { status: 404 },
       );
     }
 
     // Only receipt owner can update business expense fields
     if (receipt.userId !== user.id) {
       return NextResponse.json(
-        { error: "Unauthorized - only receipt owner can update this receipt" },
-        { status: 403 }
+        { error: 'Unauthorized - only receipt owner can update this receipt' },
+        { status: 403 },
       );
     }
 
@@ -94,7 +94,7 @@ export async function PATCH(
 
     // Build update object
     const updates: Partial<typeof receipts.$inferInsert> = {};
-    
+
     if (isBusinessExpense !== undefined) updates.isBusinessExpense = isBusinessExpense;
     if (businessCategory !== undefined) updates.businessCategory = businessCategory;
     if (businessNotes !== undefined) updates.businessNotes = businessNotes;
@@ -107,36 +107,36 @@ export async function PATCH(
       .returning();
 
     submitLogEvent(
-      "receipt",
+      'receipt',
       `Updated receipt ${receiptId}`,
       correlationId,
-      { receiptId, updates }
+      { receiptId, updates },
     );
 
     return NextResponse.json(updatedReceipt);
   } catch (error) {
-    console.error("Error updating receipt:", error);
-    
+    console.error('Error updating receipt:', error);
+
     submitLogEvent(
-      "receipt-error",
-      "Failed to update receipt",
+      'receipt-error',
+      'Failed to update receipt',
       correlationId,
       {
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
-      true
+      true,
     );
 
     return NextResponse.json(
-      { error: "Failed to update receipt" },
-      { status: 500 }
+      { error: 'Failed to update receipt' },
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
@@ -152,8 +152,8 @@ export async function DELETE(
 
     if (!receipt) {
       return NextResponse.json(
-        { error: "Receipt not found" },
-        { status: 404 }
+        { error: 'Receipt not found' },
+        { status: 404 },
       );
     }
 
@@ -166,15 +166,15 @@ export async function DELETE(
 
     if (!deleted) {
       return NextResponse.json(
-        { error: "Failed to delete receipt" },
-        { status: 500 }
+        { error: 'Failed to delete receipt' },
+        { status: 500 },
       );
     }
 
     // Log the deletion
     submitLogEvent(
-      "receipt",
-      "Receipt soft deleted",
+      'receipt',
+      'Receipt soft deleted',
       correlationId,
       {
         receiptId,
@@ -183,7 +183,7 @@ export async function DELETE(
         totalAmount: receipt.totalAmount,
         deletedByAdmin: user.isAdmin && receipt.userId !== user.id,
         receiptOwnerId: receipt.userId,
-      }
+      },
     );
 
     // Invalidate insights cache for this user
@@ -191,28 +191,28 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: "Receipt deleted successfully",
+      message: 'Receipt deleted successfully',
     });
   } catch (error) {
-    console.error("Error deleting receipt:", error);
+    console.error('Error deleting receipt:', error);
 
     // Get receiptId from params for error logging
     const { id: receiptId } = await params;
-    
+
     submitLogEvent(
-      "receipt-error",
-      "Failed to delete receipt",
+      'receipt-error',
+      'Failed to delete receipt',
       correlationId,
       {
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error',
         receiptId,
       },
-      true // alert on error
+      true, // alert on error
     );
 
     return NextResponse.json(
-      { error: "Failed to delete receipt" },
-      { status: 500 }
+      { error: 'Failed to delete receipt' },
+      { status: 500 },
     );
   }
 }

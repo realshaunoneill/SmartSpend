@@ -153,7 +153,7 @@ export function CreateSubscriptionDialog() {
             variant: 'destructive',
           });
         },
-      }
+      },
     );
   };
 

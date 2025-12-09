@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { receipts, receiptItems, insightsCache } from "@/lib/db/schema";
-import { getAuthenticatedUser, requireSubscription, requireHouseholdMembership } from "@/lib/auth-helpers";
-import { eq, and, gte, sql, desc } from "drizzle-orm";
-import { CorrelationId, submitLogEvent } from "@/lib/logging";
-import { randomUUID } from "crypto";
+import { type NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { receipts, receiptItems, insightsCache } from '@/lib/db/schema';
+import { getAuthenticatedUser, requireSubscription, requireHouseholdMembership } from '@/lib/auth-helpers';
+import { eq, and, gte, sql, desc } from 'drizzle-orm';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { randomUUID } from 'crypto';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 
 /**
  * GET /api/receipts/items/top
@@ -29,10 +29,10 @@ export async function GET(request: NextRequest) {
     if (subCheck) return subCheck;
 
     const { searchParams } = new URL(request.url);
-    const householdId = searchParams.get("householdId");
-    const months = parseInt(searchParams.get("months") || "12");
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const sortBy = searchParams.get("sortBy") || "frequency";
+    const householdId = searchParams.get('householdId');
+    const months = parseInt(searchParams.get('months') || '12');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const sortBy = searchParams.get('sortBy') || 'frequency';
 
     // If householdId is provided, verify user is a member
     if (householdId) {
@@ -52,13 +52,13 @@ export async function GET(request: NextRequest) {
           eq(insightsCache.userId, user.id),
           eq(insightsCache.cacheType, 'top_items'),
           eq(insightsCache.cacheKey, cacheKey),
-          gte(insightsCache.expiresAt, new Date())
-        )
+          gte(insightsCache.expiresAt, new Date()),
+        ),
       )
       .limit(1);
 
     if (cachedResult.length > 0) {
-      submitLogEvent('receipt', "Returning cached top items", correlationId, {
+      submitLogEvent('receipt', 'Returning cached top items', correlationId, {
         userId: user.id,
         householdId,
         months,
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - months);
 
-    submitLogEvent('receipt', "Fetching top items", correlationId, {
+    submitLogEvent('receipt', 'Fetching top items', correlationId, {
       userId: user.id,
       householdId,
       months,
@@ -98,11 +98,11 @@ export async function GET(request: NextRequest) {
           eq(receipts.userId, user.id),
           gte(
             sql`TO_DATE(${receipts.transactionDate}, 'YYYY-MM-DD')`,
-            startDate.toISOString().split('T')[0]
+            startDate.toISOString().split('T')[0],
           ),
           sql`${receipts.deletedAt} IS NULL`,
-          householdId ? eq(receipts.householdId, householdId) : undefined
-        )
+          householdId ? eq(receipts.householdId, householdId) : undefined,
+        ),
       )
       .orderBy(desc(receipts.transactionDate));
 
@@ -120,12 +120,12 @@ export async function GET(request: NextRequest) {
     }>();
 
     items.forEach((item) => {
-      const price = parseFloat(item.totalPrice || item.unitPrice || "0");
-      const qty = parseFloat(item.quantity || "1");
-      
+      const price = parseFloat(item.totalPrice || item.unitPrice || '0');
+      const qty = parseFloat(item.quantity || '1');
+
       // Normalize item name (case-insensitive grouping)
       const normalizedName = item.itemName.toLowerCase().trim();
-      
+
       if (!itemMap.has(normalizedName)) {
         itemMap.set(normalizedName, {
           name: item.itemName, // Keep original casing
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
           category: item.category,
           merchants: new Set(),
           lastPurchased: item.transactionDate || new Date().toISOString().split('T')[0],
-          currency: item.currency || "USD",
+          currency: item.currency || 'USD',
         });
       }
 
@@ -144,8 +144,8 @@ export async function GET(request: NextRequest) {
       itemData.count += 1;
       itemData.totalSpent += price;
       itemData.totalQuantity += qty;
-      itemData.merchants.add(item.merchantName || "Unknown");
-      
+      itemData.merchants.add(item.merchantName || 'Unknown');
+
       // Update last purchased if more recent
       if (item.transactionDate && item.transactionDate > itemData.lastPurchased) {
         itemData.lastPurchased = item.transactionDate;
@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
 
     // Sort based on preference
     const sortedItems = itemsArray.sort((a, b) => {
-      if (sortBy === "spending") {
+      if (sortBy === 'spending') {
         return b.totalSpent - a.totalSpent;
       }
       return b.count - a.count; // Default: frequency
@@ -182,7 +182,7 @@ export async function GET(request: NextRequest) {
     const totalPurchases = itemsArray.reduce((sum, item) => sum + item.count, 0);
     const totalSpent = itemsArray.reduce((sum, item) => sum + item.totalSpent, 0);
 
-    submitLogEvent('receipt', "Top items fetched successfully", correlationId, {
+    submitLogEvent('receipt', 'Top items fetched successfully', correlationId, {
       userId: user.id,
       uniqueItems: totalUniqueItems,
       totalPurchases,
@@ -194,7 +194,7 @@ export async function GET(request: NextRequest) {
         totalUniqueItems,
         totalPurchases,
         totalSpent: parseFloat(totalSpent.toFixed(2)),
-        currency: topItems[0]?.currency || "USD",
+        currency: topItems[0]?.currency || 'USD',
         period: {
           startDate: startDate.toISOString().split('T')[0],
           endDate: new Date().toISOString().split('T')[0],
@@ -236,8 +236,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     submitLogEvent('receipt-error', `Error fetching top items: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
-      { error: "Failed to fetch top items" },
-      { status: 500 }
+      { error: 'Failed to fetch top items' },
+      { status: 500 },
     );
   }
 }

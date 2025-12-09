@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Subscription, SubscriptionPayment } from '@/lib/db/schema';
+import { type Subscription, type SubscriptionPayment } from '@/lib/db/schema';
 
 type SubscriptionWithPayments = Subscription & {
   missingPayments?: number;
@@ -54,7 +54,7 @@ type UpdatePaymentData = {
 export function useSubscriptions(
   householdId?: string,
   status?: string,
-  includePayments = false
+  includePayments = false,
 ) {
   return useQuery<SubscriptionWithPayments[]>({
     queryKey: ['subscriptions', householdId, status, includePayments],

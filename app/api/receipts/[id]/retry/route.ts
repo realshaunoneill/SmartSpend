@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { receipts, receiptItems } from "@/lib/db/schema";
-import { getAuthenticatedUser } from "@/lib/auth-helpers";
-import { analyzeReceiptWithGPT4o } from "@/lib/openai";
-import { CorrelationId, submitLogEvent } from "@/lib/logging";
-import { eq, and, isNull } from "drizzle-orm";
-import { randomUUID } from "crypto";
-import { invalidateInsightsCache } from "@/lib/utils/cache-helpers";
+import { type NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { receipts, receiptItems } from '@/lib/db/schema';
+import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { analyzeReceiptWithGPT4o } from '@/lib/openai';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { eq, and, isNull } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
+import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 /**
@@ -17,7 +17,7 @@ export const maxDuration = 60;
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
@@ -35,31 +35,31 @@ export async function POST(
         and(
           eq(receipts.id, receiptId),
           eq(receipts.userId, user.id),
-          isNull(receipts.deletedAt)
-        )
+          isNull(receipts.deletedAt),
+        ),
       )
       .limit(1);
 
     if (!receipt) {
-      return NextResponse.json({ error: "Receipt not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Receipt not found' }, { status: 404 });
     }
 
-    if (receipt.processingStatus === "completed") {
-      return NextResponse.json({ error: "Receipt already processed" }, { status: 400 });
+    if (receipt.processingStatus === 'completed') {
+      return NextResponse.json({ error: 'Receipt already processed' }, { status: 400 });
     }
 
-    submitLogEvent('receipt', "Retrying receipt processing", correlationId, { 
-      receiptId: receipt.id, 
-      userId: user.id 
+    submitLogEvent('receipt', 'Retrying receipt processing', correlationId, {
+      receiptId: receipt.id,
+      userId: user.id,
     });
 
     // Update status to processing
     await db
       .update(receipts)
-      .set({ 
+      .set({
         processingStatus: 'processing',
         processingError: null,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(receipts.id, receiptId));
 
@@ -76,18 +76,18 @@ export async function POST(
         .set({
           processingStatus: 'failed',
           processingError: error instanceof Error ? error.message : 'Unknown error',
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(receipts.id, receiptId));
 
-      submitLogEvent('receipt-error', `Receipt retry failed: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { 
+      submitLogEvent('receipt-error', `Receipt retry failed: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {
         receiptId: receipt.id,
-        error: error instanceof Error ? error.stack : undefined 
+        error: error instanceof Error ? error.stack : undefined,
       }, true);
 
       return NextResponse.json(
         {
-          error: "Failed to process receipt",
+          error: 'Failed to process receipt',
           message: error instanceof Error ? error.message : 'Unknown error',
         },
         { status: 500 },
@@ -130,7 +130,7 @@ export async function POST(
           deliveryFee: ocrData.deliveryFee,
           packagingFee: ocrData.packagingFee,
         },
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(receipts.id, receiptId))
       .returning();
@@ -144,7 +144,7 @@ export async function POST(
         const quantity = item.quantity || 1;
         const totalPrice = item.price || 0;
         const unitPrice = quantity > 0 ? totalPrice / quantity : totalPrice;
-        
+
         return {
           receiptId: receiptId,
           name: item.name || 'Unknown Item',
@@ -163,9 +163,9 @@ export async function POST(
       }
     }
 
-    submitLogEvent('receipt', "Receipt retry successful", correlationId, { 
-      receiptId: receipt.id, 
-      userId: user.id 
+    submitLogEvent('receipt', 'Receipt retry successful', correlationId, {
+      receiptId: receipt.id,
+      userId: user.id,
     });
 
     // Invalidate insights cache since receipt data changed
@@ -176,10 +176,10 @@ export async function POST(
       receipt: updatedReceipt,
     });
   } catch (error) {
-    submitLogEvent('receipt-error', `Receipt retry error: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { 
-      error: error instanceof Error ? error.stack : undefined 
+    submitLogEvent('receipt-error', `Receipt retry error: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {
+      error: error instanceof Error ? error.stack : undefined,
     }, true);
-    
+
     return NextResponse.json(
       {
         error: (error as Error).message,

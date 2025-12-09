@@ -1,16 +1,16 @@
 'use server';
-import { Suspense } from "react";
-import { randomUUID } from "crypto";
-import { syncStripeDataToDatabase } from "@/lib/stripe";
-import { getAuthenticatedUser } from "@/lib/auth-helpers";
-import Stripe from "stripe";
-import SuccessContent from "./content";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CorrelationId } from "@/lib/logging";
-import { redirect } from "next/navigation";
+import { Suspense } from 'react';
+import { randomUUID } from 'crypto';
+import { syncStripeDataToDatabase } from '@/lib/stripe';
+import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import Stripe from 'stripe';
+import SuccessContent from './content';
+import { Skeleton } from '@/components/ui/skeleton';
+import { type CorrelationId } from '@/lib/logging';
+import { redirect } from 'next/navigation';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2025-11-17.clover",
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2025-11-17.clover',
 });
 
 interface SuccessPageProps {
@@ -34,10 +34,10 @@ export default async function Success({ searchParams }: SuccessPageProps) {
   if (sessionId) {
     // Retrieve the session
     session = await stripe.checkout.sessions.retrieve(sessionId);
-    
+
     // Get the customer ID from the session
-    const customerId = typeof session.customer === 'string' 
-      ? session.customer 
+    const customerId = typeof session.customer === 'string'
+      ? session.customer
       : session.customer?.id;
 
     if (customerId) {
@@ -64,13 +64,13 @@ export default async function Success({ searchParams }: SuccessPageProps) {
                   </div>
                 </div>
               </div>
-              
+
               {/* Loading text */}
               <div className="text-center space-y-2">
                 <Skeleton className="h-8 w-48 mx-auto" />
                 <Skeleton className="h-4 w-64 mx-auto" />
               </div>
-              
+
               {/* Payment details skeleton */}
               <div className="space-y-3 pt-4">
                 <div className="flex justify-between items-center">

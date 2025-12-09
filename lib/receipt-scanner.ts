@@ -1,8 +1,8 @@
-"use server"
+'use server';
 
-import { db } from "@/lib/db";
-import { receipts, receiptItems, users } from "@/lib/db/schema";
-import { eq, desc, asc, count, isNull, and, or, gte, lte, ilike, sql } from "drizzle-orm";
+import { db } from '@/lib/db';
+import { receipts, receiptItems, users } from '@/lib/db/schema';
+import { eq, desc, asc, count, isNull, and, or, gte, lte, ilike, sql } from 'drizzle-orm';
 
 export interface GetReceiptsOptions {
   userId: string;
@@ -53,8 +53,8 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
     maxAmount,
     startDate,
     endDate,
-    sortBy = "date",
-    sortOrder = "desc",
+    sortBy = 'date',
+    sortOrder = 'desc',
   } = options;
 
   const offset = (page - 1) * limit;
@@ -79,8 +79,8 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
       or(
         ilike(receipts.merchantName, `%${search}%`),
         ilike(receipts.category, `%${search}%`),
-        sql`${receipts.id} IN ${itemSubquery}`
-      )
+        sql`${receipts.id} IN ${itemSubquery}`,
+      ),
     );
   }
 
@@ -113,18 +113,18 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
   // Determine sort field and order
   let sortField;
   switch (sortBy) {
-    case "amount":
+    case 'amount':
       sortField = sql`CAST(${receipts.totalAmount} AS DECIMAL)`;
       break;
-    case "merchant":
+    case 'merchant':
       sortField = receipts.merchantName;
       break;
-    case "date":
+    case 'date':
     default:
       sortField = receipts.transactionDate || receipts.createdAt;
       break;
   }
-  const orderFn = sortOrder === "asc" ? asc : desc;
+  const orderFn = sortOrder === 'asc' ? asc : desc;
 
   let userReceipts;
   let totalCount;
@@ -134,7 +134,7 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
     const conditions = and(
       eq(receipts.householdId, householdId),
       ...baseConditions,
-      ...filterConditions
+      ...filterConditions,
     );
 
     userReceipts = await db
@@ -156,7 +156,7 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
       eq(receipts.userId, userId),
       isNull(receipts.householdId),
       ...baseConditions,
-      ...filterConditions
+      ...filterConditions,
     );
 
     userReceipts = await db
@@ -177,7 +177,7 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
     const conditions = and(
       eq(receipts.userId, userId),
       ...baseConditions,
-      ...filterConditions
+      ...filterConditions,
     );
 
     userReceipts = await db
@@ -215,9 +215,9 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
       return {
         ...receipt,
         items,
-        submittedBy: receiptUser?.email || "Unknown",
+        submittedBy: receiptUser?.email || 'Unknown',
       };
-    })
+    }),
   );
 
   return {

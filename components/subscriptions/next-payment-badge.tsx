@@ -16,7 +16,7 @@ export function NextPaymentBadge({ nextBillingDate, amount, currency = 'EUR' }: 
   const now = new Date();
   const billingDate = new Date(nextBillingDate);
   const daysUntil = differenceInDays(billingDate, now);
-  
+
   // Don't show if billing date is in the past
   if (daysUntil < 0) return null;
 

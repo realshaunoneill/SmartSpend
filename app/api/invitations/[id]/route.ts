@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { householdUsers, householdInvitations } from "@/lib/db/schema";
-import { getAuthenticatedUser } from "@/lib/auth-helpers";
-import { eq, and } from "drizzle-orm";
-import { CorrelationId, submitLogEvent } from "@/lib/logging";
-import { randomUUID } from "crypto";
+import { type NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { householdUsers, householdInvitations } from '@/lib/db/schema';
+import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { eq, and } from 'drizzle-orm';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { randomUUID } from 'crypto';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 
 // Accept or decline invitation
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   try {
@@ -22,10 +22,10 @@ export async function PATCH(
     const { id: invitationId } = await params;
     const { action } = await req.json(); // 'accept' or 'decline'
 
-    if (!["accept", "decline"].includes(action)) {
+    if (!['accept', 'decline'].includes(action)) {
       return NextResponse.json(
         { error: "Invalid action. Must be 'accept' or 'decline'" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,15 +37,15 @@ export async function PATCH(
         and(
           eq(householdInvitations.id, invitationId),
           eq(householdInvitations.invitedEmail, user.email),
-          eq(householdInvitations.status, "pending")
-        )
+          eq(householdInvitations.status, 'pending'),
+        ),
       )
       .limit(1);
 
     if (!invitation) {
       return NextResponse.json(
-        { error: "Invitation not found or already processed" },
-        { status: 404 }
+        { error: 'Invitation not found or already processed' },
+        { status: 404 },
       );
     }
 
@@ -53,16 +53,16 @@ export async function PATCH(
     if (new Date(invitation.expiresAt) < new Date()) {
       await db
         .update(householdInvitations)
-        .set({ status: "expired", updatedAt: new Date() })
+        .set({ status: 'expired', updatedAt: new Date() })
         .where(eq(householdInvitations.id, invitationId));
 
       return NextResponse.json(
-        { error: "Invitation has expired" },
-        { status: 400 }
+        { error: 'Invitation has expired' },
+        { status: 400 },
       );
     }
 
-    if (action === "accept") {
+    if (action === 'accept') {
       // Check if user is already a member
       const [existingMembership] = await db
         .select()
@@ -70,15 +70,15 @@ export async function PATCH(
         .where(
           and(
             eq(householdUsers.householdId, invitation.householdId),
-            eq(householdUsers.userId, user.id)
-          )
+            eq(householdUsers.userId, user.id),
+          ),
         )
         .limit(1);
 
       if (existingMembership) {
         return NextResponse.json(
-          { error: "Already a member of this household" },
-          { status: 400 }
+          { error: 'Already a member of this household' },
+          { status: 400 },
         );
       }
 
@@ -86,35 +86,35 @@ export async function PATCH(
       await db.insert(householdUsers).values({
         householdId: invitation.householdId,
         userId: user.id,
-        role: "member",
+        role: 'member',
       });
 
       // Update invitation status
       await db
         .update(householdInvitations)
-        .set({ status: "accepted", updatedAt: new Date() })
+        .set({ status: 'accepted', updatedAt: new Date() })
         .where(eq(householdInvitations.id, invitationId));
 
       return NextResponse.json({
-        message: "Invitation accepted successfully",
+        message: 'Invitation accepted successfully',
         householdId: invitation.householdId,
       });
     } else {
       // Decline invitation
       await db
         .update(householdInvitations)
-        .set({ status: "declined", updatedAt: new Date() })
+        .set({ status: 'declined', updatedAt: new Date() })
         .where(eq(householdInvitations.id, invitationId));
 
       return NextResponse.json({
-        message: "Invitation declined",
+        message: 'Invitation declined',
       });
     }
   } catch (error) {
     submitLogEvent('invitation', `Error processing invitation: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
-      { error: "Failed to process invitation" },
-      { status: 500 }
+      { error: 'Failed to process invitation' },
+      { status: 500 },
     );
   }
 }

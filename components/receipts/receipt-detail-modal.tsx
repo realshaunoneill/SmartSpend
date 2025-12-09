@@ -1,22 +1,22 @@
-"use client"
+'use client';
 
-import { X } from "lucide-react"
-import { Dialog, DialogContent, DialogTitle, DialogOverlay, DialogPortal } from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
-import { ItemAnalysisDialog } from "@/components/insights/item-analysis-dialog"
-import { SubscriptionUpsell } from "@/components/subscriptions/subscription-upsell"
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
-import { useQuery } from "@tanstack/react-query"
-import { useState } from "react"
-import { useUser } from "@/lib/hooks/use-user"
-import { ReceiptHeader } from "./detail-modal/receipt-header"
-import { ReceiptBusinessDetails } from "./detail-modal/receipt-business-details"
-import { ReceiptServiceDetails } from "./detail-modal/receipt-service-details"
-import { ReceiptLoyaltyDetails } from "./detail-modal/receipt-loyalty-details"
-import { ReceiptItemsList } from "./detail-modal/receipt-items-list"
-import { ReceiptFinancialBreakdown } from "./detail-modal/receipt-financial-breakdown"
-import { ReceiptImage } from "./detail-modal/receipt-image"
-import { LinkedSubscription } from "./detail-modal/linked-subscription"
+import { X } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, DialogOverlay, DialogPortal } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import { ItemAnalysisDialog } from '@/components/insights/item-analysis-dialog';
+import { SubscriptionUpsell } from '@/components/subscriptions/subscription-upsell';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useUser } from '@/lib/hooks/use-user';
+import { ReceiptHeader } from './detail-modal/receipt-header';
+import { ReceiptBusinessDetails } from './detail-modal/receipt-business-details';
+import { ReceiptServiceDetails } from './detail-modal/receipt-service-details';
+import { ReceiptLoyaltyDetails } from './detail-modal/receipt-loyalty-details';
+import { ReceiptItemsList } from './detail-modal/receipt-items-list';
+import { ReceiptFinancialBreakdown } from './detail-modal/receipt-financial-breakdown';
+import { ReceiptImage } from './detail-modal/receipt-image';
+import { LinkedSubscription } from './detail-modal/linked-subscription';
 
 interface ReceiptDetailModalProps {
   receipt: any
@@ -34,10 +34,10 @@ export function ReceiptDetailModal({
 
   // Fetch household name and user's role if receipt is assigned to one
   const { data: household } = useQuery({
-    queryKey: ["household", receipt?.householdId],
+    queryKey: ['household', receipt?.householdId],
     queryFn: async () => {
       if (!receipt?.householdId) return null;
-      
+
       const response = await fetch(`/api/households/${receipt.householdId}`);
       if (!response.ok) return null;
       return response.json();
@@ -53,27 +53,27 @@ export function ReceiptDetailModal({
     // User is the owner
     receipt.userId === currentUser.id ||
     // Or user is household admin (for removing from household only)
-    (receipt.householdId && household?.members?.some((m: any) => 
-      m.userId === currentUser.id && m.role === 'owner'
+    (receipt.householdId && household?.members?.some((m: any) =>
+      m.userId === currentUser.id && m.role === 'owner',
     ))
   );
 
   // Check if user is the receipt owner
   const isReceiptOwner = currentUser && receipt && receipt.userId === currentUser.id;
-  
+
   // Check subscription status
   const isSubscribed = currentUser?.subscribed === true;
-  
+
   // Check if we're still loading permissions
   const isLoadingPermissions = isLoadingUser || (receipt?.householdId && !household && open);
 
-  if (!receipt) return null
+  if (!receipt) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal>
         <DialogOverlay className="backdrop-blur-sm bg-black/60" />
-        <DialogContent 
+        <DialogContent
           className="p-0 gap-0 h-[95vh] max-h-[95vh] md:h-[95vh]"
           style={{
             width: '95vw',
@@ -118,7 +118,7 @@ export function ReceiptDetailModal({
               {/* Scrollable Content Section - All details and items */}
               <div className="flex-1 md:overflow-y-auto px-4 py-3 space-y-3 sm:px-6 sm:py-4 sm:space-y-4\">
                 <LinkedSubscription receiptId={receipt.id} />
-                
+
                 <ReceiptBusinessDetails ocrData={receipt.ocrData} />
 
                 {!isSubscribed && (
@@ -126,10 +126,10 @@ export function ReceiptDetailModal({
                     title="Upgrade to Premium"
                     description="Subscribe to unlock detailed receipt information including:"
                     features={[
-                      "Itemized purchase details",
-                      "Service information (table, server, etc.)",
-                      "Loyalty program details",
-                      "Item spending analysis"
+                      'Itemized purchase details',
+                      'Service information (table, server, etc.)',
+                      'Loyalty program details',
+                      'Item spending analysis',
                     ]}
                   />
                 )}
@@ -150,8 +150,8 @@ export function ReceiptDetailModal({
                       items={receipt.items}
                       currency={receipt.currency}
                       onAnalyzeItem={(itemName) => {
-                        setSelectedItemForAnalysis(itemName)
-                        setShowItemAnalysis(true)
+                        setSelectedItemForAnalysis(itemName);
+                        setShowItemAnalysis(true);
                       }}
                     />
                   </>
@@ -182,5 +182,5 @@ export function ReceiptDetailModal({
         />
       )}
     </Dialog>
-  )
+  );
 }

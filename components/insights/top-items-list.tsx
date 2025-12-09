@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useTopItems } from "@/hooks/use-top-items";
-import { Loader2, TrendingUp, ShoppingBag, Store, Calendar } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { ItemAnalysisDialog } from "@/components/insights/item-analysis-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useTopItems } from '@/hooks/use-top-items';
+import { Loader2, TrendingUp, ShoppingBag, Store, Calendar } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ItemAnalysisDialog } from '@/components/insights/item-analysis-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface TopItemsListProps {
   householdId?: string;
@@ -16,7 +16,7 @@ interface TopItemsListProps {
 
 export function TopItemsList({ householdId, autoLoad = false }: TopItemsListProps) {
   const [months, setMonths] = useState(12);
-  const [sortBy, setSortBy] = useState<"frequency" | "spending">("frequency");
+  const [sortBy, setSortBy] = useState<'frequency' | 'spending'>('frequency');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
 
@@ -64,7 +64,7 @@ export function TopItemsList({ householdId, autoLoad = false }: TopItemsListProp
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    "Load Items"
+                    'Load Items'
                   )}
                 </Button>
               )}
@@ -80,7 +80,7 @@ export function TopItemsList({ householdId, autoLoad = false }: TopItemsListProp
 
           {error && (
             <div className="rounded-lg bg-destructive/10 p-4 text-destructive">
-              {error.message || "An error occurred"}
+              {error.message || 'An error occurred'}
             </div>
           )}
 
@@ -107,7 +107,7 @@ export function TopItemsList({ householdId, autoLoad = false }: TopItemsListProp
               {/* Sort Tabs */}
               <Tabs
                 value={sortBy}
-                onValueChange={(value) => setSortBy(value as "frequency" | "spending")}
+                onValueChange={(value) => setSortBy(value as 'frequency' | 'spending')}
               >
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="frequency">Most Frequent</TabsTrigger>

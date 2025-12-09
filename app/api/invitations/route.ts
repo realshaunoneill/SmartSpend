@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { households, householdUsers, householdInvitations } from "@/lib/db/schema";
-import { getAuthenticatedUser } from "@/lib/auth-helpers";
-import { eq, and } from "drizzle-orm";
-import { CorrelationId, submitLogEvent } from "@/lib/logging";
-import { randomUUID } from "crypto";
+import { type NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { households, householdUsers, householdInvitations } from '@/lib/db/schema';
+import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { eq, and } from 'drizzle-orm';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { randomUUID } from 'crypto';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 
 // Get user's pending invitations
 export async function GET(req: NextRequest) {
@@ -33,21 +33,21 @@ export async function GET(req: NextRequest) {
       .where(
         and(
           eq(householdInvitations.invitedEmail, user.email),
-          eq(householdInvitations.status, "pending")
-        )
+          eq(householdInvitations.status, 'pending'),
+        ),
       );
 
     // Filter out expired invitations
     const validInvitations = invitations.filter(
-      (inv) => new Date(inv.expiresAt) > new Date()
+      (inv) => new Date(inv.expiresAt) > new Date(),
     );
 
     return NextResponse.json(validInvitations);
   } catch (error) {
     submitLogEvent('invitation', `Error fetching invitations: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
-      { error: "Failed to fetch invitations" },
-      { status: 500 }
+      { error: 'Failed to fetch invitations' },
+      { status: 500 },
     );
   }
 }

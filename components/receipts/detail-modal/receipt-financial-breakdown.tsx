@@ -1,16 +1,16 @@
-"use client"
+'use client';
 
-import { CreditCard } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
+import { CreditCard } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface ReceiptFinancialBreakdownProps {
   receipt: any
 }
 
 export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdownProps) {
-  const hasCharges = (receipt.tax > 0) || (receipt.serviceCharge > 0) || (receipt.ocrData?.tips > 0) || (receipt.ocrData?.deliveryFee > 0) || (receipt.ocrData?.packagingFee > 0)
-  const hasDiscount = receipt.ocrData?.discount > 0
-  const hasDetails = receipt.subtotal || hasCharges || hasDiscount
+  const hasCharges = (receipt.tax > 0) || (receipt.serviceCharge > 0) || (receipt.ocrData?.tips > 0) || (receipt.ocrData?.deliveryFee > 0) || (receipt.ocrData?.packagingFee > 0);
+  const hasDiscount = receipt.ocrData?.discount > 0;
+  const hasDetails = receipt.subtotal || hasCharges || hasDiscount;
 
   return (
     <div className="bg-background p-4 space-y-3 shrink-0">
@@ -18,7 +18,7 @@ export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdown
         <CreditCard className="h-3.5 w-3.5" />
         Financial Breakdown
       </div>
-      
+
       {/* Only show detailed breakdown if there are details */}
       {hasDetails && (
         <div className="space-y-2 p-3 rounded-lg bg-muted/30">
@@ -109,5 +109,5 @@ export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdown
         </div>
       </div>
     </div>
-  )
+  );
 }
