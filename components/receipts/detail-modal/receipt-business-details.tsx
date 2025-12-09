@@ -1,9 +1,10 @@
 'use client';
 
 import { Building2, Phone, Globe, Hash, ExternalLink } from 'lucide-react';
+import type { OCRData } from '@/lib/types/api-responses';
 
 interface ReceiptBusinessDetailsProps {
-  ocrData: any
+  ocrData: OCRData | null;
 }
 
 export function ReceiptBusinessDetails({ ocrData }: ReceiptBusinessDetailsProps) {

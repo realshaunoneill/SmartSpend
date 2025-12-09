@@ -2,6 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Receipt, Home, Calendar, CreditCard, Mail, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import type { ReceiptWithItems } from '@/lib/types/api-responses';
 
 interface UserCardProps {
   user: {
@@ -16,7 +17,7 @@ interface UserCardProps {
   }
   isExpanded: boolean
   onToggle: () => void
-  userReceipts?: any[]
+  userReceipts?: ReceiptWithItems[]
   onOpenReceipt: (receiptId: string) => void
 }
 
@@ -74,7 +75,7 @@ export function UserCard({ user, isExpanded, onToggle, userReceipts, onOpenRecei
           {userReceipts ? (
             userReceipts.length > 0 ? (
               <div className="space-y-2">
-                {userReceipts.map((receipt: any) => (
+                {userReceipts.map(receipt => (
                   <div
                     key={receipt.id}
                     className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-md bg-background p-3 hover:bg-muted/50 cursor-pointer transition-colors"

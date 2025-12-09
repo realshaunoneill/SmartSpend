@@ -12,8 +12,10 @@ import { SubscriptionList } from '@/components/subscriptions/subscription-list';
 import { NextSubscriptionCard } from '@/components/subscriptions/next-subscription-card';
 import { Loader2 } from 'lucide-react';
 
+type Status = 'active' | 'paused' | 'cancelled' | undefined;
+
 function SubscriptionsPageContent() {
-  const [statusFilter, setStatusFilter] = useState<'active' | 'paused' | 'cancelled' | undefined>('active');
+  const [statusFilter, setStatusFilter] = useState<Status>('active');
   const { data: subscriptions, isLoading } = useSubscriptions(undefined, statusFilter, true);
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);
   const searchParams = useSearchParams();
@@ -87,7 +89,7 @@ function SubscriptionsPageContent() {
       )}
 
       {/* Tabs */}
-      <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)} className="w-full">
+      <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as Status)} className="w-full">
         <TabsList className="grid w-full md:w-auto grid-cols-3">
           <TabsTrigger value="active">Active</TabsTrigger>
           <TabsTrigger value="paused">Paused</TabsTrigger>

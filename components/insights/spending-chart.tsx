@@ -13,7 +13,20 @@ interface SpendingChartProps {
 }
 
 // Custom tooltip component that properly uses theme colors
-function CustomTooltip({ active, payload, label }: any) {
+interface TooltipPayload {
+  value?: number;
+  dataKey?: string;
+  name?: string;
+  color?: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string;
+}
+
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border border-border bg-popover p-3 shadow-lg">

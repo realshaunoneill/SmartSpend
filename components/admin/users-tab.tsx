@@ -2,13 +2,26 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserCard } from './user-card';
+import type { ReceiptWithItems } from '@/lib/types/api-responses';
+
+// Admin-specific user type with aggregated data
+interface AdminUser {
+  id: string;
+  email: string;
+  subscribed: boolean;
+  isAdmin: boolean;
+  createdAt: string;
+  stripeCustomerId: string | null;
+  receiptCount: number;
+  householdCount: number;
+}
 
 interface UsersTabProps {
-  users: any[]
-  expandedUsers: Set<string>
-  userReceipts: Record<string, any[]>
-  onToggleUser: (userId: string) => void
-  onOpenReceipt: (receiptId: string) => void
+  users: AdminUser[];
+  expandedUsers: Set<string>;
+  userReceipts: Record<string, ReceiptWithItems[]>;
+  onToggleUser: (userId: string) => void;
+  onOpenReceipt: (receiptId: string) => void;
 }
 
 export function UsersTab({

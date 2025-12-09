@@ -4,24 +4,11 @@ import { Calendar, Store } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { formatCategory } from '@/lib/utils/format-category';
 import { format, parseISO, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
-
-interface Receipt {
-  id: string;
-  merchantName?: string;
-  totalAmount?: string;
-  currency?: string;
-  transactionDate?: string;
-  category?: string;
-  imageUrl?: string;
-  location?: string;
-  created_at?: string;
-  householdName?: string;
-  [key: string]: any;
-}
+import type { ReceiptWithItems } from '@/lib/types/api-responses';
 
 interface ReceiptTimelineProps {
-  receipts: Receipt[];
-  onReceiptClick: (receipt: Receipt) => void;
+  receipts: ReceiptWithItems[];
+  onReceiptClick: (receipt: ReceiptWithItems) => void;
 }
 
 const categoryColors: Record<string, string> = {
@@ -44,11 +31,11 @@ function getDateLabel(date: Date): string {
   return format(date, 'MMMM d, yyyy'); // January 15, 2025
 }
 
-function groupReceiptsByDate(receipts: Receipt[]) {
-  const groups: Record<string, Receipt[]> = {};
+function groupReceiptsByDate(receipts: ReceiptWithItems[]) {
+  const groups: Record<string, ReceiptWithItems[]> = {};
 
   receipts.forEach(receipt => {
-    const dateStr = receipt.transactionDate || receipt.created_at;
+    const dateStr = receipt.transactionDate || receipt.createdAt.toISOString();
     if (!dateStr) return;
 
     const date = parseISO(dateStr);
@@ -151,11 +138,6 @@ export function ReceiptTimeline({ receipts, onReceiptClick }: ReceiptTimelinePro
                           <Badge variant="outline" className="text-xs">
                             <Calendar className="h-3 w-3 mr-1" />
                             {format(parseISO(receipt.transactionDate), 'MMM d, h:mm a')}
-                          </Badge>
-                        )}
-                        {receipt.householdName && (
-                          <Badge variant="secondary" className="text-xs">
-                            {receipt.householdName}
                           </Badge>
                         )}
                       </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 
 export type EventType =
@@ -49,7 +50,7 @@ export const submitLogEvent =(
     event: EventType,
     logLine: string,
     correlationId: CorrelationId | null,
-    data?: { [key: string]: any },
+    data?: Record<string, unknown>,
     alert = false,
   ) => {
     const logEvent = async () => {
@@ -82,8 +83,9 @@ export const submitLogEvent =(
         }
 
         return true;
-      } catch (error: any) {
-        console.error('Failed to log event', error.message);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Failed to log event', errorMessage);
 
         return false;
       }
@@ -96,12 +98,12 @@ const submitAlert = async (
   event: EventType,
   logLine: string,
   correlationId: CorrelationId | null,
-  data?: any,
+  data?: Record<string, unknown>,
 ) => {
   try {
     const _message = `🚨 <b>${event.toUpperCase()}</b>\n` +
       `Message: ${logLine}\n` +
-      (data.userId ? `User ID: <pre>${data.userId}</pre>` : '');
+      (data?.userId ? `User ID: <pre>${data.userId}</pre>` : '');
 
     // await sendTelegramAlert(message);
   } catch (error) {

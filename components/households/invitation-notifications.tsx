@@ -11,6 +11,11 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useInvitations, useAcceptInvitation } from '@/lib/hooks/use-invitations';
 import { toast } from 'sonner';
+import type { HouseholdInvitation } from '@/lib/db/schema';
+
+type InvitationWithHouseholdName = HouseholdInvitation & {
+  householdName: string;
+};
 
 export function InvitationNotifications() {
   const { data: invitations = [], isLoading } = useInvitations();
@@ -66,7 +71,7 @@ export function InvitationNotifications() {
             <div className="px-3 py-2 text-sm font-semibold border-b">
               Household Invitations ({pendingCount})
             </div>
-            {invitations.map((invitation: any) => (
+            {invitations.map((invitation: InvitationWithHouseholdName) => (
               <div key={invitation.id} className="p-3 space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="p-2 rounded-lg bg-primary/10">

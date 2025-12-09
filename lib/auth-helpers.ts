@@ -6,7 +6,8 @@ import { randomUUID } from 'crypto';
 import { db } from '@/lib/db';
 import { householdUsers } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
-import type { User } from '@/lib/db/schema';
+import type { User, Receipt } from '@/lib/db/schema';
+import type { ReceiptWithItems } from '@/lib/types/api-responses';
 
 /**
  * Get user email from Clerk
@@ -52,13 +53,13 @@ export async function getAuthenticatedUser(correlationId?: CorrelationId) {
  * Check if user has an active subscription
  * Returns null if subscribed, or NextResponse error if not
  */
-export async function requireSubscription(userOrResult: any) {
-  // If it's already an error response, return it
+export async function requireSubscription(userOrResult: { user: User } | User | NextResponse) {
+  // If it's already a NextResponse error, return it
   if (userOrResult instanceof NextResponse) {
     return userOrResult;
   }
 
-  const user = userOrResult.user || userOrResult;
+  const user = 'user' in userOrResult ? userOrResult.user : userOrResult;
 
   const skipSubscriptionCheck = process.env.SKIP_SUBSCRIPTION_CHECK === 'true';
 
@@ -131,7 +132,7 @@ export async function requireHouseholdMembership(
  * Returns null if authorized, or NextResponse error if not
  */
 export async function requireReceiptAccess(
-  receipt: any,
+  receipt: Receipt,
   user: User,
   correlationId: CorrelationId,
 ) {
@@ -150,13 +151,13 @@ export async function requireReceiptAccess(
  * Filter receipt data for non-subscribed users
  * Removes premium features like line items, OCR data, detailed analytics
  */
-export function filterReceiptForSubscription(receipt: any, isSubscribed: boolean) {
+export function filterReceiptForSubscription(receipt: Receipt | ReceiptWithItems, isSubscribed: boolean) {
   if (isSubscribed) {
     return receipt;
   }
 
   // For non-subscribed users, only return basic receipt info
-  return {
+  const filtered: Record<string, unknown> = {
     id: receipt.id,
     userId: receipt.userId,
     householdId: receipt.householdId,
@@ -169,28 +170,20 @@ export function filterReceiptForSubscription(receipt: any, isSubscribed: boolean
     processingStatus: receipt.processingStatus,
     createdAt: receipt.createdAt,
     updatedAt: receipt.updatedAt,
-    submittedBy: receipt.submittedBy,
-    // Exclude premium features:
-    // - items (line items)
-    // - ocrData (detailed OCR response)
-    // - paymentMethod
-    // - location
-    // - tax
-    // - serviceCharge
-    // - subtotal
-    // - receiptNumber
-    // - processingTokens
-    // - isBusinessExpense
-    // - businessCategory
-    // - businessNotes
-    // - taxDeductible
   };
+
+  // Add submittedBy if it exists (only on ReceiptWithItems)
+  if ('submittedBy' in receipt && receipt.submittedBy !== undefined) {
+    filtered.submittedBy = receipt.submittedBy;
+  }
+
+  return filtered;
 }
 
 /**
  * Filter multiple receipts for non-subscribed users
  */
-export function filterReceiptsForSubscription(receipts: any[], isSubscribed: boolean) {
+export function filterReceiptsForSubscription(receipts: ReceiptWithItems[], isSubscribed: boolean) {
   if (isSubscribed) {
     return receipts;
   }

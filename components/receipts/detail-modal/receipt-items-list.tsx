@@ -4,9 +4,16 @@ import { ShoppingBag, TrendingUp, Percent, Tag, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { capitalizeText } from '@/lib/utils/format-category';
+import type { ReceiptItem } from '@/lib/db/schema';
+
+type Modifier = {
+  name: string;
+  price: number | string;
+  type?: string;
+};
 
 interface ReceiptItemsListProps {
-  items: any[]
+  items: ReceiptItem[]
   currency: string
   onAnalyzeItem: (itemName: string) => void
 }
@@ -23,11 +30,11 @@ export function ReceiptItemsList({ items, currency, onAnalyzeItem }: ReceiptItem
         Items ({items.length})
       </div>
       <div className="space-y-1 pr-2">
-        {items.map((item: any, index: number) => {
-          const quantity = parseFloat(item.quantity) || 1;
-          const totalPrice = parseFloat(item.price) || 0;
+        {items.map((item: ReceiptItem, index: number) => {
+          const quantity = parseFloat(item.quantity || '1') || 1;
+          const totalPrice = parseFloat(item.price || '0') || 0;
           const unitPrice = quantity > 1 ? totalPrice / quantity : null;
-          const hasModifiers = item.modifiers && Array.isArray(item.modifiers) && item.modifiers.length > 0;
+          const hasModifiers = !!(item.modifiers && Array.isArray(item.modifiers) && item.modifiers.length > 0);
 
           return (
             <div
@@ -79,11 +86,11 @@ export function ReceiptItemsList({ items, currency, onAnalyzeItem }: ReceiptItem
                 </div>
               </div>
 
-              {/* Modifiers/Sub-items */}
               {hasModifiers && (
                 <div className="mt-2 ml-4 space-y-1 border-l-2 border-muted pl-3">
-                  {item.modifiers.map((modifier: any, modIndex: number) => {
-                    const isDiscount = modifier.type === 'discount' || modifier.price < 0;
+                  {(item.modifiers as unknown as Modifier[]).map((modifier: Modifier, modIndex: number) => {
+                    const modifierPrice = typeof modifier.price === 'string' ? parseFloat(modifier.price) : modifier.price;
+                    const isDiscount = modifier.type === 'discount' || modifierPrice < 0;
                     const isDeposit = modifier.type === 'deposit';
                     const isFee = modifier.type === 'fee';
 
@@ -108,11 +115,11 @@ export function ReceiptItemsList({ items, currency, onAnalyzeItem }: ReceiptItem
                               'border-muted-foreground/30'
                             }`}
                           >
-                            {capitalizeText(modifier.type)}
+                            {capitalizeText(modifier.type || 'modifier')}
                           </Badge>
                         </div>
                         <span className={`font-medium ${isDiscount ? 'text-green-600' : ''}`}>
-                          {modifier.price >= 0 ? '+' : ''}{currency} {Math.abs(modifier.price).toFixed(2)}
+                          {modifierPrice >= 0 ? '+' : ''}{currency} {Math.abs(modifierPrice).toFixed(2)}
                         </span>
                       </div>
                     );

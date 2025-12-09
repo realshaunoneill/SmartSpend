@@ -12,6 +12,7 @@ import { useUser } from '@clerk/nextjs';
 import { useUser as useUserData } from '@/lib/hooks/use-user';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { HouseholdWithMembers } from '@/lib/types/api-responses';
 
 export default function SettingsPage() {
   const { user: clerkUser, isLoaded } = useUser();
@@ -310,7 +311,7 @@ export default function SettingsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None (Personal receipts only)</SelectItem>
-                  {households.map((household: any) => (
+                  {households.map((household: HouseholdWithMembers) => (
                     <SelectItem key={household.id} value={household.id}>
                       {household.name}
                     </SelectItem>

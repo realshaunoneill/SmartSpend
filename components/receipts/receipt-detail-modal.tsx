@@ -17,11 +17,12 @@ import { ReceiptItemsList } from './detail-modal/receipt-items-list';
 import { ReceiptFinancialBreakdown } from './detail-modal/receipt-financial-breakdown';
 import { ReceiptImage } from './detail-modal/receipt-image';
 import { LinkedSubscription } from './detail-modal/linked-subscription';
+import type { ReceiptWithItems, OCRData, MemberWithUser } from '@/lib/types/api-responses';
 
 interface ReceiptDetailModalProps {
-  receipt: any
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  receipt: ReceiptWithItems | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function ReceiptDetailModal({
@@ -53,19 +54,19 @@ export function ReceiptDetailModal({
     // User is the owner
     receipt.userId === currentUser.id ||
     // Or user is household admin (for removing from household only)
-    (receipt.householdId && household?.members?.some((m: any) =>
-      m.userId === currentUser.id && m.role === 'owner',
+    (receipt.householdId && household?.members?.some((m: MemberWithUser) =>
+      m.user_id === currentUser.id && m.role === 'owner',
     ))
   );
 
   // Check if user is the receipt owner
-  const isReceiptOwner = currentUser && receipt && receipt.userId === currentUser.id;
+  const isReceiptOwner = !!(currentUser && receipt && receipt.userId === currentUser.id);
 
   // Check subscription status
   const isSubscribed = currentUser?.subscribed === true;
 
   // Check if we're still loading permissions
-  const isLoadingPermissions = isLoadingUser || (receipt?.householdId && !household && open);
+  const isLoadingPermissions = isLoadingUser || (!!receipt?.householdId && !household && open);
 
   if (!receipt) return null;
 
@@ -119,7 +120,7 @@ export function ReceiptDetailModal({
               <div className="flex-1 md:overflow-y-auto px-4 py-3 space-y-3 sm:px-6 sm:py-4 sm:space-y-4\">
                 <LinkedSubscription receiptId={receipt.id} />
 
-                <ReceiptBusinessDetails ocrData={receipt.ocrData} />
+                <ReceiptBusinessDetails ocrData={(receipt.ocrData as OCRData) || null} />
 
                 {!isSubscribed && (
                   <SubscriptionUpsell
@@ -136,19 +137,28 @@ export function ReceiptDetailModal({
 
                 {isSubscribed && (
                   <>
-                    {receipt.ocrData?.phoneNumber || receipt.ocrData?.website || receipt.ocrData?.vatNumber ? <Separator /> : null}
+                    {(() => {
+                      const ocr = receipt.ocrData as OCRData | null;
+                      return ocr?.phoneNumber || ocr?.website || ocr?.vatNumber ? <Separator /> : null;
+                    })()}
 
-                    <ReceiptServiceDetails ocrData={receipt.ocrData} />
+                    <ReceiptServiceDetails ocrData={(receipt.ocrData as OCRData) || null} />
 
-                    {receipt.ocrData?.tableNumber || receipt.ocrData?.serverName || receipt.ocrData?.customerCount ? <Separator /> : null}
+                    {(() => {
+                      const ocr = receipt.ocrData as OCRData | null;
+                      return ocr?.tableNumber || ocr?.serverName || ocr?.customerCount ? <Separator /> : null;
+                    })()}
 
-                    <ReceiptLoyaltyDetails ocrData={receipt.ocrData} />
+                    <ReceiptLoyaltyDetails ocrData={(receipt.ocrData as OCRData) || null} />
 
-                    {receipt.ocrData?.loyaltyNumber || receipt.ocrData?.specialOffers ? <Separator /> : null}
+                    {(() => {
+                      const ocr = receipt.ocrData as OCRData | null;
+                      return ocr?.loyaltyNumber || ocr?.specialOffers ? <Separator /> : null;
+                    })()}
 
                     <ReceiptItemsList
-                      items={receipt.items}
-                      currency={receipt.currency}
+                      items={receipt.items ?? []}
+                      currency={receipt.currency ?? 'USD'}
                       onAnalyzeItem={(itemName) => {
                         setSelectedItemForAnalysis(itemName);
                         setShowItemAnalysis(true);
@@ -178,7 +188,7 @@ export function ReceiptDetailModal({
               setSelectedItemForAnalysis(null);
             }
           }}
-          householdId={receipt.householdId}
+          householdId={receipt.householdId ?? undefined}
         />
       )}
     </Dialog>

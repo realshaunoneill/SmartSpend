@@ -7,10 +7,17 @@ import { ReceiptAssignmentDialog } from '@/components/receipts/receipt-assignmen
 import { DeleteReceiptButton } from './delete-receipt-button';
 import { BusinessExpenseDialog } from './business-expense-dialog';
 import { formatCategory, capitalizeText } from '@/lib/utils/format-category';
+import type { ReceiptWithItems, OCRData } from '@/lib/types/api-responses';
+
+interface HouseholdInfo {
+  id: string;
+  name: string;
+  members?: Array<{ user_id: string; role: string; email: string }>;
+}
 
 interface ReceiptHeaderProps {
-  receipt: any
-  household: any
+  receipt: ReceiptWithItems
+  household: HouseholdInfo | null
   isLoadingPermissions: boolean
   canModifyReceipt: boolean
   isReceiptOwner: boolean
@@ -37,12 +44,12 @@ export function ReceiptHeader({
               <h2 className="text-2xl font-bold">
                 {receipt.merchantName || 'Unknown Merchant'}
               </h2>
-              {receipt.ocrData && Object.keys(receipt.ocrData).length > 5 && (
+              {receipt.ocrData && typeof receipt.ocrData === 'object' && Object.keys(receipt.ocrData).length > 5 ? (
                 <Badge variant="default" className="text-xs">
                   <Info className="h-3 w-3 mr-1" />
                   Enhanced
                 </Badge>
-              )}
+              ) : null}
             </div>
             {receipt.location && (
               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
@@ -58,12 +65,15 @@ export function ReceiptHeader({
                   {formatCategory(receipt.category)}
                 </Badge>
               )}
-              {receipt.ocrData?.merchantType && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Building2 className="h-3 w-3" />
-                  {capitalizeText(receipt.ocrData.merchantType)}
-                </Badge>
-              )}
+              {(() => {
+                const ocrData = receipt.ocrData as OCRData | null;
+                return ocrData?.merchantType && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Building2 className="h-3 w-3" />
+                    {capitalizeText(ocrData.merchantType)}
+                  </Badge>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -91,9 +101,9 @@ export function ReceiptHeader({
           <div className="flex gap-2">
             <ReceiptAssignmentDialog
               receiptId={receipt.id}
-              currentHouseholdId={receipt.householdId}
+              currentHouseholdId={receipt.householdId || undefined}
               isOwner={isReceiptOwner}
-              canRemoveOnly={!isReceiptOwner && receipt.householdId}
+              canRemoveOnly={!isReceiptOwner && !!receipt.householdId}
             >
               <Button variant="secondary" size="sm" className="flex-1">
                 <Users className="h-4 w-4 mr-2" />
@@ -124,12 +134,15 @@ export function ReceiptHeader({
           {receipt.transactionDate ||
             new Date(receipt.createdAt).toLocaleDateString()}
         </Badge>
-        {receipt.ocrData?.timeOfDay && (
-          <Badge variant="secondary" className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {receipt.ocrData.timeOfDay}
-          </Badge>
-        )}
+        {(() => {
+          const ocrData = receipt.ocrData as OCRData | null;
+          return ocrData?.timeOfDay && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {ocrData.timeOfDay}
+            </Badge>
+          );
+        })()}
         {receipt.paymentMethod && (
           <Badge variant="secondary" className="flex items-center gap-1">
             <CreditCard className="h-3 w-3" />
@@ -142,12 +155,15 @@ export function ReceiptHeader({
             {receipt.receiptNumber}
           </Badge>
         )}
-        {receipt.ocrData?.orderNumber && (
-          <Badge variant="secondary" className="flex items-center gap-1">
-            <ReceiptIcon className="h-3 w-3" />
-            Order: {receipt.ocrData.orderNumber}
-          </Badge>
-        )}
+        {(() => {
+          const ocrData = receipt.ocrData as OCRData | null;
+          return ocrData?.orderNumber && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <ReceiptIcon className="h-3 w-3" />
+              Order: {ocrData.orderNumber}
+            </Badge>
+          );
+        })()}
       </div>
 
       {/* Business Expense Section - Only for receipt owner */}

@@ -13,6 +13,7 @@ import {
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { HouseholdWithMembers } from '@/lib/types/api-responses';
 
 interface ReceiptAssignmentDialogProps {
   receiptId: string;
@@ -34,7 +35,7 @@ export function ReceiptAssignmentDialog({
     currentHouseholdId || '__personal__',
   );
 
-  const { data: households = [] } = useHouseholds();
+  const { data: households = [] } = useHouseholds() as { data: HouseholdWithMembers[] };
   const queryClient = useQueryClient();
 
   const assignReceipt = useMutation({
@@ -106,7 +107,7 @@ export function ReceiptAssignmentDialog({
                     </div>
                     <div>
                       <p className="font-medium">
-                        {households.find((h: any) => h.id === selectedHouseholdId)?.name || 'Unknown Household'}
+                        {households.find(h => h.id === selectedHouseholdId)?.name || 'Unknown Household'}
                       </p>
                       <p className="text-xs text-muted-foreground">Shared with household</p>
                     </div>
@@ -145,7 +146,7 @@ export function ReceiptAssignmentDialog({
                 )}
 
                 {/* Household options - only for owners */}
-                {isOwner && !canRemoveOnly && households.map((household: any) => (
+                {isOwner && !canRemoveOnly && households.map(household => (
                   <button
                     key={household.id}
                     type="button"

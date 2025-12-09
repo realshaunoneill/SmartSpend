@@ -2,12 +2,28 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { HouseholdCard } from './household-card';
+import type { HouseholdWithMembers, ReceiptWithItems, MemberWithUser } from '@/lib/types/api-responses';
+
+type HouseholdDetailsWithMembers = HouseholdWithMembers & {
+  members?: MemberWithUser[];
+};
+
+type AdminHouseholdReceipt = ReceiptWithItems & {
+  submitterEmail?: string;
+};
 
 interface HouseholdsTabProps {
-  households: any[]
+  households: Array<{
+    id: string
+    name: string
+    memberCount: number
+    receiptCount: number
+    createdAt: string
+    ownerEmail: string
+  }>
   expandedHouseholds: Set<string>
-  householdDetails: Record<string, any>
-  householdReceipts: Record<string, any[]>
+  householdDetails: Record<string, HouseholdDetailsWithMembers>
+  householdReceipts: Record<string, AdminHouseholdReceipt[]>
   onToggleHousehold: (householdId: string) => void
   onOpenReceipt: (receiptId: string) => void
 }

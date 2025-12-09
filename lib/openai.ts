@@ -214,10 +214,12 @@ Return ONLY valid JSON with all numeric values as numbers (not strings), no addi
   };
 }
 
+import type { OCRData } from '@/lib/types/api-responses';
+
 /**
  * Simple receipt analysis for upload route (basic extraction)
  */
-export async function analyzeReceiptSimple(imageUrl: string, correlationId: CorrelationId): Promise<any> {
+export async function analyzeReceiptSimple(imageUrl: string, correlationId: CorrelationId): Promise<OCRData> {
   try {
     const inputImageRes = await fetch(imageUrl);
     if (!inputImageRes.ok) {
@@ -375,7 +377,7 @@ Keep the response under 300 words and format it in a friendly, easy-to-read way.
 /**
  * Clean and parse JSON response from OpenAI
  */
-export function cleanJsonResponse(content: string): any {
+export function cleanJsonResponse(content: string): Record<string, unknown> {
   let jsonContent = content.trim();
 
   // Remove markdown code blocks
@@ -385,7 +387,7 @@ export function cleanJsonResponse(content: string): any {
     jsonContent = jsonContent.replace(/^```\n/, '').replace(/\n```$/, '');
   }
 
-  return JSON.parse(jsonContent);
+  return JSON.parse(jsonContent) as Record<string, unknown>;
 }
 
 export { openai };

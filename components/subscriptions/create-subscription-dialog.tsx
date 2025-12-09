@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { Plus } from 'lucide-react';
 import { useCreateSubscription } from '@/hooks/use-subscriptions';
 import { useHouseholds } from '@/lib/hooks/use-households';
+import type { HouseholdWithMembers } from '@/lib/types/api-responses';
 import {
   Dialog,
   DialogContent,
@@ -262,7 +263,7 @@ export function CreateSubscriptionDialog() {
                 </Label>
                 <Select
                   onValueChange={(value) =>
-                    setValue('billingFrequency', value as any)
+                    setValue('billingFrequency', value as FormData['billingFrequency'])
                   }
                   defaultValue="monthly"
                 >
@@ -341,7 +342,7 @@ export function CreateSubscriptionDialog() {
                     <SelectValue placeholder="Personal subscription" />
                   </SelectTrigger>
                   <SelectContent>
-                    {households.map((household: any) => (
+                    {households.map((household: HouseholdWithMembers) => (
                       <SelectItem key={household.id} value={household.id}>
                         {household.name}
                       </SelectItem>

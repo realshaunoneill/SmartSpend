@@ -12,8 +12,9 @@ import { SubscriptionGate } from '@/components/subscriptions/subscription-gate';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Users } from 'lucide-react';
 import { HouseholdReceipts } from '@/components/households/household-receipts';
+import { Users } from 'lucide-react';
+import type { HouseholdWithMembers, MemberWithUser } from '@/lib/types/api-responses';
 
 export default function SharingPage() {
   const { user: _clerkUser, isLoaded } = useClerkUser();
@@ -38,13 +39,13 @@ export default function SharingPage() {
       if (!response.ok) throw new Error('Failed to fetch members');
 
       const data = await response.json();
-      return data.map((member: any) => ({
-        id: member.userId,
-        user_id: member.userId,
+      return data.map((member: MemberWithUser) => ({
+        id: member.user_id,
+        user_id: member.user_id,
         full_name: member.email.split('@')[0],
         email: member.email,
         role: member.role === 'owner' ? 'admin' : 'member',
-        joined_at: member.joinedAt,
+        joined_at: member.joined_at,
       }));
     },
     enabled: !!selectedHouseholdId,
@@ -57,10 +58,10 @@ export default function SharingPage() {
     }
   }, [households, selectedHouseholdId]);
 
-  const selectedHousehold = households.find((h: any) => h.id === selectedHouseholdId);
+  const selectedHousehold = households.find((h: HouseholdWithMembers) => h.id === selectedHouseholdId);
   const currentUserId = user?.id;
   const isCurrentUserAdmin = selectedHousehold && user ?
-    members.find((m: any) => m.user_id === user.id)?.role === 'admin' : false;
+    members.find((m: MemberWithUser) => m.user_id === user.id)?.role === 'owner' : false;
 
   if (!isLoaded || !user) {
     return (
@@ -164,7 +165,7 @@ export default function SharingPage() {
                   onUpdate={() => {
                     queryClient.invalidateQueries({ queryKey: ['households'] });
                   }}
-                  onSelect={(household: any) => setSelectedHouseholdId(household.id)}
+                  onSelect={(household) => setSelectedHouseholdId(household.id)}
                   selectedId={selectedHouseholdId}
                 />
               </div>

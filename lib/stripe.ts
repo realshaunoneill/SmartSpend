@@ -234,8 +234,8 @@ export async function syncStripeDataToDatabase(customerId: string, correlationId
       subscriptionId: subscription.id,
       status: subscription.status,
       priceId: subscription.items.data[0].price.id,
-      currentPeriodEnd: (subscription as any).current_period_end,
-      currentPeriodStart: (subscription as any).current_period_start,
+      currentPeriodEnd: 'current_period_end' in subscription ? (subscription.current_period_end as number) : 0,
+      currentPeriodStart: 'current_period_start' in subscription ? (subscription.current_period_start as number) : 0,
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
       paymentMethod:
         subscription.default_payment_method &&

@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ReceiptDetailModal } from '@/components/receipts/receipt-detail-modal';
 import { formatCategory } from '@/lib/utils/format-category';
-import type { Receipt } from '@/lib/types';
+import type { ReceiptWithItems } from '@/lib/types/api-responses';
 
 interface ReceiptListProps {
-  receipts: Receipt[]
-  onReceiptClick?: (receipt: any) => void
+  receipts: ReceiptWithItems[];
+  onReceiptClick?: (receipt: ReceiptWithItems) => void;
 }
 
 const categoryColors: Record<string, string> = {
@@ -26,7 +26,7 @@ const categoryColors: Record<string, string> = {
 };
 
 export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
-  const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+  const [selectedReceipt, setSelectedReceipt] = useState<ReceiptWithItems | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   const formatDate = (dateString: string) => {
@@ -34,7 +34,7 @@ export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const handleReceiptClick = (receipt: any) => {
+  const handleReceiptClick = (receipt: ReceiptWithItems) => {
     if (onReceiptClick) {
       onReceiptClick(receipt);
     } else {
@@ -70,10 +70,10 @@ export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
                 {/* Receipt Image Thumbnail */}
                 <div className="shrink-0">
                   <div className="h-16 w-16 overflow-hidden rounded-md border bg-muted">
-                    {(receipt as any).imageUrl ? (
+                    {receipt.imageUrl ? (
                       <img
-                        src={(receipt as any).imageUrl || '/placeholder.svg'}
-                        alt={`Receipt from ${(receipt as any).merchantName || 'merchant'}`}
+                        src={receipt.imageUrl || '/placeholder.svg'}
+                        alt={`Receipt from ${receipt.merchantName || 'merchant'}`}
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -90,42 +90,42 @@ export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
                     <div className="flex items-center gap-2">
                       <Store className="h-4 w-4 text-muted-foreground" />
                       <span className="font-semibold text-foreground">
-                        {(receipt as any).merchantName || 'Unknown Merchant'}
+                        {receipt.merchantName || 'Unknown Merchant'}
                       </span>
                     </div>
                     <span className="text-lg font-bold text-foreground sm:whitespace-nowrap">
-                      {(receipt as any).currency || '$'} {(receipt as any).totalAmount || '0.00'}
+                      {receipt.currency || '$'} {receipt.totalAmount || '0.00'}
                     </span>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground sm:gap-3">
-                    {(receipt as any).transactionDate && (
+                    {receipt.transactionDate && (
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        <span className="hidden sm:inline">{(receipt as any).transactionDate}</span>
-                        <span className="sm:hidden">{formatDate((receipt as any).transactionDate)}</span>
+                        <span className="hidden sm:inline">{receipt.transactionDate}</span>
+                        <span className="sm:hidden">{formatDate(receipt.transactionDate)}</span>
                       </div>
                     )}
-                    {(receipt as any).category && (
-                      <Badge variant="secondary" className={categoryColors[(receipt as any).category] || categoryColors.other}>
-                        {formatCategory((receipt as any).category)}
+                    {receipt.category && (
+                      <Badge variant="secondary" className={categoryColors[receipt.category] || categoryColors.other}>
+                        {formatCategory(receipt.category)}
                       </Badge>
                     )}
-                    {(receipt as any).paymentMethod && (
-                      <span className="capitalize">{(receipt as any).paymentMethod.replace('_', ' ')}</span>
+                    {receipt.paymentMethod && (
+                      <span className="capitalize">{receipt.paymentMethod.replace('_', ' ')}</span>
                     )}
-                    {(receipt as any).items && (receipt as any).items.length > 0 && (
-                      <span>{(receipt as any).items.length} items</span>
+                    {receipt.items && receipt.items.length > 0 && (
+                      <span>{receipt.items.length} items</span>
                     )}
-                    {(receipt as any).householdId && (
+                    {receipt.householdId && (
                       <Badge variant="secondary" className="text-xs">
                         <Users className="h-3 w-3 mr-1" />
                         Shared
                       </Badge>
                     )}
-                    {(receipt as any).submittedBy && (receipt as any).householdId && (
+                    {receipt.submittedBy && receipt.householdId && (
                       <span className="text-xs">
-                        by {(receipt as any).submittedBy.split('@')[0]}
+                        by {receipt.submittedBy.split('@')[0]}
                       </span>
                     )}
                   </div>

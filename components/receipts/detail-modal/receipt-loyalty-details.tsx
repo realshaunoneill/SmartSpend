@@ -1,9 +1,10 @@
 'use client';
 
 import { Gift, Tag, Percent } from 'lucide-react';
+import type { OCRData } from '@/lib/types/api-responses';
 
 interface ReceiptLoyaltyDetailsProps {
-  ocrData: any
+  ocrData: OCRData | null
 }
 
 export function ReceiptLoyaltyDetails({ ocrData }: ReceiptLoyaltyDetailsProps) {

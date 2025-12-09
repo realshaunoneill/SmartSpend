@@ -86,7 +86,7 @@ export function EditSubscriptionDialog({
       category: subscription.category || '',
       amount: subscription.amount,
       currency: subscription.currency,
-      billingFrequency: subscription.billingFrequency as any,
+      billingFrequency: subscription.billingFrequency as 'monthly' | 'quarterly' | 'yearly' | 'custom',
       billingDay: subscription.billingDay.toString(),
       customFrequencyDays: subscription.customFrequencyDays?.toString() || '',
       website: subscription.website || '',
@@ -106,7 +106,7 @@ export function EditSubscriptionDialog({
       category: subscription.category || '',
       amount: subscription.amount,
       currency: subscription.currency,
-      billingFrequency: subscription.billingFrequency as any,
+      billingFrequency: subscription.billingFrequency as 'monthly' | 'quarterly' | 'yearly' | 'custom',
       billingDay: subscription.billingDay.toString(),
       customFrequencyDays: subscription.customFrequencyDays?.toString() || '',
       website: subscription.website || '',
@@ -246,7 +246,7 @@ export function EditSubscriptionDialog({
                 <Label htmlFor="billingFrequency">Billing Frequency *</Label>
                 <Select
                   value={watch('billingFrequency')}
-                  onValueChange={(value) => setValue('billingFrequency', value as any)}
+                  onValueChange={(value) => setValue('billingFrequency', value as 'monthly' | 'quarterly' | 'yearly' | 'custom')}
                 >
                   <SelectTrigger>
                     <SelectValue />

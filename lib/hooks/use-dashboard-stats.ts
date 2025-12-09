@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRecentReceipts } from './use-receipts';
+import type { ReceiptWithItems } from '@/lib/types/api-responses';
 
 export function useDashboardStats(householdId?: string, personalOnly: boolean = false) {
   const { receipts, isLoading: receiptsLoading } = useRecentReceipts(householdId, 100, personalOnly); // Get more for stats
@@ -19,15 +20,15 @@ export function useDashboardStats(householdId?: string, personalOnly: boolean = 
       }
 
       // Calculate total spent
-      const totalSpent = receipts.reduce((sum: number, receipt: any) => {
-        return sum + (parseFloat(receipt.total_amount) || 0);
+      const totalSpent = receipts.reduce((sum: number, receipt: ReceiptWithItems) => {
+        return sum + (parseFloat(receipt.totalAmount || '0') || 0);
       }, 0);
 
       // Calculate spending by category
       const categoryTotals: Record<string, number> = {};
-      receipts.forEach((receipt: any) => {
+      receipts.forEach((receipt: ReceiptWithItems) => {
         const category = receipt.category || 'other';
-        categoryTotals[category] = (categoryTotals[category] || 0) + (parseFloat(receipt.total_amount) || 0);
+        categoryTotals[category] = (categoryTotals[category] || 0) + (parseFloat(receipt.totalAmount || '0') || 0);
       });
 
       // Convert to array and calculate percentages
@@ -46,7 +47,9 @@ export function useDashboardStats(householdId?: string, personalOnly: boolean = 
 
       // Get recent receipts (last 5)
       const recentReceipts = [...receipts]
-        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .sort((a: ReceiptWithItems, b: ReceiptWithItems) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        )
         .slice(0, 5);
 
       return {

@@ -2,7 +2,9 @@
 
 import { db } from '@/lib/db';
 import { receipts, receiptItems, users } from '@/lib/db/schema';
+import type { Receipt } from '@/lib/db/schema';
 import { eq, desc, asc, count, isNull, and, or, gte, lte, ilike, sql } from 'drizzle-orm';
+import type { ReceiptWithItems } from '@/lib/types/api-responses';
 
 export interface GetReceiptsOptions {
   userId: string;
@@ -24,7 +26,7 @@ export interface GetReceiptsOptions {
 }
 
 export interface PaginatedReceipts {
-  receipts: any[];
+  receipts: ReceiptWithItems[];
   pagination: {
     page: number;
     limit: number;
@@ -260,7 +262,7 @@ export async function getHouseholdReceipts(householdId: string) {
 /**
  * Get a single receipt by ID
  */
-export async function getReceiptById(receiptId: string, includeDeleted = false) {
+export async function getReceiptById(receiptId: string, includeDeleted = false): Promise<Receipt | null> {
   const conditions = includeDeleted
     ? eq(receipts.id, receiptId)
     : and(eq(receipts.id, receiptId), isNull(receipts.deletedAt));

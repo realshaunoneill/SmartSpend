@@ -29,7 +29,7 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
               <CardTitle className="text-xl sm:text-2xl">Total Spending</CardTitle>
               <CardDescription>{periodLabels[period]}</CardDescription>
             </div>
-            <Tabs value={period} onValueChange={(v) => onPeriodChange(v as any)}>
+            <Tabs value={period} onValueChange={(v) => onPeriodChange(v as 'week' | 'month' | 'year')}>
               <TabsList className="grid w-full grid-cols-3 sm:w-auto">
                 <TabsTrigger value="week">Week</TabsTrigger>
                 <TabsTrigger value="month">Month</TabsTrigger>
@@ -59,7 +59,7 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
               <CardTitle className="text-xl sm:text-2xl">Total Spending</CardTitle>
               <CardDescription>{periodLabels[period]}</CardDescription>
             </div>
-            <Tabs value={period} onValueChange={(v) => onPeriodChange(v as any)}>
+            <Tabs value={period} onValueChange={(v) => onPeriodChange(v as 'week' | 'month' | 'year')}>
               <TabsList className="grid w-full grid-cols-3 sm:w-auto">
                 <TabsTrigger value="week">Week</TabsTrigger>
                 <TabsTrigger value="month">Month</TabsTrigger>
@@ -88,7 +88,7 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
               <CardTitle className="text-xl sm:text-2xl">Total Spending</CardTitle>
               <CardDescription>{periodLabels[period]}</CardDescription>
             </div>
-            <Tabs value={period} onValueChange={(v) => onPeriodChange(v as any)}>
+            <Tabs value={period} onValueChange={(v) => onPeriodChange(v as 'week' | 'month' | 'year')}>
               <TabsList className="grid w-full grid-cols-3 sm:w-auto">
                 <TabsTrigger value="week">Week</TabsTrigger>
                 <TabsTrigger value="month">Month</TabsTrigger>
@@ -124,7 +124,7 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
             <CardTitle className="text-xl sm:text-2xl">Total Spending</CardTitle>
             <CardDescription>{periodLabels[period]}</CardDescription>
           </div>
-          <Tabs value={period} onValueChange={(v) => onPeriodChange(v as any)}>
+          <Tabs value={period} onValueChange={(v) => onPeriodChange(v as 'week' | 'month' | 'year')}>
             <TabsList className="grid w-full grid-cols-3 sm:w-auto">
               <TabsTrigger value="week">Week</TabsTrigger>
               <TabsTrigger value="month">Month</TabsTrigger>

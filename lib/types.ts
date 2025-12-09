@@ -35,6 +35,7 @@ export interface Receipt {
   category?: string
   payment_method?: string
   image_url?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   raw_ocr_data?: any
   notes?: string
   created_at: string

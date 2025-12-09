@@ -1,5 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 
+interface TopItem {
+  name: string;
+  count: number;
+  totalSpent: number;
+  totalQuantity: number;
+  averagePrice: number;
+  merchants: string[];
+}
+
 export interface ItemAnalysis {
   itemName: string;
   searchPeriod: {
@@ -77,7 +86,7 @@ async function analyzeItem(
       const normalizedSearchName = itemName.toLowerCase().trim();
 
       // Try exact match first
-      let matchedItems = data.topItems.filter((item: any) => {
+      let matchedItems = data.topItems.filter((item: TopItem) => {
         return item.name.toLowerCase().trim() === normalizedSearchName;
       });
 
@@ -85,7 +94,7 @@ async function analyzeItem(
       if (matchedItems.length === 0) {
         const searchTerms = normalizedSearchName.split(/\s+/).filter(w => w.length > 0);
 
-        matchedItems = data.topItems.filter((item: any) => {
+        matchedItems = data.topItems.filter((item: TopItem) => {
           const itemNameLower = item.name.toLowerCase().trim();
           // Match if item contains all search words or search term contains the item name
           return searchTerms.every(term => itemNameLower.includes(term)) ||
@@ -111,7 +120,7 @@ async function analyzeItem(
         merchants: string[];
       }> = [];
 
-      matchedItems.forEach((item: any) => {
+      matchedItems.forEach((item: TopItem) => {
         totalPurchases += item.count;
         totalSpent += item.totalSpent;
         totalQuantity += item.totalQuantity;

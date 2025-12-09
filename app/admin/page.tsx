@@ -11,8 +11,9 @@ import { ReceiptsTab } from '@/components/admin/receipts-tab';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import type { ReceiptWithItems, HouseholdWithMembers } from '@/lib/types/api-responses';
 
-interface User {
+interface AdminUser {
   id: string
   email: string
   subscribed: boolean
@@ -49,16 +50,16 @@ export default function AdminPage() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [households, setHouseholds] = useState<Household[]>([]);
   const [receipts, setReceipts] = useState<ReceiptDetail[]>([]);
-  const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+  const [selectedReceipt, setSelectedReceipt] = useState<ReceiptWithItems | null>(null);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
   const [expandedHouseholds, setExpandedHouseholds] = useState<Set<string>>(new Set());
-  const [userReceipts, setUserReceipts] = useState<Record<string, any[]>>({});
-  const [householdDetails, setHouseholdDetails] = useState<Record<string, any>>({});
-  const [householdReceipts, setHouseholdReceipts] = useState<Record<string, any[]>>({});
+  const [userReceipts, setUserReceipts] = useState<Record<string, ReceiptWithItems[]>>({});
+  const [householdDetails, setHouseholdDetails] = useState<Record<string, HouseholdWithMembers>>({});
+  const [householdReceipts, setHouseholdReceipts] = useState<Record<string, ReceiptWithItems[]>>({});
 
   useEffect(() => {
     async function checkAdminAndFetchData() {

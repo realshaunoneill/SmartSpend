@@ -6,13 +6,14 @@ import { useState } from 'react';
 import { Upload, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import type { OCRData } from '@/lib/types/api-responses';
 
 import { upload } from '@vercel/blob/client';
 
 interface UploadState {
   status: 'idle' | 'uploading' | 'scanning' | 'success' | 'error'
   message?: string
-  receiptData?: any
+  receiptData?: OCRData
 }
 
 const ENV_PATH_PREFIX =
@@ -200,70 +201,70 @@ export function ReceiptUpload({
               <div className="rounded-lg border bg-card p-4">
                 <h4 className="mb-3 text-sm font-semibold text-foreground">Receipt Details</h4>
                 <div className="space-y-2 text-sm">
-                  {uploadState.receiptData.merchantName && (
+                  {uploadState.receiptData.merchantName ? (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Merchant:</span>
                       <span className="font-medium text-foreground">
-                        {uploadState.receiptData.merchantName}
+                        {String(uploadState.receiptData.merchantName)}
                       </span>
                     </div>
-                  )}
-                  {uploadState.receiptData.location && (
+                  ) : null}
+                  {uploadState.receiptData.location ? (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Location:</span>
                       <span className="font-medium text-foreground text-right max-w-[200px] truncate">
-                        {uploadState.receiptData.location}
+                        {String(uploadState.receiptData.location)}
                       </span>
                     </div>
-                  )}
-                  {uploadState.receiptData.transactionDate && (
+                  ) : null}
+                  {uploadState.receiptData.transactionDate ? (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Date:</span>
                       <span className="font-medium text-foreground">
-                        {uploadState.receiptData.transactionDate}
+                        {String(uploadState.receiptData.transactionDate)}
                       </span>
                     </div>
-                  )}
-                  {uploadState.receiptData.subtotal && (
+                  ) : null}
+                  {uploadState.receiptData.subtotal ? (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal:</span>
                       <span className="font-medium text-foreground">
-                        {uploadState.receiptData.currency} {uploadState.receiptData.subtotal}
+                        {String(uploadState.receiptData.currency)} {String(uploadState.receiptData.subtotal)}
                       </span>
                     </div>
-                  )}
-                  {uploadState.receiptData.tax && (
+                  ) : null}
+                  {uploadState.receiptData.tax ? (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Tax:</span>
                       <span className="font-medium text-foreground">
-                        {uploadState.receiptData.currency} {uploadState.receiptData.tax}
+                        {String(uploadState.receiptData.currency)} {String(uploadState.receiptData.tax)}
                       </span>
                     </div>
-                  )}
-                  {uploadState.receiptData.serviceCharge && (
+                  ) : null}
+                  {uploadState.receiptData.serviceCharge ? (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Service Charge:</span>
                       <span className="font-medium text-foreground">
-                        {uploadState.receiptData.currency} {uploadState.receiptData.serviceCharge}
+                        {String(uploadState.receiptData.currency)} {String(uploadState.receiptData.serviceCharge)}
                       </span>
                     </div>
-                  )}
-                  {uploadState.receiptData.totalAmount && (
+                  ) : null}
+                  {uploadState.receiptData.totalAmount ? (
                     <div className="flex justify-between border-t pt-2 mt-2">
                       <span className="text-muted-foreground font-semibold">Total:</span>
                       <span className="font-bold text-foreground">
-                        {uploadState.receiptData.currency} {uploadState.receiptData.totalAmount}
+                        {String(uploadState.receiptData.currency)} {String(uploadState.receiptData.totalAmount)}
                       </span>
                     </div>
-                  )}
-                  {uploadState.receiptData.paymentMethod && (
+                  ) : null}
+                  {uploadState.receiptData.paymentMethod ? (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Payment:</span>
                       <span className="font-medium text-foreground capitalize">
-                        {uploadState.receiptData.paymentMethod}
+                        {String(uploadState.receiptData.paymentMethod)}
                       </span>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
@@ -274,15 +275,15 @@ export function ReceiptUpload({
                     Items ({uploadState.receiptData.items.length})
                   </h4>
                   <div className="space-y-2">
-                    {uploadState.receiptData.items.map((item: any, index: number) => (
+                    {uploadState.receiptData.items.map((item, index: number) => (
                       <div key={index} className="flex justify-between text-sm border-b pb-2 last:border-0">
                         <div className="flex-1">
-                          <div className="font-medium text-foreground">{item.name}</div>
+                          <div className="font-medium text-foreground">{String(item.name)}</div>
                           {item.quantity && (
-                            <div className="text-xs text-muted-foreground">Qty: {item.quantity}</div>
+                            <div className="text-xs text-muted-foreground">Qty: {String(item.quantity)}</div>
                           )}
                         </div>
-                        {item.price && (
+                        {item.price && uploadState.receiptData && (
                           <div className="font-medium text-foreground">
                             {uploadState.receiptData.currency} {item.price}
                           </div>

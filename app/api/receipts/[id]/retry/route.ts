@@ -7,6 +7,7 @@ import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { eq, and, isNull } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
+import type { OCRItem } from '@/lib/types/api-responses';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -140,9 +141,11 @@ export async function POST(
       // Delete existing items if any
       await db.delete(receiptItems).where(eq(receiptItems.receiptId, receiptId));
 
-      const itemsToInsert = ocrData.items.map((item: any) => {
-        const quantity = item.quantity || 1;
-        const totalPrice = item.price || 0;
+      const itemsToInsert = ocrData.items.map((item: OCRItem) => {
+        const quantityRaw = item.quantity || 1;
+        const quantity = typeof quantityRaw === 'string' ? parseFloat(quantityRaw) : quantityRaw;
+        const priceRaw = item.price || 0;
+        const totalPrice = typeof priceRaw === 'string' ? parseFloat(priceRaw) : priceRaw;
         const unitPrice = quantity > 0 ? totalPrice / quantity : totalPrice;
 
         return {

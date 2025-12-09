@@ -9,13 +9,14 @@ export default tseslint.config(
       'build/**',
       'dist/**',
       '.vercel/**',
+      'next-env.d.ts',
     ],
   },
   ...tseslint.configs.recommended,
   {
     rules: {
       // Disable rules that are too strict for Next.js projects
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': [
         'warn', // Changed to "warn" so it doesn't fail builds
         {

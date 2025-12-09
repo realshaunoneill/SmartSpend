@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { receipts, receiptItems } from '@/lib/db/schema';
 import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers';
 import { analyzeReceiptWithGPT4o } from '@/lib/openai';
+import type { OCRItem } from '@/lib/types/api-responses';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { randomUUID } from 'crypto';
 import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
@@ -146,9 +147,11 @@ export async function POST(req: NextRequest) {
 
     // Save receipt items with enhanced data
     if (ocrData.items && Array.isArray(ocrData.items)) {
-      const itemsToInsert = ocrData.items.map((item: any) => {
-        const quantity = item.quantity || 1;
-        const totalPrice = item.price || 0; // This is the total price for the line item
+      const itemsToInsert = ocrData.items.map((item: OCRItem) => {
+        const quantityRaw = item.quantity || 1;
+        const quantity = typeof quantityRaw === 'string' ? parseFloat(quantityRaw) : quantityRaw;
+        const priceRaw = item.price || 0;
+        const totalPrice = typeof priceRaw === 'string' ? parseFloat(priceRaw) : priceRaw;
         const unitPrice = quantity > 0 ? totalPrice / quantity : totalPrice;
 
         return {
@@ -177,7 +180,7 @@ export async function POST(req: NextRequest) {
 
     // Prepare enhanced response with all extracted data
     const items = ocrData.items && Array.isArray(ocrData.items)
-      ? ocrData.items.map((item: any) => ({
+      ? ocrData.items.map((item: OCRItem) => ({
           name: item.name,
           quantity: item.quantity,
           price: item.price,

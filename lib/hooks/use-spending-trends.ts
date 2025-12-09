@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useReceipts } from './use-receipts';
+import type { ReceiptWithItems } from '@/lib/types/api-responses';
 
 interface SpendingTrendsData {
   chartData: Array<{
@@ -61,7 +62,7 @@ export function useSpendingTrends(householdId?: string, period: 'week' | 'month'
       }
 
       // Filter receipts within the period
-      const periodReceipts = receipts.filter((receipt: any) => {
+      const periodReceipts = receipts.filter((receipt) => {
         const receiptDate = new Date(receipt.transactionDate || receipt.createdAt);
         return receiptDate >= startDate && receiptDate <= now;
       });
@@ -69,7 +70,7 @@ export function useSpendingTrends(householdId?: string, period: 'week' | 'month'
       // Group receipts by time period
       const groupedData: Record<string, { amount: number; date: Date }> = {};
 
-      periodReceipts.forEach((receipt: any) => {
+      periodReceipts.forEach((receipt: ReceiptWithItems) => {
         const receiptDate = new Date(receipt.transactionDate || receipt.createdAt);
         let groupKey: string;
 
@@ -141,7 +142,7 @@ export function useSpendingTrends(householdId?: string, period: 'week' | 'month'
       }
 
       // Calculate total spent in current period
-      const totalSpent = periodReceipts.reduce((sum: number, receipt: any) => {
+      const totalSpent = periodReceipts.reduce((sum: number, receipt: ReceiptWithItems) => {
         return sum + (parseFloat(receipt.totalAmount || '0'));
       }, 0);
 
@@ -150,12 +151,12 @@ export function useSpendingTrends(householdId?: string, period: 'week' | 'month'
       const periodLength = now.getTime() - startDate.getTime();
       previousPeriodStart.setTime(startDate.getTime() - periodLength);
 
-      const previousPeriodReceipts = receipts.filter((receipt: any) => {
+      const previousPeriodReceipts = receipts.filter((receipt) => {
         const receiptDate = new Date(receipt.transactionDate || receipt.createdAt);
         return receiptDate >= previousPeriodStart && receiptDate < startDate;
       });
 
-      const previousTotal = previousPeriodReceipts.reduce((sum: number, receipt: any) => {
+      const previousTotal = previousPeriodReceipts.reduce((sum: number, receipt: ReceiptWithItems) => {
         return sum + (parseFloat(receipt.totalAmount || '0'));
       }, 0);
 
@@ -165,8 +166,8 @@ export function useSpendingTrends(householdId?: string, period: 'week' | 'month'
 
       // Calculate spending by category for current period
       const categoryTotals: Record<string, number> = {};
-      periodReceipts.forEach((receipt: any) => {
-        const category = receipt.category || 'other';
+      periodReceipts.forEach((receipt) => {
+        const category = receipt.category || 'Other';
         categoryTotals[category] = (categoryTotals[category] || 0) + (parseFloat(receipt.totalAmount || '0'));
       });
 

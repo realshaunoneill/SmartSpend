@@ -1,7 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { ReceiptWithItems } from '@/lib/types/api-responses';
 
 interface ReceiptsResponse {
-  receipts: any[]
+  receipts: ReceiptWithItems[]
   pagination: {
     page: number
     limit: number

@@ -3,10 +3,41 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Receipt, Home } from 'lucide-react';
 
+interface AdminUser {
+  id: string;
+  email: string;
+  subscribed: boolean;
+  isAdmin: boolean;
+  createdAt: string;
+  stripeCustomerId: string | null;
+  receiptCount: number;
+  householdCount: number;
+}
+
+interface AdminHousehold {
+  id: string;
+  name: string;
+  memberCount: number;
+  receiptCount: number;
+  createdAt: string;
+}
+
+interface AdminReceipt {
+  id: string;
+  merchantName: string;
+  totalAmount: string;
+  currency: string;
+  transactionDate: string;
+  userEmail: string;
+  householdName: string | null;
+  processingStatus: string;
+  createdAt: string;
+}
+
 interface AdminStatsProps {
-  users: any[]
-  households: any[]
-  receipts: any[]
+  users: AdminUser[]
+  households: AdminHousehold[]
+  receipts: AdminReceipt[]
 }
 
 export function AdminStats({ users, households, receipts }: AdminStatsProps) {

@@ -3,6 +3,15 @@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Receipt, Home, Users, Calendar, Mail, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import type { HouseholdWithMembers, ReceiptWithItems, MemberWithUser } from '@/lib/types/api-responses';
+
+type HouseholdDetailsWithMembers = HouseholdWithMembers & {
+  members?: MemberWithUser[];
+};
+
+type AdminHouseholdReceipt = ReceiptWithItems & {
+  submitterEmail?: string;
+};
 
 interface HouseholdCardProps {
   household: {
@@ -15,10 +24,8 @@ interface HouseholdCardProps {
   }
   isExpanded: boolean
   onToggle: () => void
-  householdDetails?: {
-    members?: any[]
-  }
-  householdReceipts?: any[]
+  householdDetails?: HouseholdDetailsWithMembers
+  householdReceipts?: AdminHouseholdReceipt[]
   onOpenReceipt: (receiptId: string) => void
 }
 
@@ -89,9 +96,9 @@ export function HouseholdCard({
               {householdDetails ? (
                 householdDetails.members && householdDetails.members.length > 0 ? (
                   <div className="space-y-2">
-                    {householdDetails.members.map((member: any) => (
+                    {householdDetails.members.map((member: MemberWithUser) => (
                       <div
-                        key={member.userId}
+                        key={member.user_id}
                         className="flex items-center justify-between rounded-md bg-background p-3"
                       >
                         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -117,7 +124,7 @@ export function HouseholdCard({
               {householdReceipts ? (
                 householdReceipts.length > 0 ? (
                   <div className="space-y-2">
-                    {householdReceipts.map((receipt: any) => (
+                    {householdReceipts.map((receipt: AdminHouseholdReceipt) => (
                       <div
                         key={receipt.id}
                         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-md bg-background p-3 hover:bg-muted/50 cursor-pointer transition-colors"

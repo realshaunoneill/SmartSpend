@@ -1,9 +1,10 @@
 'use client';
 
 import { Utensils, Hash, UserCheck, Users } from 'lucide-react';
+import type { OCRData } from '@/lib/types/api-responses';
 
 interface ReceiptServiceDetailsProps {
-  ocrData: any
+  ocrData: OCRData | null;
 }
 
 export function ReceiptServiceDetails({ ocrData }: ReceiptServiceDetailsProps) {

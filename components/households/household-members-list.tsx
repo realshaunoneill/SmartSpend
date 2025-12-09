@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { removeMember, updateMemberRole } from '@/lib/household-actions';
 import { useSendInvitation, useHouseholdInvitations } from '@/lib/hooks/use-invitations';
 import { toast } from 'sonner';
+import type { HouseholdInvitation } from '@/lib/db/schema';
 
 interface Member {
   id: string
@@ -225,7 +226,7 @@ export function HouseholdMembersList({
                 Pending Invitations
               </h4>
               <div className="space-y-2">
-                {invitations.map((invitation: any) => (
+                {invitations.map((invitation: HouseholdInvitation) => (
                   <div
                     key={invitation.id}
                     className="flex items-center justify-between rounded-lg border bg-muted/50 p-3"

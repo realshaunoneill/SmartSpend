@@ -17,6 +17,8 @@ import { useUser as useClerkUser } from '@clerk/nextjs';
 import { useReceipts, useRecentReceipts } from '@/lib/hooks/use-receipts';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { ReceiptTimeline } from '@/components/receipts/receipt-timeline';
+import type { ReceiptWithItems } from '@/lib/types/api-responses';
+import type { Receipt } from '@/lib/db/schema';
 
 function ReceiptsPageContent() {
   const { user: clerkUser } = useClerkUser();
@@ -24,7 +26,7 @@ function ReceiptsPageContent() {
   const searchParams = useSearchParams();
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>();
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+  const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filters, setFilters] = useState<ReceiptFilters>({
     sortBy: 'date',
@@ -128,7 +130,7 @@ function ReceiptsPageContent() {
     });
   };
 
-  const handleReceiptClick = (receipt: any) => {
+  const handleReceiptClick = (receipt: ReceiptWithItems) => {
     setSelectedReceipt(receipt);
     setIsModalOpen(true);
   };

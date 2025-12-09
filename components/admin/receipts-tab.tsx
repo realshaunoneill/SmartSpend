@@ -3,8 +3,20 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ReceiptCard } from './receipt-card';
 
+interface AdminReceipt {
+  id: string;
+  merchantName: string;
+  totalAmount: string;
+  currency: string;
+  transactionDate: string;
+  userEmail: string;
+  householdName: string | null;
+  processingStatus: string;
+  createdAt: string;
+}
+
 interface ReceiptsTabProps {
-  receipts: any[]
+  receipts: AdminReceipt[]
   onOpenReceipt: (receiptId: string) => void
 }
 

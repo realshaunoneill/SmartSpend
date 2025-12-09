@@ -2,14 +2,23 @@
 
 import { CreditCard } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import type { ReceiptWithItems, OCRData } from '@/lib/types/api-responses';
 
 interface ReceiptFinancialBreakdownProps {
-  receipt: any
+  receipt: ReceiptWithItems
 }
 
 export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdownProps) {
-  const hasCharges = (receipt.tax > 0) || (receipt.serviceCharge > 0) || (receipt.ocrData?.tips > 0) || (receipt.ocrData?.deliveryFee > 0) || (receipt.ocrData?.packagingFee > 0);
-  const hasDiscount = receipt.ocrData?.discount > 0;
+  const ocrData = receipt.ocrData as OCRData | null;
+  const tax = receipt.tax ? parseFloat(receipt.tax) : 0;
+  const serviceCharge = receipt.serviceCharge ? parseFloat(receipt.serviceCharge) : 0;
+  const tips = ocrData?.tips ? parseFloat(String(ocrData.tips)) : 0;
+  const deliveryFee = ocrData?.deliveryFee ? parseFloat(String(ocrData.deliveryFee)) : 0;
+  const packagingFee = ocrData?.packagingFee ? parseFloat(String(ocrData.packagingFee)) : 0;
+  const discount = ocrData?.discount ? parseFloat(String(ocrData.discount)) : 0;
+
+  const hasCharges = tax > 0 || serviceCharge > 0 || tips > 0 || deliveryFee > 0 || packagingFee > 0;
+  const hasDiscount = discount > 0;
   const hasDetails = receipt.subtotal || hasCharges || hasDiscount;
 
   return (
@@ -36,7 +45,7 @@ export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdown
             <>
               {receipt.subtotal && <Separator className="my-1.5" />}
               <div className="space-y-1.5">
-                {receipt.tax > 0 && (
+                {tax > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Tax</span>
                     <span className="text-sm font-medium">
@@ -45,7 +54,7 @@ export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdown
                   </div>
                 )}
 
-                {receipt.serviceCharge > 0 && (
+                {serviceCharge > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Service Charge</span>
                     <span className="text-sm font-medium">
@@ -54,29 +63,29 @@ export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdown
                   </div>
                 )}
 
-                {receipt.ocrData?.tips > 0 && (
+                {tips > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Tips</span>
                     <span className="text-sm font-medium">
-                      +{receipt.currency} {receipt.ocrData.tips}
+                      +{receipt.currency} {String(ocrData?.tips || '')}
                     </span>
                   </div>
                 )}
 
-                {receipt.ocrData?.deliveryFee > 0 && (
+                {deliveryFee > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Delivery Fee</span>
                     <span className="text-sm font-medium">
-                      +{receipt.currency} {receipt.ocrData.deliveryFee}
+                      +{receipt.currency} {String(ocrData?.deliveryFee || '')}
                     </span>
                   </div>
                 )}
 
-                {receipt.ocrData?.packagingFee > 0 && (
+                {packagingFee > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Packaging Fee</span>
                     <span className="text-sm font-medium">
-                      +{receipt.currency} {receipt.ocrData.packagingFee}
+                      +{receipt.currency} {String(ocrData?.packagingFee || '')}
                     </span>
                   </div>
                 )}
@@ -85,13 +94,13 @@ export function ReceiptFinancialBreakdown({ receipt }: ReceiptFinancialBreakdown
           )}
 
           {/* Discounts Section */}
-          {hasDiscount && receipt.ocrData.discount > 0 && (
+          {hasDiscount && discount > 0 && (
             <>
               <Separator className="my-1.5" />
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Discount</span>
                 <span className="text-sm font-medium text-green-600">
-                  -{receipt.currency} {receipt.ocrData.discount}
+                  -{receipt.currency} {String(ocrData?.discount || '')}
                 </span>
               </div>
             </>
