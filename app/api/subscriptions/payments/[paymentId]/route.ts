@@ -5,6 +5,7 @@ import { subscriptions, subscriptionPayments, receipts } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
 
 export const runtime = 'nodejs';
 
@@ -87,6 +88,9 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
       submitLogEvent('subscription', `Linked receipt ${receiptId} to payment ${paymentId}`, correlationId, { paymentId, receiptId });
 
+      // Invalidate insights cache
+      await invalidateInsightsCache(user.id, payment.subscriptions.householdId || undefined, correlationId);
+
       return NextResponse.json(updated);
     }
 
@@ -105,6 +109,9 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       .returning();
 
     submitLogEvent('subscription', `Updated payment ${paymentId}`, correlationId, { paymentId });
+
+    // Invalidate insights cache
+    await invalidateInsightsCache(user.id, payment.subscriptions.householdId || undefined, correlationId);
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -162,6 +169,9 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       .returning();
 
     submitLogEvent('subscription', `Unlinked receipt from payment ${paymentId}`, correlationId, { paymentId });
+
+    // Invalidate insights cache
+    await invalidateInsightsCache(user.id, payment.subscriptions.householdId || undefined, correlationId);
 
     return NextResponse.json(updated);
   } catch (error) {

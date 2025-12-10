@@ -6,6 +6,7 @@ import { eq, and, desc } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { SubscriptionService } from '@/lib/services/subscription-service';
+import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
 
 export const runtime = 'nodejs';
 
@@ -139,6 +140,9 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
     submitLogEvent('subscription', `Updated subscription: ${id}`, correlationId, { subscriptionId: id });
 
+    // Invalidate insights cache
+    await invalidateInsightsCache(user.id, existing.householdId || undefined, correlationId);
+
     return NextResponse.json(updated);
   } catch (error) {
     submitLogEvent('subscription', `Error updating subscription: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
@@ -189,6 +193,9 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       );
 
     submitLogEvent('subscription', `Deleted subscription: ${id}`, correlationId, { subscriptionId: id });
+
+    // Invalidate insights cache
+    await invalidateInsightsCache(user.id, existing.householdId || undefined, correlationId);
 
     return NextResponse.json({ success: true });
   } catch (error) {

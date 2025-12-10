@@ -4,6 +4,7 @@ import { Navigation } from '@/components/layout/navigation';
 import { SpendingSummaryCard } from '@/components/insights/spending-summary-card';
 import { TopItemsList } from '@/components/insights/top-items-list';
 import { ItemSearchAnalysis } from '@/components/insights/item-search-analysis';
+import { SubscriptionInsights } from '@/components/insights/subscription-insights';
 import { SubscriptionUpsell } from '@/components/subscriptions/subscription-upsell';
 import { useUser } from '@/lib/hooks/use-user';
 import { Loader2 } from 'lucide-react';
@@ -45,6 +46,11 @@ export default function InsightsPage() {
           />
         ) : (
           <div className="grid gap-6 lg:grid-cols-2">
+            {/* Subscription Overview */}
+            <div className="lg:col-span-2">
+              <SubscriptionInsights />
+            </div>
+
             {/* AI Summary */}
             <div className="lg:col-span-2">
               <SpendingSummaryCard autoLoad />

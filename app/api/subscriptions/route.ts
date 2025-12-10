@@ -6,6 +6,7 @@ import { eq, and, or, desc, inArray } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { SubscriptionService } from '@/lib/services/subscription-service';
+import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
 
 export const runtime = 'nodejs';
 
@@ -178,6 +179,9 @@ export async function POST(req: NextRequest) {
     });
 
     submitLogEvent('subscription', `Created subscription: ${name}`, correlationId, { subscriptionId: newSubscription.id });
+
+    // Invalidate insights cache
+    await invalidateInsightsCache(user.id, householdId || undefined, correlationId);
 
     return NextResponse.json(newSubscription, { status: 201 });
   } catch (error) {
