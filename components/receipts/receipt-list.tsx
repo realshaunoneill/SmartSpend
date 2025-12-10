@@ -1,16 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { ReceiptIcon, Calendar, Store, Users } from 'lucide-react';
+import { ReceiptIcon, Calendar, Store, Users, AlertCircle, RefreshCw, Clock, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ReceiptDetailModal } from '@/components/receipts/receipt-detail-modal';
 import { formatCategory } from '@/lib/utils/format-category';
 import type { ReceiptWithItems } from '@/lib/types/api-responses';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReceiptListProps {
   receipts: ReceiptWithItems[];
   onReceiptClick?: (receipt: ReceiptWithItems) => void;
+  onRetry?: () => void;
 }
 
 const categoryColors: Record<string, string> = {
@@ -25,13 +28,83 @@ const categoryColors: Record<string, string> = {
   other: 'bg-gray-500/10 text-gray-700 dark:text-gray-400',
 };
 
-export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
+export function ReceiptList({ receipts, onReceiptClick, onRetry }: ReceiptListProps) {
   const [selectedReceipt, setSelectedReceipt] = useState<ReceiptWithItems | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const handleRetry = async (receiptId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRetryingId(receiptId);
+
+    try {
+      const response = await fetch(`/api/receipts/${receiptId}/retry`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to retry processing');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Receipt processing completed successfully',
+      });
+
+      // Call the onRetry callback to refresh the list
+      if (onRetry) {
+        onRetry();
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to retry processing',
+        variant: 'destructive',
+      });
+    } finally {
+      setRetryingId(null);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return (
+          <Badge variant="secondary" className="bg-green-500/10 text-green-700 dark:text-green-400">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Completed
+          </Badge>
+        );
+      case 'processing':
+        return (
+          <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 dark:text-blue-400">
+            <Clock className="h-3 w-3 mr-1" />
+            Processing
+          </Badge>
+        );
+      case 'failed':
+        return (
+          <Badge variant="secondary" className="bg-red-500/10 text-red-700 dark:text-red-400">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            Failed
+          </Badge>
+        );
+      case 'pending':
+        return (
+          <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending
+          </Badge>
+        );
+      default:
+        return null;
+    }
   };
 
   const handleReceiptClick = (receipt: ReceiptWithItems) => {
@@ -106,6 +179,7 @@ export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
                         <span className="sm:hidden">{formatDate(receipt.transactionDate)}</span>
                       </div>
                     )}
+                    {receipt.processingStatus && getStatusBadge(receipt.processingStatus)}
                     {receipt.category && (
                       <Badge variant="secondary" className={categoryColors[receipt.category] || categoryColors.other}>
                         {formatCategory(receipt.category)}
@@ -129,6 +203,36 @@ export function ReceiptList({ receipts, onReceiptClick }: ReceiptListProps) {
                       </span>
                     )}
                   </div>
+
+                  {/* Retry Button for Failed Receipts */}
+                  {receipt.processingStatus === 'failed' && (
+                    <div className="mt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => handleRetry(receipt.id, e)}
+                        disabled={retryingId === receipt.id}
+                        className="text-xs"
+                      >
+                        {retryingId === receipt.id ? (
+                          <>
+                            <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                            Retrying...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                            Retry Processing
+                          </>
+                        )}
+                      </Button>
+                      {receipt.processingError && (
+                        <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                          {receipt.processingError}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { ItemAnalysisDialog } from '@/components/insights/item-analysis-dialog';
 import { SubscriptionUpsell } from '@/components/subscriptions/subscription-upsell';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useUser } from '@/lib/hooks/use-user';
 import { ReceiptHeader } from './detail-modal/receipt-header';
@@ -32,6 +32,7 @@ export function ReceiptDetailModal({
 }: ReceiptDetailModalProps) {
   const [selectedItemForAnalysis, setSelectedItemForAnalysis] = useState<string | null>(null);
   const [showItemAnalysis, setShowItemAnalysis] = useState(false);
+  const queryClient = useQueryClient();
 
   // Fetch household name and user's role if receipt is assigned to one
   const { data: household } = useQuery({
@@ -67,6 +68,17 @@ export function ReceiptDetailModal({
 
   // Check if we're still loading permissions
   const isLoadingPermissions = isLoadingUser || (!!receipt?.householdId && !household && open);
+
+  const handleRetrySuccess = () => {
+    // Invalidate queries to refresh receipt data
+    if (receipt) {
+      queryClient.invalidateQueries({ queryKey: ['receipts'] });
+      queryClient.invalidateQueries({ queryKey: ['receipt', receipt.id] });
+      queryClient.invalidateQueries({ queryKey: ['recentReceipts'] });
+    }
+    // Close the modal to show the updated receipt list
+    onOpenChange(false);
+  };
 
   if (!receipt) return null;
 
@@ -116,6 +128,7 @@ export function ReceiptDetailModal({
                   canModifyReceipt={canModifyReceipt}
                   isReceiptOwner={isReceiptOwner}
                   onDeleted={() => onOpenChange(false)}
+                  onRetrySuccess={handleRetrySuccess}
                 />
               </div>
 

@@ -115,6 +115,11 @@ function ReceiptsPageContent() {
     refetchAll();
   };
 
+  const handleRetry = () => {
+    refetchRecent();
+    refetchAll();
+  };
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -193,7 +198,7 @@ function ReceiptsPageContent() {
                 </CardContent>
               </Card>
             ) : recentReceipts.length > 0 ? (
-              <ReceiptList receipts={recentReceipts} onReceiptClick={handleReceiptClick} />
+              <ReceiptList receipts={recentReceipts} onReceiptClick={handleReceiptClick} onRetry={handleRetry} />
             ) : (
               <Card>
                 <CardContent className="text-center p-8 text-muted-foreground">

@@ -1,6 +1,6 @@
 'use client';
 
-import { Store, MapPin, Info, Calendar, Clock, CreditCard, Hash, Receipt as ReceiptIcon, Tag, Building2, Users } from 'lucide-react';
+import { Store, MapPin, Info, Calendar, Clock, CreditCard, Hash, Receipt as ReceiptIcon, Tag, Building2, Users, AlertCircle, RefreshCw, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ReceiptAssignmentDialog } from '@/components/receipts/receipt-assignment-dialog';
@@ -8,6 +8,8 @@ import { DeleteReceiptButton } from './delete-receipt-button';
 import { BusinessExpenseDialog } from './business-expense-dialog';
 import { formatCategory, capitalizeText } from '@/lib/utils/format-category';
 import type { ReceiptWithItems, OCRData } from '@/lib/types/api-responses';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 interface HouseholdInfo {
   id: string;
@@ -22,6 +24,7 @@ interface ReceiptHeaderProps {
   canModifyReceipt: boolean
   isReceiptOwner: boolean
   onDeleted: () => void
+  onRetrySuccess?: () => void
 }
 
 export function ReceiptHeader({
@@ -31,7 +34,78 @@ export function ReceiptHeader({
   canModifyReceipt,
   isReceiptOwner,
   onDeleted,
+  onRetrySuccess,
 }: ReceiptHeaderProps) {
+  const [isRetrying, setIsRetrying] = useState(false);
+  const { toast } = useToast();
+
+  const handleRetry = async () => {
+    setIsRetrying(true);
+
+    try {
+      const response = await fetch(`/api/receipts/${receipt.id}/retry`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to retry processing');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Receipt processing completed successfully',
+      });
+
+      // Call the callback to refresh the receipt data
+      if (onRetrySuccess) {
+        onRetrySuccess();
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to retry processing',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return (
+          <Badge variant="secondary" className="bg-green-500/10 text-green-700 dark:text-green-400">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Completed
+          </Badge>
+        );
+      case 'processing':
+        return (
+          <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 dark:text-blue-400">
+            <Clock className="h-3 w-3 mr-1" />
+            Processing
+          </Badge>
+        );
+      case 'failed':
+        return (
+          <Badge variant="secondary" className="bg-red-500/10 text-red-700 dark:text-red-400">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            Failed
+          </Badge>
+        );
+      case 'pending':
+        return (
+          <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div>
       <div className="flex items-start justify-between mb-2">
@@ -50,6 +124,7 @@ export function ReceiptHeader({
                   Enhanced
                 </Badge>
               ) : null}
+              {receipt.processingStatus && getStatusBadge(receipt.processingStatus)}
             </div>
             {receipt.location && (
               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
@@ -86,6 +161,41 @@ export function ReceiptHeader({
             <Users className="h-3 w-3" />
             Shared with {household.name}
           </Badge>
+        </div>
+      )}
+
+      {/* Processing Error Message */}
+      {receipt.processingStatus === 'failed' && receipt.processingError && (
+        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-md">
+          <p className="text-sm text-red-700 dark:text-red-400">
+            <AlertCircle className="h-4 w-4 inline mr-2" />
+            <strong>Processing Error:</strong> {receipt.processingError}
+          </p>
+        </div>
+      )}
+
+      {/* Retry Button for Failed Receipts */}
+      {receipt.processingStatus === 'failed' && isReceiptOwner && (
+        <div className="mt-4">
+          <Button
+            onClick={handleRetry}
+            disabled={isRetrying}
+            variant="default"
+            size="sm"
+            className="w-full"
+          >
+            {isRetrying ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Retrying...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry Processing
+              </>
+            )}
+          </Button>
         </div>
       )}
 

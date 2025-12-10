@@ -54,6 +54,16 @@ export async function POST(
       userId: user.id,
     });
 
+    submitLogEvent('receipt-process-start', 'Starting receipt retry processing', correlationId, {
+      receiptId: receipt.id,
+      imageUrl: receipt.imageUrl,
+      userId: user.id,
+      userEmail: email,
+      previousStatus: receipt.processingStatus,
+      previousError: receipt.processingError,
+      timestamp: new Date().toISOString(),
+    });
+
     // Update status to processing
     await db
       .update(receipts)
@@ -63,6 +73,13 @@ export async function POST(
         updatedAt: new Date(),
       })
       .where(eq(receipts.id, receiptId));
+
+    submitLogEvent('receipt-status-processing', 'Receipt status updated to processing (retry)', correlationId, {
+      receiptId: receipt.id,
+      userId: user.id,
+      status: 'processing',
+      timestamp: new Date().toISOString(),
+    });
 
     // Analyze receipt with OpenAI
     let ocrData, usage;
@@ -169,6 +186,19 @@ export async function POST(
     submitLogEvent('receipt', 'Receipt retry successful', correlationId, {
       receiptId: receipt.id,
       userId: user.id,
+    });
+
+    submitLogEvent('receipt-process-complete', 'Receipt retry processing completed successfully', correlationId, {
+      receiptId: receipt.id,
+      userId: user.id,
+      merchantName: updatedReceipt.merchantName,
+      totalAmount: updatedReceipt.totalAmount,
+      currency: updatedReceipt.currency,
+      itemCount: ocrData.items?.length || 0,
+      tokensUsed: usage,
+      processingStatus: 'completed',
+      wasRetry: true,
+      timestamp: new Date().toISOString(),
     });
 
     // Invalidate insights cache since receipt data changed

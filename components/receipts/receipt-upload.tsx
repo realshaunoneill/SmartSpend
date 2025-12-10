@@ -80,7 +80,17 @@ export function ReceiptUpload({
         },
       );
 
-      console.log('Upload completed:', blob.url);
+      console.log('Upload completed:', blob);
+      console.log('Full blob object keys:', Object.keys(blob));
+      console.log('Blob receiptId:', blob.receiptId);
+
+      // Check if we got a receiptId back from the upload
+      if (!blob.receiptId) {
+        console.error('No receiptId in blob response. Full blob object:', JSON.stringify(blob, null, 2));
+        throw new Error('Receipt ID not returned from upload');
+      }
+
+      console.log('Receipt ID received:', blob.receiptId);
 
       // Step 2: Process receipt with OpenAI
       setUploadState({
@@ -94,13 +104,13 @@ export function ReceiptUpload({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          imageUrl: blob.url,
-          householdId,
+          receiptId: blob.receiptId,
         }),
       });
 
       if (!processResponse.ok) {
-        throw new Error('Failed to process receipt');
+        const errorData = await processResponse.json();
+        throw new Error(errorData.message || 'Failed to process receipt');
       }
 
       const receiptData = await processResponse.json();
