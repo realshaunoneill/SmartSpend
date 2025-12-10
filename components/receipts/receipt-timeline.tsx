@@ -35,7 +35,17 @@ function groupReceiptsByDate(receipts: ReceiptWithItems[]) {
   const groups: Record<string, ReceiptWithItems[]> = {};
 
   receipts.forEach(receipt => {
-    const dateStr = receipt.transactionDate || receipt.createdAt.toISOString();
+    let dateStr: string | undefined;
+    
+    if (receipt.transactionDate) {
+      dateStr = receipt.transactionDate;
+    } else if (receipt.createdAt) {
+      // Handle both Date objects and string dates
+      dateStr = typeof receipt.createdAt === 'string' 
+        ? receipt.createdAt 
+        : receipt.createdAt.toISOString();
+    }
+    
     if (!dateStr) return;
 
     const date = parseISO(dateStr);
@@ -83,12 +93,20 @@ export function ReceiptTimeline({ receipts, onReceiptClick }: ReceiptTimelinePro
           <div className="ml-16 space-y-4">
             {groupedReceipts[dateLabel].map((receipt) => {
               const categoryClass = categoryColors[receipt.category?.toLowerCase() || 'other'] || categoryColors.other;
+              
+              // Determine border style based on processing status
+              let borderClass = 'border-2';
+              if (receipt.processingStatus === 'failed') {
+                borderClass = 'border-2 border-red-500';
+              } else if (receipt.processingStatus === 'pending' || receipt.processingStatus === 'processing') {
+                borderClass = 'border-2 border-yellow-500';
+              }
 
               return (
                 <div
                   key={receipt.id}
                   onClick={() => onReceiptClick(receipt)}
-                  className="group relative cursor-pointer rounded-lg border-2 bg-card p-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:-translate-y-1"
+                  className={`group relative cursor-pointer rounded-lg bg-card p-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:-translate-y-1 ${borderClass}`}
                 >
                   {/* Timeline connector dot */}
                   <div className="absolute -left-[45px] top-6 h-3 w-3 rounded-full border-2 border-primary bg-background group-hover:bg-primary transition-colors" />
@@ -129,7 +147,24 @@ export function ReceiptTimeline({ receipts, onReceiptClick }: ReceiptTimelinePro
 
                       {/* Badges */}
                       <div className="flex flex-wrap items-center gap-2">
-                        {receipt.category && (
+                        {/* Processing status badges */}
+                        {receipt.processingStatus === 'pending' && (
+                          <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20">
+                            ⏳ Processing - Wait a minute, if it doesn't complete contact support
+                          </Badge>
+                        )}
+                        {receipt.processingStatus === 'processing' && (
+                          <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20">
+                            ⏳ Processing - Wait a minute, if it doesn't complete contact support
+                          </Badge>
+                        )}
+                        {receipt.processingStatus === 'failed' && (
+                          <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20">
+                            ❌ Failed - Please contact support
+                          </Badge>
+                        )}
+                        
+                        {receipt.category && receipt.processingStatus === 'completed' && (
                           <Badge variant="outline" className={categoryClass}>
                             {formatCategory(receipt.category)}
                           </Badge>

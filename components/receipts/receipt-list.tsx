@@ -83,23 +83,23 @@ export function ReceiptList({ receipts, onReceiptClick, onRetry }: ReceiptListPr
         );
       case 'processing':
         return (
-          <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 dark:text-blue-400">
+          <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400">
             <Clock className="h-3 w-3 mr-1" />
-            Processing
+            Processing - Wait a minute, if it doesn't complete contact support
           </Badge>
         );
       case 'failed':
         return (
           <Badge variant="secondary" className="bg-red-500/10 text-red-700 dark:text-red-400">
             <AlertCircle className="h-3 w-3 mr-1" />
-            Failed
+            Failed - Please contact support
           </Badge>
         );
       case 'pending':
         return (
           <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400">
             <Clock className="h-3 w-3 mr-1" />
-            Pending
+            Processing - Wait a minute, if it doesn't complete contact support
           </Badge>
         );
       default:

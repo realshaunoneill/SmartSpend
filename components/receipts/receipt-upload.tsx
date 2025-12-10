@@ -81,18 +81,34 @@ export function ReceiptUpload({
       );
 
       console.log('Upload completed:', blob);
-      console.log('Full blob object keys:', Object.keys(blob));
-      console.log('Blob receiptId:', blob.receiptId);
+      console.log('Blob URL:', blob.url);
 
-      // Check if we got a receiptId back from the upload
-      if (!blob.receiptId) {
-        console.error('No receiptId in blob response. Full blob object:', JSON.stringify(blob, null, 2));
-        throw new Error('Receipt ID not returned from upload');
+      // Step 2: Create receipt entry in database
+      setUploadState({
+        status: 'uploading',
+        message: 'Creating receipt entry...',
+      });
+
+      const createResponse = await fetch('/api/receipt/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageUrl: blob.url,
+          householdId,
+        }),
+      });
+
+      if (!createResponse.ok) {
+        const errorData = await createResponse.json();
+        throw new Error(errorData.message || 'Failed to create receipt entry');
       }
 
-      console.log('Receipt ID received:', blob.receiptId);
+      const { receiptId: dbReceiptId } = await createResponse.json();
+      console.log('Receipt entry created with ID:', dbReceiptId);
 
-      // Step 2: Process receipt with OpenAI
+      // Step 3: Process receipt with OpenAI
       setUploadState({
         status: 'scanning',
         message: 'Analyzing receipt...',
@@ -104,7 +120,7 @@ export function ReceiptUpload({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          receiptId: blob.receiptId,
+          receiptId: dbReceiptId,
         }),
       });
 

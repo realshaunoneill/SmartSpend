@@ -83,12 +83,31 @@ export function ReceiptBatchUpload({
     );
 
     try {
+      // If no receiptId, create the DB entry first
+      let receiptId = item.receiptId;
+      if (!receiptId) {
+        const createResponse = await fetch('/api/receipt/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageUrl: item.blobUrl,
+            householdId,
+          }),
+        });
+
+        if (!createResponse.ok) {
+          throw new Error('Failed to create receipt entry');
+        }
+
+        const createData = await createResponse.json();
+        receiptId = createData.receiptId;
+      }
+
       const processResponse = await fetch('/api/receipt/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          imageUrl: item.blobUrl,
-          householdId,
+          receiptId,
         }),
       });
 
@@ -134,11 +153,27 @@ export function ReceiptBatchUpload({
         },
       );
 
-      // Step 2: Trigger async processing (fire and forget)
+      // Step 2: Create receipt entry in database
+      const createResponse = await fetch('/api/receipt/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl: blob.url,
+          householdId,
+        }),
+      });
+
+      if (!createResponse.ok) {
+        throw new Error('Failed to create receipt entry');
+      }
+
+      const { receiptId: dbReceiptId } = await createResponse.json();
+
+      // Step 3: Trigger async processing (fire and forget)
       setUploadItems(prev =>
         prev.map(i =>
           i.id === item.id
-            ? { ...i, status: 'processing' as const, progress: 50, blobUrl: blob.url, receiptId }
+            ? { ...i, status: 'processing' as const, progress: 50, blobUrl: blob.url, receiptId: dbReceiptId }
             : i,
         ),
       );
@@ -148,8 +183,7 @@ export function ReceiptBatchUpload({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          imageUrl: blob.url,
-          householdId,
+          receiptId: dbReceiptId,
         }),
       })
         .then(async (response) => {

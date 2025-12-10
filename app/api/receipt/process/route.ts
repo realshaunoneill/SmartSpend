@@ -7,6 +7,7 @@ import type { OCRItem } from '@/lib/types/api-responses';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { randomUUID } from 'crypto';
 import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
+import { eq, and, isNull } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -23,25 +24,74 @@ export async function POST(req: NextRequest) {
     if (subCheck) return subCheck;
 
     const body = await req.json();
-    let { householdId } = body;
-    const { imageUrl } = body;
+    const { receiptId } = body;
 
-    if (!imageUrl) {
+    if (!receiptId) {
+      submitLogEvent('receipt-error', 'No receiptId provided to process endpoint', correlationId, {
+        body,
+        userId: user.id,
+      }, true);
       return NextResponse.json(
-        { error: 'Image URL is required' },
+        { error: 'Receipt ID is required' },
         { status: 400 },
       );
     }
 
-    // If no householdId provided, use the user's default household (if set)
-    if (!householdId && user.defaultHouseholdId) {
-      householdId = user.defaultHouseholdId;
-      submitLogEvent('receipt-process', 'Using default household for receipt', correlationId, {
-        defaultHouseholdId: user.defaultHouseholdId,
-      });
+    // Get the existing receipt from database
+    const [existingReceipt] = await db
+      .select()
+      .from(receipts)
+      .where(
+        and(
+          eq(receipts.id, receiptId),
+          eq(receipts.userId, user.id),
+          isNull(receipts.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    if (!existingReceipt) {
+      return NextResponse.json(
+        { error: 'Receipt not found' },
+        { status: 404 },
+      );
     }
 
-    submitLogEvent('receipt-process', 'Processing receipt', correlationId, { imageUrl, userId: user.id, householdId });
+    if (existingReceipt.processingStatus === 'completed') {
+      return NextResponse.json(
+        { error: 'Receipt already processed' },
+        { status: 400 },
+      );
+    }
+
+    const imageUrl = existingReceipt.imageUrl;
+    const householdId = existingReceipt.householdId;
+
+    submitLogEvent('receipt-process-start', 'Starting receipt processing', correlationId, {
+      receiptId,
+      imageUrl,
+      userId: user.id,
+      userEmail: user.email,
+      householdId,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Update status to processing
+    await db
+      .update(receipts)
+      .set({
+        processingStatus: 'processing',
+        processingError: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(receipts.id, receiptId));
+
+    submitLogEvent('receipt-status-processing', 'Receipt status updated to processing', correlationId, {
+      receiptId,
+      userId: user.id,
+      status: 'processing',
+      timestamp: new Date().toISOString(),
+    });
 
     // Analyze receipt with OpenAI
     let ocrData, usage;
@@ -50,20 +100,18 @@ export async function POST(req: NextRequest) {
       ocrData = result.data;
       usage = result.usage;
     } catch (error) {
-      // Save failed receipt to database
-      const [failedReceipt] = await db
-        .insert(receipts)
-        .values({
-          userId: user.id,
-          householdId,
-          imageUrl,
+      // Update receipt status to failed
+      await db
+        .update(receipts)
+        .set({
           processingStatus: 'failed',
           processingError: error instanceof Error ? error.message : 'Unknown error',
+          updatedAt: new Date(),
         })
-        .returning();
+        .where(eq(receipts.id, receiptId));
 
       submitLogEvent('receipt-error', `Receipt processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {
-        receiptId: failedReceipt.id,
+        receiptId,
         error: error instanceof Error ? error.stack : undefined,
       }, true);
 
@@ -71,7 +119,7 @@ export async function POST(req: NextRequest) {
         {
           error: 'Failed to process receipt',
           message: error instanceof Error ? error.message : 'Unknown error',
-          receiptId: failedReceipt.id,
+          receiptId,
         },
         { status: 500 },
       );
@@ -94,13 +142,10 @@ export async function POST(req: NextRequest) {
       userId: user.id,
     });
 
-    // Save receipt to database with enhanced data
+    // Update receipt in database with enhanced data
     const [receipt] = await db
-      .insert(receipts)
-      .values({
-        userId: user.id,
-        householdId,
-        imageUrl,
+      .update(receipts)
+      .set({
         merchantName: ocrData.merchant || 'Unknown Merchant',
         totalAmount: ocrData.total?.toString() || '0',
         currency: ocrData.currency || 'USD',
@@ -114,6 +159,8 @@ export async function POST(req: NextRequest) {
         category: ocrData.category || 'other',
         processingStatus: 'completed', // Mark as successfully processed
         processingTokens: usage, // Store token usage for cost calculation
+        processingError: null, // Clear any previous error
+        updatedAt: new Date(),
         ocrData: {
           ...ocrData,
           // Store additional extracted details
@@ -134,15 +181,17 @@ export async function POST(req: NextRequest) {
           packagingFee: ocrData.packagingFee,
         },
       })
+      .where(eq(receipts.id, receiptId))
       .returning();
 
-    submitLogEvent('receipt', 'Receipt saved to database', correlationId, {
+    submitLogEvent('receipt-process-complete', 'Receipt updated in database with OCR data', correlationId, {
       receiptId: receipt.id,
       tokenUsage: usage,
       userEmail: user.email,
       userId: user.id,
       merchantName: receipt.merchantName,
       totalAmount: receipt.totalAmount,
+      timestamp: new Date().toISOString(),
     });
 
     // Save receipt items with enhanced data

@@ -57,10 +57,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json(jsonResponse);
     }
 
-    submitLogEvent('receipt-upload', 'Upload completed, processing receipt', correlationId, { userId: user.id, clerkId });
+    // For upload completion response, we need to handle the actual upload separately
+    // The client-side handleUpload completes the upload and calls this endpoint again
+    // At this point, we just return the completion acknowledgment
+    submitLogEvent('receipt-upload-blob-complete', 'Blob upload completed successfully', correlationId, {
+      userId: user.id,
+      clerkId,
+      responseType: jsonResponse.type,
+      timestamp: new Date().toISOString(),
+    });
 
-    // For upload completion, just return success
-    // The actual processing will happen via webhook or we need a different approach
+    // Return success - the client will handle the actual blob URL
     return NextResponse.json(jsonResponse);
   } catch (error) {
     submitLogEvent('receipt-error', `Receipt upload error: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { error: error instanceof Error ? error.stack : undefined }, true);
