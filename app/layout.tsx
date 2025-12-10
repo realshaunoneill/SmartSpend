@@ -14,7 +14,49 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'ReceiptWise - Receipt & Expense Tracker',
   description: 'Track receipts, manage spending, and sync your bank accounts in one place',
-  generator: 'v0.app',
+  applicationName: 'ReceiptWise',
+  keywords: ['receipt tracker', 'expense tracker', 'receipt scanner', 'spending tracker', 'subscription manager', 'receipt management', 'expense management'],
+  authors: [{ name: 'ReceiptWise' }],
+  creator: 'ReceiptWise',
+  publisher: 'ReceiptWise',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://receiptwise.io'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'ReceiptWise - Receipt & Expense Tracker',
+    description: 'Track receipts, manage spending, and sync your bank accounts in one place',
+    url: '/',
+    siteName: 'ReceiptWise',
+    images: [
+      {
+        url: '/opengraph.png',
+        width: 1536,
+        height: 1024,
+        alt: 'ReceiptWise - Receipt & Expense Tracker',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ReceiptWise - Receipt & Expense Tracker',
+    description: 'Track receipts, manage spending, and sync your bank accounts in one place',
+    images: ['/opengraph.png'],
+    creator: '@receiptwise',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: [
       {
@@ -23,6 +65,7 @@ export const metadata: Metadata = {
     ],
     apple: '/logo.png',
   },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({

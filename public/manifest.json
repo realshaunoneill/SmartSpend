@@ -1,0 +1,26 @@
+{
+  "name": "ReceiptWise - Receipt & Expense Tracker",
+  "short_name": "ReceiptWise",
+  "description": "Track receipts, manage spending, and sync your bank accounts in one place",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["finance", "productivity", "business"],
+  "lang": "en-US",
+  "dir": "ltr"
+}
