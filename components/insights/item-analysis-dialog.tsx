@@ -9,9 +9,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useItemAnalysis } from '@/hooks/use-item-analysis';
-import { Loader2, TrendingUp, ShoppingCart, Calendar, Store, ShoppingBag, AlertCircle, RefreshCcw } from 'lucide-react';
+import { Loader2, TrendingUp, ShoppingCart, Calendar, Store, ShoppingBag, AlertCircle, RefreshCcw, ExternalLink, Receipt } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
 
 interface ItemAnalysisDialogProps {
   itemName: string;
@@ -27,6 +30,7 @@ export function ItemAnalysisDialog({
   householdId,
 }: ItemAnalysisDialogProps) {
   const [months] = useState(12);
+  const router = useRouter();
 
   const { data: analysis, isLoading, error, refetch } = useItemAnalysis({
     itemName,
@@ -37,6 +41,13 @@ export function ItemAnalysisDialog({
 
   const handleRefresh = () => {
     refetch();
+  };
+
+  const handleViewReceipt = (receiptId: string) => {
+    // Close the analysis dialog
+    onOpenChange(false);
+    // Navigate to receipts page with the receipt ID as a query param
+    router.push(`/receipts?receiptId=${receiptId}`);
   };
 
   return (
@@ -120,7 +131,7 @@ export function ItemAnalysisDialog({
           {analysis && !isLoading && (
             <div className="space-y-6">
             {/* Summary Cards */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-4">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -164,6 +175,35 @@ export function ItemAnalysisDialog({
                   </p>
                 </CardContent>
               </Card>
+
+              {analysis.recentPurchases.length >= 2 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium">Price Trend</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const latestPrice = parseFloat(analysis.recentPurchases[0].price);
+                      const previousPrice = parseFloat(analysis.recentPurchases[1].price);
+                      const priceDiff = latestPrice - previousPrice;
+                      const percentChange = ((priceDiff / previousPrice) * 100);
+                      const isIncreasing = priceDiff > 0;
+                      const isStable = Math.abs(percentChange) < 1;
+
+                      return (
+                        <>
+                          <div className={`text-2xl font-bold ${isStable ? 'text-muted-foreground' : isIncreasing ? 'text-red-600' : 'text-green-600'}`}>
+                            {isStable ? '~' : isIncreasing ? '↑' : '↓'} {Math.abs(percentChange).toFixed(1)}%
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {isStable ? 'Stable' : isIncreasing ? 'Increasing' : 'Decreasing'} vs. last purchase
+                          </p>
+                        </>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Item Variants */}
@@ -221,16 +261,33 @@ export function ItemAnalysisDialog({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Store className="h-5 w-5" />
-                    Merchants
+                    Top Merchants
                   </CardTitle>
-                  <CardDescription>Where you've purchased these items</CardDescription>
+                  <CardDescription>Where you've purchased these items most frequently</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {analysis.topMerchants.map((merchant, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-primary" />
-                        <div className="font-medium">{merchant.merchant}</div>
+                      <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <div className="font-medium">{merchant.merchant}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {merchant.count} purchase{merchant.count !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold">
+                            {analysis.summary.currency} {merchant.total.toFixed(2)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Avg: {analysis.summary.currency} {merchant.average.toFixed(2)}
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -240,21 +297,71 @@ export function ItemAnalysisDialog({
 
 
 
-            {/* Last Purchase */}
-            {analysis.recentPurchases.length > 0 && analysis.recentPurchases[0].date && (
+            {/* Recent Purchases */}
+            {analysis.recentPurchases.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Last Purchase</CardTitle>
-                  <CardDescription>Most recent purchase of this item</CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Receipt className="h-5 w-5" />
+                    Recent Purchases
+                  </CardTitle>
+                  <CardDescription>
+                    {analysis.recentPurchases.length} recent purchase{analysis.recentPurchases.length !== 1 ? 's' : ''} of this item
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{analysis.recentPurchases[0].merchant}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(analysis.recentPurchases[0].date).toLocaleDateString()}
+                  <div className="space-y-3">
+                    {analysis.recentPurchases.map((purchase, index) => (
+                      <div
+                        key={purchase.receiptId || index}
+                        className="group relative p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Store className="h-4 w-4 text-muted-foreground shrink-0" />
+                              <span className="font-medium truncate">{purchase.merchant || 'Unknown Merchant'}</span>
+                              {index === 0 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  Latest
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-4 flex-wrap text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="h-3.5 w-3.5" />
+                                {purchase.date ? format(new Date(purchase.date), 'MMM dd, yyyy') : 'Date unknown'}
+                              </div>
+                              {purchase.quantity && (
+                                <div className="flex items-center gap-1.5">
+                                  <ShoppingCart className="h-3.5 w-3.5" />
+                                  Qty: {purchase.quantity}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex items-center justify-between pt-1">
+                              <div className="font-semibold text-lg">
+                                {analysis.summary.currency} {parseFloat(purchase.price).toFixed(2)}
+                              </div>
+                              
+                              {purchase.receiptId && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleViewReceipt(purchase.receiptId)}
+                                  className="gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  View Receipt
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>

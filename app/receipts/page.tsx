@@ -52,9 +52,9 @@ function ReceiptsPageContent() {
     setCurrentPage(1);
   }, [selectedHouseholdId, filters]);
 
-  // Handle selected query parameter from URL
+  // Handle selected or receiptId query parameter from URL
   useEffect(() => {
-    const selectedId = searchParams.get('selected');
+    const selectedId = searchParams.get('selected') || searchParams.get('receiptId');
     if (selectedId) {
       // Find the receipt in either recent or all receipts
       const receiptsToSearch = [...(recentReceipts || []), ...(allReceipts || [])];
