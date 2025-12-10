@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { subscriptions, subscriptionPayments } from '@/lib/db/schema';
-import { eq, and, or, desc, sql } from 'drizzle-orm';
+import { eq, and, or, desc, inArray } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { SubscriptionService } from '@/lib/services/subscription-service';
@@ -46,17 +46,17 @@ export async function GET(req: NextRequest) {
       .orderBy(desc(subscriptions.nextBillingDate));
 
     // Optionally include payment information
-    if (includePayments) {
+    if (includePayments && userSubscriptions.length > 0) {
       // Get all subscription IDs
       const subscriptionIds = userSubscriptions.map(s => s.id);
 
-      // Fetch all payments in one query
-      const allPayments = subscriptionIds.length > 0 ? await db
+      // Fetch all payments in one query using inArray
+      const allPayments = await db
         .select()
         .from(subscriptionPayments)
         .where(
           and(
-            sql`${subscriptionPayments.subscriptionId} = ANY(${subscriptionIds})`,
+            inArray(subscriptionPayments.subscriptionId, subscriptionIds),
             or(
               eq(subscriptionPayments.status, 'pending'),
               eq(subscriptionPayments.status, 'missed'),
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
           ),
         )
         .orderBy(desc(subscriptionPayments.expectedDate))
-        .limit(12 * subscriptionIds.length) : [];
+        .limit(12 * subscriptionIds.length);
 
       // Group payments by subscription ID
       const paymentsBySubscription = new Map<string, typeof allPayments>();
