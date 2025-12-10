@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Filter, X, Calendar, DollarSign, Store, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,7 +46,30 @@ export function ReceiptSearchFilters({
   onClearFilters,
 }: ReceiptSearchFiltersProps) {
   const [localFilters, setLocalFilters] = useState<ReceiptFilters>(filters);
+  const [searchValue, setSearchValue] = useState(filters.search || '');
   const [isOpen, setIsOpen] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounce search input
+  useEffect(() => {
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Set new timeout
+    searchTimeoutRef.current = setTimeout(() => {
+      const newFilters = { ...filters, search: searchValue || undefined };
+      onFiltersChange(newFilters);
+    }, 500); // 500ms debounce delay
+
+    // Cleanup on unmount
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchValue]); // Only run when searchValue changes
 
   const activeFilterCount = Object.entries(filters).filter(
     ([key, value]) => value && key !== 'sortBy' && key !== 'sortOrder' && key !== 'search',
@@ -68,8 +91,7 @@ export function ReceiptSearchFilters({
   };
 
   const handleSearchChange = (value: string) => {
-    const newFilters = { ...filters, search: value || undefined };
-    onFiltersChange(newFilters);
+    setSearchValue(value);
   };
 
   return (
@@ -80,7 +102,7 @@ export function ReceiptSearchFilters({
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search receipts, merchants, or items..."
-            value={filters.search || ''}
+            value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
           />

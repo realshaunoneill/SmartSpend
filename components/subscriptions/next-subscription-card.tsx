@@ -40,20 +40,20 @@ export function NextSubscriptionCard({ subscription, onClick }: NextSubscription
       )}
       onClick={onClick}
     >
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between gap-6">
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
           {/* Left Section - Subscription Info */}
-          <div className="flex-1 space-y-3">
-            <div className="flex items-start gap-4">
+          <div className="flex-1 space-y-3 sm:space-y-3">
+            <div className="flex items-start gap-3 sm:gap-4">
               {/* Icon */}
               <div className={cn(
-                'p-3 rounded-xl shrink-0',
+                'p-2 sm:p-3 rounded-xl shrink-0',
                 isUrgent && 'bg-red-500/10',
                 isWithinWeek && !isUrgent && 'bg-blue-500/10',
                 !isWithinWeek && 'bg-muted',
               )}>
                 <Clock className={cn(
-                  'w-6 h-6',
+                  'w-5 h-5 sm:w-6 sm:h-6',
                   isUrgent && 'text-red-600 dark:text-red-400',
                   isWithinWeek && !isUrgent && 'text-blue-600 dark:text-blue-400',
                   !isWithinWeek && 'text-muted-foreground',
@@ -62,26 +62,26 @@ export function NextSubscriptionCard({ subscription, onClick }: NextSubscription
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-xl font-bold truncate">{subscription.name}</h3>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <h3 className="text-lg sm:text-xl font-bold truncate">{subscription.name}</h3>
                   {subscription.isBusinessExpense && (
                     <Badge variant="secondary" className="text-xs">Business</Badge>
                   )}
                   <Badge
                     variant={subscription.status === 'active' ? 'default' : 'secondary'}
-                    className="capitalize"
+                    className="capitalize text-xs"
                   >
                     {subscription.status}
                   </Badge>
                 </div>
 
                 {subscription.description && (
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-1">
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 line-clamp-1">
                     {subscription.description}
                   </p>
                 )}
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   {subscription.category && (
                     <Badge variant="outline" className="text-xs">
                       {subscription.category}
@@ -102,21 +102,21 @@ export function NextSubscriptionCard({ subscription, onClick }: NextSubscription
           </div>
 
           {/* Right Section - Payment Info */}
-          <div className="flex flex-col items-end gap-3 shrink-0">
-            <div className="text-right">
-              <div className="flex items-baseline gap-1 justify-end">
-                <span className="text-3xl font-bold tracking-tight">
+          <div className="flex flex-col items-start sm:items-end gap-4 sm:gap-2 w-full sm:w-auto">
+            <div className="text-left sm:text-right w-full sm:w-auto">
+              <div className="flex items-baseline gap-1 sm:justify-end">
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight">
                   €{parseFloat(subscription.amount).toFixed(2)}
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
                 {subscription.billingFrequency}
               </p>
             </div>
 
             {billingDate && (
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Calendar className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium w-full sm:w-auto">
+                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className={cn(
                   isUrgent && 'text-red-600 dark:text-red-400',
                   isWithinWeek && !isUrgent && 'text-blue-600 dark:text-blue-400',
@@ -128,7 +128,7 @@ export function NextSubscriptionCard({ subscription, onClick }: NextSubscription
 
             <Button
               size="sm"
-              className="mt-2"
+              className="mt-0 sm:mt-1 w-full sm:w-auto"
               onClick={(e) => {
                 e.stopPropagation();
                 onClick();
