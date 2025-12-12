@@ -156,7 +156,7 @@ export default function SignInPage() {
                         New to ReceiptWise? Create your account in seconds.
                       </p>
                     </div>
-                    
+
                     <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
