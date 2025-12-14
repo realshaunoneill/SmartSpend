@@ -1,56 +1,60 @@
-import OpenAI from 'openai';
+import { generateObject, generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { z } from 'zod';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Zod schemas for type-safe AI responses
+const itemModifierSchema = z.object({
+  name: z.string(),
+  price: z.number(),
+  type: z.enum(['fee', 'deposit', 'discount', 'addon', 'modifier']),
 });
 
-export interface ItemModifier {
-  name: string;
-  price: number;
-  type: 'fee' | 'deposit' | 'discount' | 'addon' | 'modifier';
-}
+const receiptItemSchema = z.object({
+  name: z.string(),
+  quantity: z.number().optional(),
+  price: z.number(),
+  category: z.string().optional(),
+  description: z.string().optional(),
+  modifiers: z.array(itemModifierSchema).optional(),
+});
 
-export interface ReceiptData {
-  merchant?: string;
-  total?: number;
-  currency?: string;
-  date?: string;
-  category?: string;
-  items?: Array<{
-    name: string;
-    quantity?: number;
-    price: number;
-    category?: string;
-    description?: string;
-    modifiers?: ItemModifier[];
-  }>;
-  rawItems?: Array<{
-    name: string;
-    price: number;
-  }>;
-  location?: string;
-  subtotal?: number;
-  tax?: number;
-  serviceCharge?: number;
-  paymentMethod?: string;
-  receiptNumber?: string;
-  merchantType?: string;
-  tips?: number;
-  discount?: number;
-  loyaltyNumber?: string;
-  tableNumber?: string;
-  serverName?: string;
-  orderNumber?: string;
-  phoneNumber?: string;
-  website?: string;
-  vatNumber?: string;
-  timeOfDay?: string;
-  customerCount?: number;
-  specialOffers?: string;
-  deliveryFee?: number;
-  packagingFee?: number;
-}
+const receiptDataSchema = z.object({
+  merchant: z.string().optional(),
+  total: z.number().optional(),
+  currency: z.string().optional(),
+  date: z.string().optional(),
+  category: z.string().optional(),
+  items: z.array(receiptItemSchema).optional(),
+  rawItems: z.array(z.object({
+    name: z.string(),
+    price: z.number(),
+  })).optional(),
+  location: z.string().optional(),
+  subtotal: z.number().optional(),
+  tax: z.number().optional(),
+  serviceCharge: z.number().optional(),
+  paymentMethod: z.string().optional(),
+  receiptNumber: z.string().optional(),
+  merchantType: z.string().optional(),
+  tips: z.number().optional(),
+  discount: z.number().optional(),
+  loyaltyNumber: z.string().optional(),
+  tableNumber: z.string().optional(),
+  serverName: z.string().optional(),
+  orderNumber: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  website: z.string().optional(),
+  vatNumber: z.string().optional(),
+  timeOfDay: z.string().optional(),
+  customerCount: z.number().optional(),
+  specialOffers: z.string().optional(),
+  deliveryFee: z.number().optional(),
+  packagingFee: z.number().optional(),
+});
+
+export type ItemModifier = z.infer<typeof itemModifierSchema>;
+export type ReceiptData = z.infer<typeof receiptDataSchema>;
 
 export interface TokenUsage {
   promptTokens: number;
@@ -92,17 +96,28 @@ export async function analyzeReceiptWithGPT4o(
   const base64Image = buffer.toString('base64');
   const mimeType = contentType || 'image/png';
 
-  submitLogEvent('receipt-process', 'Calling OpenAI Vision API', correlationId, { userId, userEmail });
+  submitLogEvent('receipt-process', 'Calling OpenAI Vision API with Vercel AI SDK', correlationId, { userId, userEmail });
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
+  const result = await generateObject({
+    model: openai('gpt-4o'),
+    schema: receiptDataSchema,
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: 'analyzeReceiptWithGPT4o',
+      metadata: {
+        userId,
+        userEmail,
+        correlationId,
+        purpose: 'receipt_processing',
+      },
+    },
     messages: [
       {
         role: 'user',
         content: [
           {
             type: 'text',
-            text: `Analyze this receipt image and extract the following information in JSON format:
+            text: `Analyze this receipt image and extract the following information:
 
 REQUIRED FIELDS:
 - merchant: merchant/store name
@@ -168,117 +183,36 @@ SMART CATEGORIZATION RULES:
 - "travel": Hotels, flights, travel services
 - "home": Home improvement, furniture, household items
 
-Return ONLY valid JSON with all numeric values as numbers (not strings), no additional text.`,
+Extract all numeric values as numbers (not strings).`,
           },
           {
-            type: 'image_url',
-            image_url: {
-              url: `data:${mimeType};base64,${base64Image}`,
-            },
+            type: 'image',
+            image: `data:${mimeType};base64,${base64Image}`,
           },
         ],
       },
     ],
-    max_tokens: 1000,
-    user: userEmail,
-    metadata: {
-      userId: userId,
-      userEmail: userEmail,
-      purpose: 'receipt_processing',
-    },
   });
 
-  const usage = response.usage;
-
   submitLogEvent('receipt-process', 'OpenAI API usage', correlationId, {
-    promptTokens: usage?.prompt_tokens,
-    completionTokens: usage?.completion_tokens,
-    totalTokens: usage?.total_tokens,
+    promptTokens: result.usage.promptTokens,
+    completionTokens: result.usage.completionTokens,
+    totalTokens: result.usage.totalTokens,
     model: 'gpt-4o',
     userEmail,
     userId,
   });
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error('No response from OpenAI');
-  }
-
   return {
-    data: cleanJsonResponse(content),
+    data: result.object,
     usage: {
-      promptTokens: usage?.prompt_tokens || 0,
-      completionTokens: usage?.completion_tokens || 0,
-      totalTokens: usage?.total_tokens || 0,
+      promptTokens: result.usage.promptTokens,
+      completionTokens: result.usage.completionTokens,
+      totalTokens: result.usage.totalTokens,
     },
   };
 }
 
-import type { OCRData } from '@/lib/types/api-responses';
-
-/**
- * Simple receipt analysis for upload route (basic extraction)
- */
-export async function analyzeReceiptSimple(imageUrl: string, correlationId: CorrelationId): Promise<OCRData> {
-  try {
-    const inputImageRes = await fetch(imageUrl);
-    if (!inputImageRes.ok) {
-      throw new Error(`Failed to download image: ${inputImageRes.statusText}`);
-    }
-
-    const contentType = inputImageRes.headers.get('content-type');
-    const inputImageBuffer = await inputImageRes.arrayBuffer();
-
-    const buffer = Buffer.from(inputImageBuffer);
-    const base64Image = buffer.toString('base64');
-    const mimeType = contentType || 'image/png';
-
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `Analyze this receipt image and extract the following information in JSON format:
-- items: array of objects with name, quantity, and price for each item
-- location: store location/address
-- merchant: merchant/store name
-- date: transaction date (if visible)
-- subtotal: subtotal amount before tax and service charges (if visible)
-- tax: tax amount (if visible)
-- serviceCharge: service charge amount (if visible)
-- total: total amount
-- currency: currency code (e.g., "GBP", "USD", "EUR")
-- paymentMethod: payment method used (if visible, e.g., "Card", "Cash")
-- receiptNumber: receipt or transaction number (if visible)
-
-Return ONLY valid JSON, no additional text.`,
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: `data:${mimeType};base64,${base64Image}`,
-              },
-            },
-          ],
-        },
-      ],
-      max_tokens: 1000,
-    });
-
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error('No response from OpenAI');
-    }
-
-    return cleanJsonResponse(content);
-  } catch (error) {
-    submitLogEvent('receipt-error', `Receipt analysis error: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { imageUrl }, true);
-    throw error;
-  }
-}
 
 /**
  * Generate spending summary using GPT-4o Mini
@@ -297,23 +231,29 @@ export async function generateSpendingSummary(
   userId: string,
   correlationId: CorrelationId,
 ): Promise<SpendingInsight> {
-  submitLogEvent('receipt', 'Generating AI spending summary', correlationId, {
+  submitLogEvent('receipt', 'Generating AI spending summary with Vercel AI SDK', correlationId, {
     userId,
     userEmail,
     totalItems: aggregatedData.totalItems,
     totalSpent: aggregatedData.totalSpent,
   });
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'system',
-        content: 'You are a helpful financial advisor analyzing spending patterns. Provide insights, identify trends, and offer actionable advice. Be concise but insightful. Use a friendly, conversational tone.',
+  const result = await generateText({
+    model: openai('gpt-4o-mini'),
+    system: 'You are a helpful financial advisor analyzing spending patterns. Provide insights, identify trends, and offer actionable advice. Be concise but insightful. Use a friendly, conversational tone.',
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: 'generateSpendingSummary',
+      metadata: {
+        userId,
+        userEmail,
+        correlationId,
+        purpose: 'spending_summary',
+        totalItems: aggregatedData.totalItems,
+        totalSpent: aggregatedData.totalSpent,
       },
-      {
-        role: 'user',
-        content: `Analyze this spending data and provide a summary with insights and recommendations:
+    },
+    prompt: `Analyze this spending data and provide a summary with insights and recommendations:
 
 Period: ${aggregatedData.period}
 Total Items Purchased: ${aggregatedData.totalItems}
@@ -336,58 +276,27 @@ Please provide:
 5. 2-3 actionable recommendations
 
 Keep the response under 300 words and format it in a friendly, easy-to-read way.`,
-      },
-    ],
-    max_tokens: 500,
+    maxTokens: 500,
     temperature: 0.7,
-    user: userEmail,
-    metadata: {
-      userId: userId,
-      userEmail: userEmail,
-      purpose: 'spending_summary',
-    },
   });
 
-  const usage = response.usage;
-
   submitLogEvent('receipt', 'AI spending summary generated', correlationId, {
-    promptTokens: usage?.prompt_tokens,
-    completionTokens: usage?.completion_tokens,
-    totalTokens: usage?.total_tokens,
+    promptTokens: result.usage.promptTokens,
+    completionTokens: result.usage.completionTokens,
+    totalTokens: result.usage.totalTokens,
     model: 'gpt-4o-mini',
     userEmail,
     userId,
   });
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error('No summary generated from OpenAI');
-  }
-
   return {
-    summary: content.trim(),
+    summary: result.text.trim(),
     usage: {
-      promptTokens: usage?.prompt_tokens || 0,
-      completionTokens: usage?.completion_tokens || 0,
-      totalTokens: usage?.total_tokens || 0,
+      promptTokens: result.usage.promptTokens,
+      completionTokens: result.usage.completionTokens,
+      totalTokens: result.usage.totalTokens,
     },
   };
 }
 
-/**
- * Clean and parse JSON response from OpenAI
- */
-export function cleanJsonResponse(content: string): Record<string, unknown> {
-  let jsonContent = content.trim();
 
-  // Remove markdown code blocks
-  if (jsonContent.startsWith('```json')) {
-    jsonContent = jsonContent.replace(/^```json\n/, '').replace(/\n```$/, '');
-  } else if (jsonContent.startsWith('```')) {
-    jsonContent = jsonContent.replace(/^```\n/, '').replace(/\n```$/, '');
-  }
-
-  return JSON.parse(jsonContent) as Record<string, unknown>;
-}
-
-export { openai };
