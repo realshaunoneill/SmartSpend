@@ -9,8 +9,9 @@ import { CreateSubscriptionDialog } from '@/components/subscriptions/create-subs
 import { SubscriptionDetailModal } from '@/components/subscriptions/subscription-detail-modal';
 import { SubscriptionStats } from '@/components/subscriptions/subscription-stats';
 import { SubscriptionList } from '@/components/subscriptions/subscription-list';
-import { NextSubscriptionCard } from '@/components/subscriptions/next-subscription-card';
-import { Loader2 } from 'lucide-react';
+import { UpcomingSubscriptionCard } from '@/components/subscriptions/upcoming-subscription-card';
+import { Clock, Loader2, Calendar } from 'lucide-react';
+import { addDays } from 'date-fns';
 
 type Status = 'active' | 'paused' | 'cancelled' | undefined;
 
@@ -31,14 +32,25 @@ function SubscriptionsPageContent() {
   // Calculate stats
   const activeSubscriptions = subscriptions?.filter(s => s.status === 'active') || [];
 
-  // Find next upcoming subscription
-  const nextSubscription = activeSubscriptions
-    .filter(s => s.nextBillingDate)
+  // Get upcoming payments
+  const now = new Date();
+  const futureDate = addDays(now, 7);
+  
+  // Get next 3 upcoming payments (showing all upcoming, highlighting those within 7 days)
+  const upcomingPayments = activeSubscriptions
+    .filter(sub => sub.nextBillingDate)
     .sort((a, b) => {
       const dateA = new Date(a.nextBillingDate!).getTime();
       const dateB = new Date(b.nextBillingDate!).getTime();
       return dateA - dateB;
-    })[0];
+    })
+    .slice(0, 3); // Top 3 upcoming payments
+  
+  // Check how many are within 7 days
+  const upcomingWithin7Days = upcomingPayments.filter(sub => {
+    const billingDate = new Date(sub.nextBillingDate!);
+    return billingDate >= now && billingDate <= futureDate;
+  }).length;
 
   const totalMonthly = activeSubscriptions.reduce((sum, sub) => {
     const amount = parseFloat(sub.amount);
@@ -67,44 +79,71 @@ function SubscriptionsPageContent() {
         <CreateSubscriptionDialog />
       </div>
 
-      {/* Stats Grid */}
-      <div className="mb-6">
-        <SubscriptionStats
-          activeCount={activeSubscriptions.length}
-          monthlyTotal={totalMonthly}
-          yearlyTotal={totalYearly}
-          missingPayments={missingPaymentsCount}
-        />
-      </div>
+      {/* Empty State - No Subscriptions */}
+      {!isLoading && (!subscriptions || subscriptions.length === 0) && (
+        <div className="text-center py-12">
+          <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No subscriptions yet</h3>
+          <p className="text-muted-foreground mb-4">Start tracking your recurring payments</p>
+          <CreateSubscriptionDialog />
+        </div>
+      )}
 
-      {/* Next Upcoming Subscription */}
-      {nextSubscription && (
+      {/* Stats Grid */}
+      {subscriptions && subscriptions.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3">Next Payment Due</h2>
-          <NextSubscriptionCard
-            subscription={nextSubscription}
-            onClick={() => setSelectedSubscriptionId(nextSubscription.id)}
+          <SubscriptionStats
+            activeCount={activeSubscriptions.length}
+            monthlyTotal={totalMonthly}
+            yearlyTotal={totalYearly}
+            missingPayments={missingPaymentsCount}
           />
         </div>
       )}
 
-      {/* Tabs */}
-      <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as Status)} className="w-full">
-        <TabsList className="grid w-full md:w-auto grid-cols-3">
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="paused">Paused</TabsTrigger>
-          <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-        </TabsList>
+      {/* Upcoming Payments Section */}
+      {subscriptions && subscriptions.length > 0 && upcomingPayments.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold">Upcoming Payments</h2>
+            {upcomingWithin7Days > 0 && (
+              <span className="text-sm text-muted-foreground">
+                • {upcomingWithin7Days} in next 7 days
+              </span>
+            )}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {upcomingPayments.map((subscription) => (
+              <UpcomingSubscriptionCard
+                key={subscription.id}
+                subscription={subscription}
+                onClick={() => setSelectedSubscriptionId(subscription.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
-        <TabsContent value={statusFilter || 'active'} className="mt-6">
-          <SubscriptionList
-            subscriptions={subscriptions}
-            isLoading={isLoading}
-            status={statusFilter || 'active'}
-            onSelectSubscription={setSelectedSubscriptionId}
-          />
-        </TabsContent>
-      </Tabs>
+      {/* Tabs */}
+      {subscriptions && subscriptions.length > 0 && (
+        <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as Status)} className="w-full">
+          <TabsList className="grid w-full md:w-auto grid-cols-3">
+            <TabsTrigger value="active">Active</TabsTrigger>
+            <TabsTrigger value="paused">Paused</TabsTrigger>
+            <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value={statusFilter || 'active'} className="mt-6">
+            <SubscriptionList
+              subscriptions={subscriptions}
+              isLoading={isLoading}
+              status={statusFilter || 'active'}
+              onSelectSubscription={setSelectedSubscriptionId}
+            />
+          </TabsContent>
+        </Tabs>
+      )}
 
         {/* Detail Modal */}
         <SubscriptionDetailModal
