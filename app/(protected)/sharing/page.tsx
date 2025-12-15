@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser as useClerkUser } from '@clerk/nextjs';
 import { useUser } from '@/lib/hooks/use-user';
 import { Navigation } from '@/components/layout/navigation';
 import { CreateHouseholdDialog } from '@/components/households/create-household-dialog';
@@ -17,7 +16,6 @@ import { Users } from 'lucide-react';
 import type { HouseholdWithMembers, MemberWithUser } from '@/lib/types/api-responses';
 
 export default function SharingPage() {
-  const { user: _clerkUser, isLoaded } = useClerkUser();
   const { user, isSubscribed } = useUser();
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>();
   const queryClient = useQueryClient();
@@ -62,21 +60,6 @@ export default function SharingPage() {
   const currentUserId = user?.id;
   const isCurrentUserAdmin = selectedHousehold && user ?
     members.find((m: MemberWithUser) => m.user_id === user.id)?.role === 'owner' : false;
-
-  if (!isLoaded || !user) {
-    return (
-      <>
-        <Navigation />
-        <main className="container mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
-          <div className="text-center">
-            <p className="text-muted-foreground">
-              {!isLoaded ? 'Loading...' : 'Please sign in to manage households'}
-            </p>
-          </div>
-        </main>
-      </>
-    );
-  }
 
   return (
     <>

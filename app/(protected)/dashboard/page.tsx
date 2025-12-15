@@ -10,10 +10,9 @@ import { HouseholdSelector } from '@/components/households/household-selector';
 import { SubscriptionGate } from '@/components/subscriptions/subscription-gate';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useUser } from '@clerk/nextjs';
 import { useDashboardStats } from '@/lib/hooks/use-dashboard-stats';
 import { useHouseholds } from '@/lib/hooks/use-households';
-import { Upload, Receipt, BarChart3, ArrowRight } from 'lucide-react';
+import { Upload, Receipt, BarChart3, ArrowRight, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { UpcomingPayments } from '@/components/subscriptions/upcoming-payments';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
@@ -21,7 +20,6 @@ import { useSubscriptions } from '@/hooks/use-subscriptions';
 export default function DashboardPage() {
   const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month');
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>();
-  const { isLoaded, user } = useUser();
   const router = useRouter();
 
   const { data: households = [] } = useHouseholds();
@@ -32,23 +30,6 @@ export default function DashboardPage() {
   const actualHouseholdId = isPersonalOnly ? undefined : selectedHouseholdId;
 
   const { stats, isLoading: statsLoading } = useDashboardStats(actualHouseholdId, isPersonalOnly);
-
-  // Show loading state while Clerk is loading
-  if (!isLoaded) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // User will be redirected by middleware if not authenticated
-  if (!user) {
-    return null;
-  }
 
   // Show loading state while stats are loading
   if (statsLoading) {
@@ -64,7 +45,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex min-h-[400px] items-center justify-center">
             <div className="text-center">
-              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
               <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
             </div>
           </div>

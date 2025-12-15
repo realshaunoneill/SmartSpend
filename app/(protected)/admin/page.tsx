@@ -9,7 +9,6 @@ import { UsersTab } from '@/components/admin/users-tab';
 import { HouseholdsTab } from '@/components/admin/households-tab';
 import { ReceiptsTab } from '@/components/admin/receipts-tab';
 import { Loader2, ShieldCheck } from 'lucide-react';
-import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import type { ReceiptWithItems, HouseholdWithMembers } from '@/lib/types/api-responses';
 
@@ -46,7 +45,6 @@ interface ReceiptDetail {
 }
 
 export default function AdminPage() {
-  const { isLoaded } = useUser();
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -63,8 +61,6 @@ export default function AdminPage() {
 
   useEffect(() => {
     async function checkAdminAndFetchData() {
-      if (!isLoaded) return;
-
       try {
         const response = await fetch('/api/admin/check');
         if (!response.ok) {
@@ -98,7 +94,7 @@ export default function AdminPage() {
     }
 
     checkAdminAndFetchData();
-  }, [isLoaded, router]);
+  }, [router]);
 
   const handleOpenReceipt = async (receiptId: string) => {
     try {
@@ -170,7 +166,7 @@ export default function AdminPage() {
     }
   };
 
-  if (!isLoaded || loading) {
+  if (loading) {
     return (
       <>
         <Navigation />
