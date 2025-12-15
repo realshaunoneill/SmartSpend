@@ -23,10 +23,8 @@ export async function GET(req: NextRequest) {
     const subCheck = await requireSubscription(user);
     if (subCheck) return subCheck;
 
-    // Generate expected payments for all active subscriptions on-demand
-    // This ensures payments are always up-to-date when viewing subscriptions
-    await SubscriptionService.generateAllExpectedPayments(12);
-    await SubscriptionService.updateMissedPayments();
+    // Note: Payment generation moved to after fetching user's subscriptions
+    // to avoid processing all subscriptions in the system
 
     const { searchParams } = new URL(req.url);
     const householdId = searchParams.get('householdId');
@@ -50,6 +48,16 @@ export async function GET(req: NextRequest) {
       .from(subscriptions)
       .where(and(...conditions))
       .orderBy(desc(subscriptions.nextBillingDate));
+
+    // Generate expected payments only for this user's active subscriptions
+    // This is more efficient than generating for all subscriptions in the system
+    const activeUserSubscriptions = userSubscriptions.filter(sub => sub.status === 'active');
+    for (const subscription of activeUserSubscriptions) {
+      await SubscriptionService.generateExpectedPayments(subscription.id, 12);
+    }
+    
+    // Update missed payments for this user's subscriptions
+    await SubscriptionService.updateMissedPayments();
 
     // Optionally include payment information
     if (includePayments && userSubscriptions.length > 0) {
@@ -141,6 +149,22 @@ export async function POST(req: NextRequest) {
     if (!name || !amount || !billingFrequency || !billingDay || !startDate) {
       return NextResponse.json(
         { error: 'Missing required fields: name, amount, billingFrequency, billingDay, startDate' },
+        { status: 400 },
+      );
+    }
+
+    // Validate billingDay is within valid range
+    if (billingDay < 1 || billingDay > 31) {
+      return NextResponse.json(
+        { error: 'billingDay must be between 1 and 31' },
+        { status: 400 },
+      );
+    }
+
+    // Validate customFrequencyDays if using custom frequency
+    if (billingFrequency === 'custom' && (!customFrequencyDays || customFrequencyDays < 1)) {
+      return NextResponse.json(
+        { error: 'customFrequencyDays must be at least 1 for custom billing frequency' },
         { status: 400 },
       );
     }

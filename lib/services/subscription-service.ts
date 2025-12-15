@@ -5,6 +5,7 @@ import { eq, and, lte, or } from 'drizzle-orm';
 export class SubscriptionService {
   /**
    * Calculate next billing date based on billing frequency
+   * Handles month-end edge cases (e.g., Jan 31 -> Feb 28/29)
    */
   static calculateNextBillingDate(
     startDate: Date,
@@ -12,16 +13,30 @@ export class SubscriptionService {
     customFrequencyDays?: number,
   ): Date {
     const nextBilling = new Date(startDate);
+    const originalDay = startDate.getDate();
 
     switch (billingFrequency) {
       case 'monthly':
         nextBilling.setMonth(nextBilling.getMonth() + 1);
+        // Handle month-end dates: if we wanted day 31 but next month only has 30 days,
+        // the date will overflow to the next month. Fix by setting to last day of intended month.
+        if (nextBilling.getDate() !== originalDay) {
+          nextBilling.setDate(0); // Set to last day of previous month
+        }
         break;
       case 'quarterly':
         nextBilling.setMonth(nextBilling.getMonth() + 3);
+        // Handle month-end dates for quarterly billing
+        if (nextBilling.getDate() !== originalDay) {
+          nextBilling.setDate(0); // Set to last day of previous month
+        }
         break;
       case 'yearly':
         nextBilling.setFullYear(nextBilling.getFullYear() + 1);
+        // Handle Feb 29 (leap year) edge case
+        if (nextBilling.getDate() !== originalDay) {
+          nextBilling.setDate(0); // Set to last day of previous month
+        }
         break;
       case 'custom':
         if (customFrequencyDays) {
@@ -88,15 +103,26 @@ export class SubscriptionService {
     }> = [];
 
     let currentDate = new Date(lastExpectedDate);
+    let safetyCounter = 0;
+    const MAX_ITERATIONS = 1000; // Safety limit to prevent infinite loops (~83 years of monthly payments)
 
     // Generate payments until we reach the future date
-    while (currentDate <= futureDate) {
+    while (currentDate <= futureDate && safetyCounter < MAX_ITERATIONS) {
+      const previousDate = new Date(currentDate);
+      
       // Calculate next date
       currentDate = this.calculateNextBillingDate(
         currentDate,
         subscription.billingFrequency as 'monthly' | 'quarterly' | 'yearly' | 'custom',
         subscription.customFrequencyDays || undefined,
       );
+      
+      // Safety check: ensure date actually progressed
+      if (currentDate <= previousDate) {
+        throw new Error(`Date calculation did not progress forward for subscription ${subscriptionId}`);
+      }
+      
+      safetyCounter++;
 
       // Check if this payment already exists
       const existingPayment = existingPayments.find(

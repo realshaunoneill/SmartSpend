@@ -75,7 +75,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       const updates: Partial<typeof subscriptionPayments.$inferInsert> = {
         receiptId,
         actualDate: actualDate ? new Date(actualDate) : (receipt.transactionDate ? new Date(receipt.transactionDate) : new Date()),
-        actualAmount: actualAmount ?? (receipt.totalAmount ? parseFloat(receipt.totalAmount) : 0),
+        actualAmount: actualAmount?.toString() ?? receipt.totalAmount ?? '0',
         status: status || 'paid', // Default to paid when linking receipt
       };
 
