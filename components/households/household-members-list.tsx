@@ -151,7 +151,7 @@ export function HouseholdMembersList({
       </CardHeader>
       <CardContent>
         {!isSubscribed && isCurrentUserAdmin && (
-          <div key="upsell" className="mb-4">
+          <div className="mb-4">
             <SubscriptionUpsell
               title="Member Management Locked"
               description="Upgrade to Premium to unlock full member management:"
@@ -164,13 +164,13 @@ export function HouseholdMembersList({
             />
           </div>
         )}
-        <div key="members-list" className="space-y-3">
+        <div className="space-y-3">
           {members.map((member) => {
             const isCurrentUser = member.user_id === currentUserId;
             const canManage = isCurrentUserAdmin && !isCurrentUser && isSubscribed;
 
             return (
-              <div key={member.id} className="flex items-center justify-between rounded-lg border bg-card p-4">
+              <div key={`member-${member.user_id}`} className="flex items-center justify-between rounded-lg border bg-card p-4">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 overflow-hidden rounded-full bg-primary/10">
                     {member.avatar_url ? (
