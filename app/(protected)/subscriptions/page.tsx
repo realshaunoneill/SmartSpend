@@ -35,7 +35,7 @@ function SubscriptionsPageContent() {
   // Get upcoming payments
   const now = new Date();
   const futureDate = addDays(now, 7);
-  
+
   // Get next 3 upcoming payments (showing all upcoming, highlighting those within 7 days)
   const upcomingPayments = activeSubscriptions
     .filter(sub => sub.nextBillingDate)
@@ -45,7 +45,7 @@ function SubscriptionsPageContent() {
       return dateA - dateB;
     })
     .slice(0, 3); // Top 3 upcoming payments
-  
+
   // Check how many are within 7 days
   const upcomingWithin7Days = upcomingPayments.filter(sub => {
     const billingDate = new Date(sub.nextBillingDate!);

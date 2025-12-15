@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
+import { SubscriptionService } from '@/lib/services/subscription-service';
 
 export const runtime = 'nodejs';
 
@@ -88,6 +89,15 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
       submitLogEvent('subscription', `Linked receipt ${receiptId} to payment ${paymentId}`, correlationId, { paymentId, receiptId });
 
+      // If payment is marked as paid, update subscription and generate next payment
+      if (updates.status === 'paid' && updates.actualDate) {
+        await SubscriptionService.handlePaymentPaid(
+          payment.subscription_payments.subscriptionId,
+          new Date(updates.actualDate),
+        );
+        submitLogEvent('subscription', `Generated next payment for subscription ${payment.subscription_payments.subscriptionId}`, correlationId);
+      }
+
       // Invalidate insights cache
       await invalidateInsightsCache(user.id, payment.subscriptions.householdId || undefined, correlationId);
 
@@ -109,6 +119,15 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       .returning();
 
     submitLogEvent('subscription', `Updated payment ${paymentId}`, correlationId, { paymentId });
+
+    // If payment is marked as paid, update subscription and generate next payment
+    if (updates.status === 'paid' && updates.actualDate) {
+      await SubscriptionService.handlePaymentPaid(
+        payment.subscription_payments.subscriptionId,
+        new Date(updates.actualDate),
+      );
+      submitLogEvent('subscription', `Generated next payment for subscription ${payment.subscription_payments.subscriptionId}`, correlationId);
+    }
 
     // Invalidate insights cache
     await invalidateInsightsCache(user.id, payment.subscriptions.householdId || undefined, correlationId);

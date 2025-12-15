@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
-import { subscriptions, type Subscription } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { subscriptions, subscriptionPayments, type Subscription } from '@/lib/db/schema';
+import { eq, and, lte, or } from 'drizzle-orm';
 
 export class SubscriptionService {
   /**
@@ -31,6 +31,185 @@ export class SubscriptionService {
     }
 
     return nextBilling;
+  }
+
+  /**
+   * Generate expected payments for a subscription
+   * Creates payment records for the next N billing cycles (default: 12 months ahead)
+   */
+  static async generateExpectedPayments(
+    subscriptionId: string,
+    monthsAhead: number = 12,
+  ): Promise<number> {
+    // Fetch subscription
+    const [subscription] = await db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.id, subscriptionId))
+      .limit(1);
+
+    if (!subscription || subscription.status !== 'active') {
+      return 0;
+    }
+
+    // Get existing pending/missed payments to avoid duplicates
+    const existingPayments = await db
+      .select()
+      .from(subscriptionPayments)
+      .where(
+        and(
+          eq(subscriptionPayments.subscriptionId, subscriptionId),
+          or(
+            eq(subscriptionPayments.status, 'pending'),
+            eq(subscriptionPayments.status, 'missed'),
+          ),
+        ),
+      );
+
+    // Find the latest expected date
+    let lastExpectedDate = subscription.nextBillingDate;
+    if (existingPayments.length > 0) {
+      const sortedPayments = existingPayments.sort(
+        (a, b) => new Date(b.expectedDate).getTime() - new Date(a.expectedDate).getTime(),
+      );
+      lastExpectedDate = sortedPayments[0].expectedDate;
+    }
+
+    // Calculate how many payments to generate
+    const now = new Date();
+    const futureDate = new Date(now);
+    futureDate.setMonth(futureDate.getMonth() + monthsAhead);
+
+    const paymentsToCreate: Array<{
+      subscriptionId: string;
+      expectedDate: Date;
+      expectedAmount: string;
+      status: string;
+    }> = [];
+
+    let currentDate = new Date(lastExpectedDate);
+
+    // Generate payments until we reach the future date
+    while (currentDate <= futureDate) {
+      // Calculate next date
+      currentDate = this.calculateNextBillingDate(
+        currentDate,
+        subscription.billingFrequency as 'monthly' | 'quarterly' | 'yearly' | 'custom',
+        subscription.customFrequencyDays || undefined,
+      );
+
+      // Check if this payment already exists
+      const existingPayment = existingPayments.find(
+        (p) => {
+          const diff = Math.abs(
+            new Date(p.expectedDate).getTime() - currentDate.getTime(),
+          );
+          return diff < 24 * 60 * 60 * 1000; // Within 1 day
+        },
+      );
+
+      if (!existingPayment && currentDate <= futureDate) {
+        paymentsToCreate.push({
+          subscriptionId: subscription.id,
+          expectedDate: new Date(currentDate),
+          expectedAmount: subscription.amount,
+          status: 'pending',
+        });
+      }
+    }
+
+    // Bulk insert payments
+    if (paymentsToCreate.length > 0) {
+      await db.insert(subscriptionPayments).values(paymentsToCreate);
+    }
+
+    return paymentsToCreate.length;
+  }
+
+  /**
+   * Generate expected payments for all active subscriptions
+   * This should be run periodically (e.g., daily cron job)
+   */
+  static async generateAllExpectedPayments(monthsAhead: number = 12): Promise<{
+    processed: number;
+    created: number;
+  }> {
+    // Get all active subscriptions
+    const activeSubscriptions = await db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.status, 'active'));
+
+    let totalCreated = 0;
+
+    for (const subscription of activeSubscriptions) {
+      const created = await this.generateExpectedPayments(subscription.id, monthsAhead);
+      totalCreated += created;
+    }
+
+    return {
+      processed: activeSubscriptions.length,
+      created: totalCreated,
+    };
+  }
+
+  /**
+   * Update missed payments status
+   * Mark payments as "missed" if they're past due and still pending
+   */
+  static async updateMissedPayments(): Promise<number> {
+    const now = new Date();
+
+    const result = await db
+      .update(subscriptionPayments)
+      .set({ status: 'missed' })
+      .where(
+        and(
+          eq(subscriptionPayments.status, 'pending'),
+          lte(subscriptionPayments.expectedDate, now),
+        ),
+      )
+      .returning();
+
+    return result.length;
+  }
+
+  /**
+   * When a payment is marked as paid, generate the next expected payment
+   * and update the subscription's nextBillingDate
+   */
+  static async handlePaymentPaid(
+    subscriptionId: string,
+    paidDate: Date,
+  ): Promise<void> {
+    const [subscription] = await db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.id, subscriptionId))
+      .limit(1);
+
+    if (!subscription || subscription.status !== 'active') {
+      return;
+    }
+
+    // Calculate next billing date from the paid date
+    const nextBilling = this.calculateNextBillingDate(
+      paidDate,
+      subscription.billingFrequency as 'monthly' | 'quarterly' | 'yearly' | 'custom',
+      subscription.customFrequencyDays || undefined,
+    );
+
+    // Update subscription's nextBillingDate and lastPaymentDate
+    await db
+      .update(subscriptions)
+      .set({
+        nextBillingDate: nextBilling,
+        lastPaymentDate: paidDate,
+      })
+      .where(eq(subscriptions.id, subscriptionId));
+
+    // Generate future expected payments
+    await this.generateExpectedPayments(subscriptionId, 12);
   }
 
   /**

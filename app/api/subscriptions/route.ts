@@ -23,6 +23,11 @@ export async function GET(req: NextRequest) {
     const subCheck = await requireSubscription(user);
     if (subCheck) return subCheck;
 
+    // Generate expected payments for all active subscriptions on-demand
+    // This ensures payments are always up-to-date when viewing subscriptions
+    await SubscriptionService.generateAllExpectedPayments(12);
+    await SubscriptionService.updateMissedPayments();
+
     const { searchParams } = new URL(req.url);
     const householdId = searchParams.get('householdId');
     const status = searchParams.get('status'); // 'active', 'paused', 'cancelled'
@@ -170,15 +175,10 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    // Generate initial expected payment
-    await db.insert(subscriptionPayments).values({
-      subscriptionId: newSubscription.id,
-      expectedDate: nextBilling,
-      expectedAmount: amount,
-      status: 'pending',
-    });
+    // Generate expected payments for the next 12 months
+    const paymentsCreated = await SubscriptionService.generateExpectedPayments(newSubscription.id, 12);
 
-    submitLogEvent('subscription', `Created subscription: ${name}`, correlationId, { subscriptionId: newSubscription.id });
+    submitLogEvent('subscription', `Created subscription: ${name} with ${paymentsCreated} expected payments`, correlationId, { subscriptionId: newSubscription.id });
 
     // Invalidate insights cache
     await invalidateInsightsCache(user.id, householdId || undefined, correlationId);

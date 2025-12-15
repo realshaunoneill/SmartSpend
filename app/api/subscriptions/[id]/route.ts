@@ -138,6 +138,28 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       )
       .returning();
 
+    // If billing details changed and subscription is active, regenerate expected payments
+    const billingDetailsChanged = amount !== undefined ||
+                                   billingFrequency !== undefined ||
+                                   billingDay !== undefined ||
+                                   customFrequencyDays !== undefined;
+
+    if (billingDetailsChanged && updated.status === 'active') {
+      // Delete future pending/missed payments
+      await db
+        .delete(subscriptionPayments)
+        .where(
+          and(
+            eq(subscriptionPayments.subscriptionId, id),
+            eq(subscriptionPayments.status, 'pending'),
+          ),
+        );
+
+      // Regenerate expected payments
+      const paymentsCreated = await SubscriptionService.generateExpectedPayments(id, 12);
+      submitLogEvent('subscription', `Regenerated ${paymentsCreated} payments after billing details change`, correlationId, { subscriptionId: id });
+    }
+
     submitLogEvent('subscription', `Updated subscription: ${id}`, correlationId, { subscriptionId: id });
 
     // Invalidate insights cache
