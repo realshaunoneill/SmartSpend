@@ -154,15 +154,22 @@ export function ReceiptHeader({
         </div>
       </div>
 
-      {/* Current Household Badge */}
-      {household && (
-        <div className="mt-4">
+      {/* Current Household Badge and Business Expense Display */}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {household && (
           <Badge variant="secondary" className="flex items-center gap-2 w-fit">
             <Users className="h-3 w-3" />
             Shared with {household.name}
           </Badge>
-        </div>
-      )}
+        )}
+        {receipt.isBusinessExpense && !isReceiptOwner && (
+          <Badge variant="secondary" className="flex items-center gap-2 w-fit bg-blue-500/10 text-blue-700 dark:text-blue-400">
+            <Building2 className="h-3 w-3" />
+            Business Expense
+            {receipt.taxDeductible && <span className="ml-1">• Tax Deductible</span>}
+          </Badge>
+        )}
+      </div>
 
       {/* Processing Error Message */}
       {receipt.processingStatus === 'failed' && receipt.processingError && (

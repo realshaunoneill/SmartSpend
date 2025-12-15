@@ -145,6 +145,11 @@ export async function PATCH(
       .where(eq(receipts.id, receiptId))
       .returning();
 
+    // Invalidate insights cache when business expense status changes
+    if (isBusinessExpense !== undefined || businessCategory !== undefined || taxDeductible !== undefined) {
+      await invalidateInsightsCache(user.id, receipt.householdId, correlationId);
+    }
+
     submitLogEvent(
       'receipt',
       `Updated receipt ${receiptId}`,

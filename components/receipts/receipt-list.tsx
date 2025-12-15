@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ReceiptIcon, Calendar, Store, Users, AlertCircle, RefreshCw, Clock, CheckCircle } from 'lucide-react';
+import { ReceiptIcon, Calendar, Store, Users, AlertCircle, RefreshCw, Clock, CheckCircle, Briefcase } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -195,6 +195,12 @@ export function ReceiptList({ receipts, onReceiptClick, onRetry }: ReceiptListPr
                       <Badge variant="secondary" className="text-xs">
                         <Users className="h-3 w-3 mr-1" />
                         Shared
+                      </Badge>
+                    )}
+                    {receipt.isBusinessExpense && (
+                      <Badge variant="secondary" className="text-xs bg-blue-500/10 text-blue-700 dark:text-blue-400">
+                        <Briefcase className="h-3 w-3 mr-1" />
+                        Business
                       </Badge>
                     )}
                     {receipt.submittedBy && receipt.householdId && (

@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -31,6 +32,7 @@ export function Navigation() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
 
   useEffect(() => {
     async function checkAdmin() {
@@ -42,15 +44,19 @@ export function Navigation() {
         }
       } catch (_error) {
         setIsAdmin(false);
+      } finally {
+        setIsCheckingAdmin(false);
       }
     }
     if (user) {
       checkAdmin();
+    } else {
+      setIsCheckingAdmin(false);
     }
   }, [user]);
 
   const displayNavItems = [...navItems];
-  if (isAdmin) {
+  if (!isCheckingAdmin && isAdmin) {
     displayNavItems.push({ href: '/admin', label: 'Admin', icon: ShieldCheck });
   }
 
@@ -59,7 +65,7 @@ export function Navigation() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -96,17 +102,26 @@ export function Navigation() {
         <div className="flex items-center gap-2">
           <InvitationNotifications />
           <ThemeToggle />
-          
+
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="relative h-8 w-8 rounded-full">
-                <img
-                  src={user?.imageUrl || '/placeholder.svg?height=32&width=32&query=user avatar'}
-                  alt="User avatar"
-                  className="h-8 w-8 rounded-full object-cover"
-                />
-              </Button>
+              <button className="relative h-8 w-8 rounded-full overflow-hidden border-2 border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                {user?.imageUrl ? (
+                  <Image
+                    src={user.imageUrl}
+                    alt="User avatar"
+                    width={32}
+                    height={32}
+                    className="h-full w-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="h-full w-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                    {user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                )}
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="px-2 py-1.5">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, Filter, X, Calendar, DollarSign, Store, Tag } from 'lucide-react';
+import { Search, Filter, X, Calendar, DollarSign, Store, Tag, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +32,7 @@ export interface ReceiptFilters {
   endDate?: string
   sortBy?: string
   sortOrder?: string
+  isBusinessExpense?: string
 }
 
 interface ReceiptSearchFiltersProps {
@@ -256,6 +257,32 @@ export function ReceiptSearchFilters({
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Business Expense Filter */}
+            <div className="space-y-2">
+              <Label htmlFor="businessExpense" className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4" />
+                Business Expenses
+              </Label>
+              <Select
+                value={localFilters.isBusinessExpense || 'all'}
+                onValueChange={(value) =>
+                  setLocalFilters({
+                    ...localFilters,
+                    isBusinessExpense: value === 'all' ? undefined : value,
+                  })
+                }
+              >
+                <SelectTrigger id="businessExpense">
+                  <SelectValue placeholder="All receipts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All receipts</SelectItem>
+                  <SelectItem value="true">Business expenses only</SelectItem>
+                  <SelectItem value="false">Personal expenses only</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Sort Options */}

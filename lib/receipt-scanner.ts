@@ -23,6 +23,7 @@ export interface GetReceiptsOptions {
   endDate?: string;
   sortBy?: string;
   sortOrder?: string;
+  isBusinessExpense?: string;
 }
 
 export interface PaginatedReceipts {
@@ -57,6 +58,7 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
     endDate,
     sortBy = 'date',
     sortOrder = 'desc',
+    isBusinessExpense,
   } = options;
 
   const offset = (page - 1) * limit;
@@ -121,6 +123,13 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
   }
   if (endDate) {
     filterConditions.push(lte(receipts.transactionDate, endDate));
+  }
+
+  // Business expense filter
+  if (isBusinessExpense === 'true') {
+    filterConditions.push(eq(receipts.isBusinessExpense, true));
+  } else if (isBusinessExpense === 'false') {
+    filterConditions.push(or(eq(receipts.isBusinessExpense, false), isNull(receipts.isBusinessExpense)));
   }
 
   // Determine sort field and order

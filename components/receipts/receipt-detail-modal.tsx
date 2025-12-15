@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useUser } from '@/lib/hooks/use-user';
 import { ReceiptHeader } from './detail-modal/receipt-header';
 import { ReceiptBusinessDetails } from './detail-modal/receipt-business-details';
+import { ReceiptBusinessExpenseInfo } from './detail-modal/receipt-business-expense-info';
 import { ReceiptServiceDetails } from './detail-modal/receipt-service-details';
 import { ReceiptLoyaltyDetails } from './detail-modal/receipt-loyalty-details';
 import { ReceiptItemsList } from './detail-modal/receipt-items-list';
@@ -135,6 +136,8 @@ export function ReceiptDetailModal({
               {/* Scrollable Content Section - All details and items */}
               <div className="flex-1 md:overflow-y-auto px-4 py-3 space-y-3 sm:px-6 sm:py-4 sm:space-y-4\">
                 <LinkedSubscription subscription={receipt.linkedSubscription} />
+
+                <ReceiptBusinessExpenseInfo receipt={receipt} />
 
                 <ReceiptBusinessDetails ocrData={ocr} />
 
