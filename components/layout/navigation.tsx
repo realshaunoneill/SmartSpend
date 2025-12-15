@@ -59,74 +59,48 @@ export function Navigation() {
   };
 
   return (
-    <nav className="border-b bg-card">
-      <div className="container mx-auto flex h-16 items-center gap-2 px-3 sm:gap-4 sm:px-4">
+    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4">
+        {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <img src="/logo.png" alt="ReceiptWise" className="h-6 w-auto sm:h-8" />
-          <span className="hidden text-xl font-bold text-foreground sm:inline">ReceiptWise</span>
+          <img src="/logo.png" alt="ReceiptWise" className="h-6 w-auto" />
+          <span className="hidden font-bold text-foreground lg:inline">ReceiptWise</span>
         </Link>
 
-        {/* Mobile Navigation Dropdown */}
-        <div className="flex flex-1 items-center justify-start md:hidden">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2">
-                <Menu className="h-4 w-4" />
-                <span className="text-sm">Menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              {displayNavItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href;
-                return (
-                  <DropdownMenuItem key={item.href} asChild>
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        'flex items-center gap-2',
-                        isActive && 'bg-primary/10 text-primary',
-                      )}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Desktop Navigation - Centered */}
+        <div className="hidden md:flex md:flex-1 md:justify-center">
+          <div className="flex items-center gap-1">
+            {displayNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Desktop Navigation */}
-        <div className="hidden flex-1 items-center gap-0.5 md:flex sm:gap-1">
-          {displayNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex shrink-0 items-center gap-2 rounded-md px-2 py-2 text-sm font-medium transition-colors sm:px-3',
-                  isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
+        {/* Right Side Actions */}
+        <div className="flex items-center gap-2">
           <InvitationNotifications />
           <ThemeToggle />
+          
+          {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
+              <Button variant="ghost" size="sm" className="relative h-8 w-8 rounded-full">
                 <img
                   src={user?.imageUrl || '/placeholder.svg?height=32&width=32&query=user avatar'}
                   alt="User avatar"
@@ -151,6 +125,35 @@ export function Navigation() {
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out
               </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Mobile Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {displayNavItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                return (
+                  <DropdownMenuItem key={item.href} asChild>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        'flex items-center gap-2',
+                        isActive && 'bg-primary/10 text-primary',
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
