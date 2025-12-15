@@ -15,6 +15,8 @@ import { Loader2, TrendingUp, ShoppingCart, Calendar, Store, ShoppingBag, AlertC
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { ReceiptDetailModal } from '@/components/receipts/receipt-detail-modal';
+import type { ReceiptWithItems } from '@/lib/types/api-responses';
 
 interface ItemAnalysisDialogProps {
   itemName: string;
@@ -31,6 +33,9 @@ export function ItemAnalysisDialog({
 }: ItemAnalysisDialogProps) {
   const [months] = useState(12);
   const router = useRouter();
+  const [selectedReceipt, setSelectedReceipt] = useState<ReceiptWithItems | null>(null);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+  const [isLoadingReceipt, setIsLoadingReceipt] = useState(false);
 
   const { data: analysis, isLoading, error, refetch } = useItemAnalysis({
     itemName,
@@ -43,14 +48,27 @@ export function ItemAnalysisDialog({
     refetch();
   };
 
-  const handleViewReceipt = (receiptId: string) => {
-    // Close the analysis dialog
-    onOpenChange(false);
-    // Navigate to receipts page with the receipt ID as a query param
-    router.push(`/receipts?receiptId=${receiptId}`);
+  const handleViewReceipt = async (receiptId: string) => {
+    setIsLoadingReceipt(true);
+    try {
+      const response = await fetch(`/api/receipts/${receiptId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch receipt');
+      }
+      const receipt = await response.json();
+      setSelectedReceipt(receipt);
+      setIsReceiptModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching receipt:', error);
+      // Fallback to navigation if fetch fails
+      router.push(`/receipts?receiptId=${receiptId}`);
+    } finally {
+      setIsLoadingReceipt(false);
+    }
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="p-0 overflow-hidden border-0"
@@ -351,10 +369,20 @@ export function ItemAnalysisDialog({
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleViewReceipt(purchase.receiptId)}
+                                  disabled={isLoadingReceipt}
                                   className="gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
-                                  View Receipt
-                                  <ExternalLink className="h-3.5 w-3.5" />
+                                  {isLoadingReceipt ? (
+                                    <>
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      Loading...
+                                    </>
+                                  ) : (
+                                    <>
+                                      View Receipt
+                                      <ExternalLink className="h-3.5 w-3.5" />
+                                    </>
+                                  )}
                                 </Button>
                               )}
                             </div>
@@ -381,5 +409,13 @@ export function ItemAnalysisDialog({
         </div>
       </DialogContent>
     </Dialog>
+    
+    {/* Receipt Detail Modal */}
+    <ReceiptDetailModal
+      receipt={selectedReceipt}
+      open={isReceiptModalOpen}
+      onOpenChange={setIsReceiptModalOpen}
+    />
+  </>
   );
 }
