@@ -3,7 +3,7 @@
 import { db } from '@/lib/db';
 import { receipts, receiptItems, users } from '@/lib/db/schema';
 import type { Receipt } from '@/lib/db/schema';
-import { eq, desc, asc, count, isNull, and, or, gte, lte, ilike, sql } from 'drizzle-orm';
+import { eq, desc, asc, count, isNull, and, or, gte, lte, ilike, sql, inArray } from 'drizzle-orm';
 import type { ReceiptWithItems } from '@/lib/types/api-responses';
 
 export interface GetReceiptsOptions {
@@ -72,18 +72,29 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
   // Text search across merchant name, category, and line items
   if (search) {
     // Search in receipt items for matching product names
-    const itemSubquery = db
-      .select({ receiptId: receiptItems.receiptId })
+    const matchingReceiptIds = await db
+      .selectDistinct({ receiptId: receiptItems.receiptId })
       .from(receiptItems)
-      .where(ilike(receiptItems.name, `%${search}%`));
+      .where(ilike(receiptItems.name, `%${search}%`))
+      .then(rows => rows.map(r => r.receiptId));
 
-    filterConditions.push(
-      or(
-        ilike(receipts.merchantName, `%${search}%`),
-        ilike(receipts.category, `%${search}%`),
-        sql`${receipts.id} IN ${itemSubquery}`,
-      ),
-    );
+    if (matchingReceiptIds.length > 0) {
+      filterConditions.push(
+        or(
+          ilike(receipts.merchantName, `%${search}%`),
+          ilike(receipts.category, `%${search}%`),
+          inArray(receipts.id, matchingReceiptIds),
+        ),
+      );
+    } else {
+      // If no items match, still search merchant and category
+      filterConditions.push(
+        or(
+          ilike(receipts.merchantName, `%${search}%`),
+          ilike(receipts.category, `%${search}%`),
+        ),
+      );
+    }
   }
 
   // Category filter
