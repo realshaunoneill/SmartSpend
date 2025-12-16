@@ -1,12 +1,12 @@
 'use client';
 
-import { AlertCircle, ExternalLink } from 'lucide-react';
+import { AlertCircle, ExternalLink, Calendar, TrendingUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LinkReceiptDialog } from './link-receipt-dialog';
-import { NextPaymentBadge } from './next-payment-badge';
 import { type Subscription, type SubscriptionPayment } from '@/lib/db/schema';
+import { differenceInDays, format, isToday, isTomorrow, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 type SubscriptionWithPayments = Subscription & {
@@ -20,6 +20,37 @@ type SubscriptionCardProps = {
 };
 
 export function SubscriptionCard({ subscription, onClick }: SubscriptionCardProps) {
+  // Calculate next payment info
+  let nextPaymentInfo = null;
+  if (subscription.nextBillingDate) {
+    const billingDate = startOfDay(new Date(subscription.nextBillingDate));
+    const today = startOfDay(new Date());
+    const daysUntil = differenceInDays(billingDate, today);
+
+    if (daysUntil >= 0) {
+      const getDateLabel = () => {
+        if (isToday(billingDate)) return 'Today';
+        if (isTomorrow(billingDate)) return 'Tomorrow';
+        if (daysUntil <= 7) return `In ${daysUntil} day${daysUntil === 1 ? '' : 's'}`;
+        return format(billingDate, 'MMM dd');
+      };
+
+      const getBadgeVariant = () => {
+        if (daysUntil === 0) return 'destructive' as const;
+        if (daysUntil <= 2) return 'secondary' as const;
+        if (daysUntil <= 7) return 'default' as const;
+        return 'outline' as const;
+      };
+
+      nextPaymentInfo = {
+        label: getDateLabel(),
+        date: format(billingDate, 'MMM dd, yyyy'),
+        variant: getBadgeVariant(),
+        daysUntil,
+      };
+    }
+  }
+
   return (
     <Card
       className={cn(
@@ -28,18 +59,20 @@ export function SubscriptionCard({ subscription, onClick }: SubscriptionCardProp
       )}
       onClick={onClick}
     >
-      <CardContent className="relative p-4 space-y-3">
+      <CardContent className="relative p-6 space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-lg font-bold truncate">{subscription.name}</h3>
+              <h3 className="text-xl font-bold truncate">{subscription.name}</h3>
               {subscription.isBusinessExpense && (
                 <Badge variant="secondary" className="text-xs">Business</Badge>
               )}
             </div>
-            {subscription.description && (
-              <p className="text-sm text-muted-foreground line-clamp-1">{subscription.description}</p>
+            {subscription.category && (
+              <Badge variant="outline" className="text-xs capitalize mt-1">
+                {subscription.category}
+              </Badge>
             )}
           </div>
           <Badge
@@ -50,41 +83,52 @@ export function SubscriptionCard({ subscription, onClick }: SubscriptionCardProp
           </Badge>
         </div>
 
-        {/* Amount Section */}
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold tracking-tight">
-            €{parseFloat(subscription.amount).toFixed(2)}
-          </span>
-          <span className="text-sm text-muted-foreground font-medium">/ {subscription.billingFrequency}</span>
+        {/* Amount & Next Payment Section */}
+        <div className="space-y-3 border-t pt-4">
+          <div className="flex items-baseline gap-2">
+            <TrendingUp className="w-5 h-5 text-muted-foreground" />
+            <span className="text-3xl font-bold tracking-tight">
+              €{parseFloat(subscription.amount).toFixed(2)}
+            </span>
+            <span className="text-sm text-muted-foreground font-medium">
+              per {subscription.billingFrequency}
+            </span>
+          </div>
+
+          {nextPaymentInfo && (
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
+              <span className="font-medium">
+                {nextPaymentInfo.label}
+              </span>
+              <span className="text-muted-foreground">
+                • {nextPaymentInfo.date}
+              </span>
+              {nextPaymentInfo.daysUntil === 0 && (
+                <Badge variant="destructive" className="ml-auto text-xs">
+                  Due Today
+                </Badge>
+              )}
+              {nextPaymentInfo.daysUntil === 1 && (
+                <Badge variant="secondary" className="ml-auto text-xs">
+                  Tomorrow
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Tags Row */}
-        <div className="flex flex-wrap items-center gap-2">
-          {subscription.category && (
-            <Badge variant="outline" className="text-xs">
-              {subscription.category}
-            </Badge>
-          )}
-          {subscription.website && (
-            <Badge variant="outline" className="text-xs gap-1">
-              <ExternalLink className="w-3 h-3" />
-              Website
-            </Badge>
-          )}
-        </div>
-
-        {/* Next Payment Badge */}
-        {subscription.nextBillingDate && (
-          <NextPaymentBadge
-            nextBillingDate={subscription.nextBillingDate}
-            amount={subscription.amount}
-            currency={subscription.currency}
-          />
+        {/* Website Link */}
+        {subscription.website && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground border-t pt-3">
+            <ExternalLink className="w-4 h-4" />
+            <span className="truncate">{subscription.website}</span>
+          </div>
         )}
 
         {/* Missing Payments Alert */}
         {subscription.missingPayments !== undefined && subscription.missingPayments > 0 && (
-          <div className="flex items-center gap-2 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+          <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg border-t mt-3">
             <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-500 shrink-0" />
             <span className="text-sm font-medium text-yellow-900 dark:text-yellow-200">
               {subscription.missingPayments} missing {subscription.missingPayments === 1 ? 'receipt' : 'receipts'}
@@ -93,7 +137,7 @@ export function SubscriptionCard({ subscription, onClick }: SubscriptionCardProp
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 border-t pt-3 mt-3">
           <Button
             variant="default"
             size="sm"
