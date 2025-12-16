@@ -1,8 +1,9 @@
 'use client';
 
-import { Receipt as ReceiptIcon, Maximize2, X } from 'lucide-react';
+import { Receipt as ReceiptIcon, Maximize2, X, Download } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface ReceiptImageProps {
   imageUrl?: string
@@ -10,6 +11,31 @@ interface ReceiptImageProps {
 
 export function ReceiptImage({ imageUrl }: ReceiptImageProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!imageUrl) return;
+
+    setIsDownloading(true);
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `receipt-${new Date().toISOString()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Receipt image downloaded');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download receipt image');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <>
@@ -26,8 +52,8 @@ export function ReceiptImage({ imageUrl }: ReceiptImageProps) {
               />
             </div>
 
-            {/* Fullscreen Button */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+            {/* Action Buttons */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
               <Button
                 variant="secondary"
                 size="sm"
@@ -36,6 +62,16 @@ export function ReceiptImage({ imageUrl }: ReceiptImageProps) {
               >
                 <Maximize2 className="h-4 w-4 mr-2" />
                 View Fullscreen
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="shadow-lg backdrop-blur-sm"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {isDownloading ? 'Downloading...' : 'Download'}
               </Button>
             </div>
           </>
@@ -53,13 +89,28 @@ export function ReceiptImage({ imageUrl }: ReceiptImageProps) {
           className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center"
           onClick={() => setIsFullscreen(false)}
         >
-          <button
-            onClick={() => setIsFullscreen(false)}
-            className="absolute top-4 right-4 p-2 rounded-full bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-background transition-colors z-10"
-            aria-label="Close fullscreen"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="absolute top-4 right-4 flex gap-2 z-10">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload();
+              }}
+              disabled={isDownloading}
+              className="shadow-lg"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {isDownloading ? 'Downloading...' : 'Download'}
+            </Button>
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="p-2 rounded-full bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-background transition-colors"
+              aria-label="Close fullscreen"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
           <img
             src={imageUrl}
             alt="Receipt - Fullscreen"

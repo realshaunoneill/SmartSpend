@@ -57,13 +57,30 @@ function DialogContent({
 }) {
   // Check if children includes a DialogTitle
   const hasTitle = React.Children.toArray(children).some(
-    (child) =>
-      React.isValidElement(child) &&
-      (child.type === DialogTitle || 
-       (typeof child.type === 'object' && 'displayName' in child.type && child.type.displayName === 'DialogTitle') ||
-       child.props?.['data-slot'] === 'dialog-title' ||
-       // Check for VisuallyHidden wrapper containing DialogTitle
-       (React.isValidElement(child.props?.children) && child.props?.children?.props?.['data-slot'] === 'dialog-title'))
+    (child) => {
+      if (!React.isValidElement(child)) return false;
+
+      // Direct DialogTitle check
+      if (child.type === DialogTitle) return true;
+
+      // Check for displayName on function/class components
+      if (typeof child.type === 'object' && child.type !== null && 'displayName' in child.type) {
+        const displayName = (child.type as { displayName?: string }).displayName;
+        if (displayName === 'DialogTitle') return true;
+      }
+
+      // Check for data-slot attribute
+      const props = child.props as Record<string, unknown>;
+      if (props['data-slot'] === 'dialog-title') return true;
+
+      // Check for VisuallyHidden wrapper containing DialogTitle
+      if (React.isValidElement(props.children)) {
+        const nestedProps = props.children.props as Record<string, unknown>;
+        if (nestedProps['data-slot'] === 'dialog-title') return true;
+      }
+
+      return false;
+    },
   );
 
   return (
