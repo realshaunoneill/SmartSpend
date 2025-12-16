@@ -50,11 +50,13 @@ export class SubscriptionService {
 
   /**
    * Generate expected payments for a subscription
-   * Creates payment records for the next N billing cycles (default: 12 months ahead)
+   * Creates payment records only for billing cycles that have already occurred (in the past)
+   * This ensures we only track payments that should have been made, not future predictions
    */
   static async generateExpectedPayments(
     subscriptionId: string,
     monthsAhead: number = 12,
+    generateHistorical: boolean = false,
   ): Promise<number> {
     // Fetch subscription
     const [subscription] = await db
@@ -81,20 +83,7 @@ export class SubscriptionService {
         ),
       );
 
-    // Find the latest expected date
-    let lastExpectedDate = subscription.nextBillingDate;
-    if (existingPayments.length > 0) {
-      const sortedPayments = existingPayments.sort(
-        (a, b) => new Date(b.expectedDate).getTime() - new Date(a.expectedDate).getTime(),
-      );
-      lastExpectedDate = sortedPayments[0].expectedDate;
-    }
-
-    // Calculate how many payments to generate
     const now = new Date();
-    const futureDate = new Date(now);
-    futureDate.setMonth(futureDate.getMonth() + monthsAhead);
-
     const paymentsToCreate: Array<{
       subscriptionId: string;
       expectedDate: Date;
@@ -102,46 +91,102 @@ export class SubscriptionService {
       status: string;
     }> = [];
 
-    let currentDate = new Date(lastExpectedDate);
-    let safetyCounter = 0;
-    const MAX_ITERATIONS = 1000; // Safety limit to prevent infinite loops (~83 years of monthly payments)
-
-    // Generate payments until we reach the future date
-    while (currentDate <= futureDate && safetyCounter < MAX_ITERATIONS) {
-      const previousDate = new Date(currentDate);
-      
-      // Calculate next date
-      currentDate = this.calculateNextBillingDate(
-        currentDate,
+    const startDate = new Date(subscription.startDate);
+    
+    // Special case: if subscription has started and there are no payments,
+    // create the first expected payment so user can link their initial receipt
+    if (existingPayments.length === 0 && startDate <= now) {
+      const firstBillingDate = this.calculateNextBillingDate(
+        startDate,
         subscription.billingFrequency as 'monthly' | 'quarterly' | 'yearly' | 'custom',
         subscription.customFrequencyDays || undefined,
       );
       
+      paymentsToCreate.push({
+        subscriptionId: subscription.id,
+        expectedDate: new Date(firstBillingDate),
+        expectedAmount: subscription.amount,
+        status: 'pending',
+      });
+    }
+
+    // Determine the starting point for payment generation
+    let startingDate: Date;
+    
+    if (existingPayments.length === 0) {
+      // No payments exist - start from the first billing date we just created
+      startingDate = this.calculateNextBillingDate(
+        startDate,
+        subscription.billingFrequency as 'monthly' | 'quarterly' | 'yearly' | 'custom',
+        subscription.customFrequencyDays || undefined,
+      );
+    } else {
+      // Payments exist - start from the latest payment to check for gaps
+      const sortedPayments = existingPayments.sort(
+        (a, b) => new Date(b.expectedDate).getTime() - new Date(a.expectedDate).getTime(),
+      );
+      startingDate = sortedPayments[0].expectedDate;
+    }
+
+    // ALWAYS only generate up to today - never create future expected payments
+    const endDate = now;
+
+    let currentDate = new Date(startingDate);
+    let safetyCounter = 0;
+    const MAX_ITERATIONS = 1000;
+
+    // Generate payments from start to end date
+    while (safetyCounter < MAX_ITERATIONS) {
+      const previousDate = new Date(currentDate);
+
+      // Calculate next billing date
+      const nextDate = this.calculateNextBillingDate(
+        currentDate,
+        subscription.billingFrequency as 'monthly' | 'quarterly' | 'yearly' | 'custom',
+        subscription.customFrequencyDays || undefined,
+      );
+
       // Safety check: ensure date actually progressed
-      if (currentDate <= previousDate) {
+      if (nextDate <= previousDate) {
         throw new Error(`Date calculation did not progress forward for subscription ${subscriptionId}`);
       }
-      
+
       safetyCounter++;
 
-      // Check if this payment already exists
+      // Check if we've reached the end date
+      if (nextDate > endDate) {
+        break;
+      }
+
+      // Check if this payment already exists (including the first one we just created)
       const existingPayment = existingPayments.find(
         (p) => {
           const diff = Math.abs(
-            new Date(p.expectedDate).getTime() - currentDate.getTime(),
+            new Date(p.expectedDate).getTime() - nextDate.getTime(),
+          );
+          return diff < 24 * 60 * 60 * 1000; // Within 1 day
+        },
+      );
+      
+      const alreadyCreated = paymentsToCreate.find(
+        (p) => {
+          const diff = Math.abs(
+            p.expectedDate.getTime() - nextDate.getTime(),
           );
           return diff < 24 * 60 * 60 * 1000; // Within 1 day
         },
       );
 
-      if (!existingPayment && currentDate <= futureDate) {
+      if (!existingPayment && !alreadyCreated) {
         paymentsToCreate.push({
           subscriptionId: subscription.id,
-          expectedDate: new Date(currentDate),
+          expectedDate: new Date(nextDate),
           expectedAmount: subscription.amount,
           status: 'pending',
         });
       }
+
+      currentDate = nextDate;
     }
 
     // Bulk insert payments

@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
     for (const subscription of activeUserSubscriptions) {
       await SubscriptionService.generateExpectedPayments(subscription.id, 12);
     }
-    
+
     // Update missed payments for this user's subscriptions
     await SubscriptionService.updateMissedPayments();
 
@@ -199,8 +199,8 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    // Generate expected payments for the next 12 months
-    const paymentsCreated = await SubscriptionService.generateExpectedPayments(newSubscription.id, 12);
+    // Generate historical payments from start date to today (for past billing cycles)
+    const paymentsCreated = await SubscriptionService.generateExpectedPayments(newSubscription.id, 12, true);
 
     submitLogEvent('subscription', `Created subscription: ${name} with ${paymentsCreated} expected payments`, correlationId, { subscriptionId: newSubscription.id });
 
