@@ -61,9 +61,14 @@ export function UpcomingSubscriptionCard({ subscription, onClick }: UpcomingSubs
                 {getDateLabel()}
               </span>
             </div>
-            {daysUntil <= 2 && (
-              <Badge variant={daysUntil === 0 ? 'destructive' : 'secondary'} className="text-xs">
-                {daysUntil === 0 ? 'Due Today' : 'Due Soon'}
+            {daysUntil === 0 && (
+              <Badge variant="destructive" className="text-xs">
+                Due Today
+              </Badge>
+            )}
+            {daysUntil > 0 && daysUntil <= 2 && (
+              <Badge variant="secondary" className="text-xs">
+                Due Soon
               </Badge>
             )}
           </div>

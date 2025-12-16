@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Navigation } from '@/components/layout/navigation';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,8 +10,9 @@ import { SubscriptionDetailModal } from '@/components/subscriptions/subscription
 import { SubscriptionStats } from '@/components/subscriptions/subscription-stats';
 import { SubscriptionList } from '@/components/subscriptions/subscription-list';
 import { UpcomingSubscriptionCard } from '@/components/subscriptions/upcoming-subscription-card';
-import { Clock, Loader2, Calendar } from 'lucide-react';
+import { Clock, Loader2, Calendar, AlertCircle } from 'lucide-react';
 import { addDays } from 'date-fns';
+import { Button } from '@/components/ui/button';
 
 type Status = 'active' | 'paused' | 'cancelled' | undefined;
 
@@ -19,13 +20,19 @@ function SubscriptionsPageContent() {
   const [statusFilter, setStatusFilter] = useState<Status>('active');
   const { data: subscriptions, isLoading } = useSubscriptions(undefined, statusFilter, true);
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);
+  const [showMissingOnly, setShowMissingOnly] = useState(false);
   const searchParams = useSearchParams();
+  const router = useRouter();
 
-  // Handle selected query parameter from URL
+  // Handle selected and filter query parameters from URL
   useEffect(() => {
     const selected = searchParams.get('selected');
+    const filter = searchParams.get('filter');
     if (selected) {
       setSelectedSubscriptionId(selected);
+    }
+    if (filter === 'missing') {
+      setShowMissingOnly(true);
     }
   }, [searchParams]);
 
@@ -66,6 +73,10 @@ function SubscriptionsPageContent() {
   const totalYearly = totalMonthly * 12;
   const missingPaymentsCount = subscriptions?.reduce((sum, sub) => sum + (sub.missingPayments || 0), 0) || 0;
 
+  // Filter subscriptions with missing payments
+  const subscriptionsWithMissing = subscriptions?.filter(sub => (sub.missingPayments || 0) > 0) || [];
+  const displaySubscriptions = showMissingOnly ? subscriptionsWithMissing : subscriptions;
+
   return (
     <>
       <Navigation />
@@ -97,7 +108,45 @@ function SubscriptionsPageContent() {
             monthlyTotal={totalMonthly}
             yearlyTotal={totalYearly}
             missingPayments={missingPaymentsCount}
+            onMissingPaymentsClick={() => {
+              setShowMissingOnly(true);
+              setStatusFilter('active');
+              const params = new URLSearchParams(searchParams.toString());
+              params.set('filter', 'missing');
+              router.push(`/subscriptions?${params.toString()}`);
+            }}
           />
+        </div>
+      )}
+
+      {/* Missing Payments Filter Banner */}
+      {showMissingOnly && subscriptionsWithMissing.length > 0 && (
+        <div className="mb-6 rounded-lg border border-orange-500/50 bg-orange-500/5 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-orange-600" />
+              <div>
+                <h3 className="font-semibold text-orange-900 dark:text-orange-100">
+                  Subscriptions Missing Receipts
+                </h3>
+                <p className="text-sm text-orange-700 dark:text-orange-300">
+                  {subscriptionsWithMissing.length} subscription{subscriptionsWithMissing.length !== 1 ? 's' : ''} with {missingPaymentsCount} missing payment{missingPaymentsCount !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowMissingOnly(false);
+                const params = new URLSearchParams(searchParams.toString());
+                params.delete('filter');
+                router.push(`/subscriptions${params.toString() ? '?' + params.toString() : ''}`);
+              }}
+            >
+              Show All
+            </Button>
+          </div>
         </div>
       )}
 
@@ -136,7 +185,7 @@ function SubscriptionsPageContent() {
 
           <TabsContent value={statusFilter || 'active'} className="mt-6">
             <SubscriptionList
-              subscriptions={subscriptions}
+              subscriptions={displaySubscriptions}
               isLoading={isLoading}
               status={statusFilter || 'active'}
               onSelectSubscription={setSelectedSubscriptionId}

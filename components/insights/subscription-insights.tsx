@@ -2,10 +2,12 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
-import { Loader2, TrendingUp, Calendar, DollarSign, AlertCircle } from 'lucide-react';
+import { Loader2, TrendingUp, Calendar, DollarSign, AlertCircle, ArrowRight } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 export function SubscriptionInsights() {
   const { data: subscriptions, isLoading } = useSubscriptions(undefined, 'active', true);
@@ -106,9 +108,16 @@ export function SubscriptionInsights() {
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground flex items-center gap-1">
                 <AlertCircle className="h-4 w-4 text-orange-500" />
-                Missing Payments
+                Missing Receipts
               </p>
-              <p className="text-2xl font-bold text-orange-600">{missingPaymentsCount}</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-2xl font-bold text-orange-600">{missingPaymentsCount}</p>
+                <Link href="/subscriptions?filter=missing">
+                  <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-orange-600 hover:text-orange-700 hover:bg-transparent">
+                    View All <ArrowRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </Link>
+              </div>
             </div>
           )}
         </div>
