@@ -3,6 +3,7 @@
   "short_name": "ReceiptWise",
   "description": "Track receipts, manage spending, and sync your bank accounts in one place",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#10b981",
@@ -22,5 +23,29 @@
   ],
   "categories": ["finance", "productivity", "business"],
   "lang": "en-US",
-  "dir": "ltr"
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Upload Receipt",
+      "short_name": "Upload",
+      "description": "Upload a new receipt",
+      "url": "/receipts?action=upload",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "View Insights",
+      "short_name": "Insights",
+      "description": "View spending insights",
+      "url": "/insights",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    }
+  ]
 }

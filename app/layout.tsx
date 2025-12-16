@@ -6,6 +6,8 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@/components/layout/theme-provider';
 import { Footer } from '@/components/layout/footer';
 import { QueryProvider } from '@/lib/providers/query-provider';
+import { PWARegister } from '@/components/layout/pwa-register';
+import { PWAInstallPrompt } from '@/components/layout/pwa-install-prompt';
 import { Toaster } from 'sonner';
 import './globals.css';
 
@@ -76,7 +78,18 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
+        <head>
+          <meta name="application-name" content="ReceiptWise" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+          <meta name="apple-mobile-web-app-title" content="ReceiptWise" />
+          <meta name="format-detection" content="telephone=no" />
+          <meta name="mobile-web-app-capable" content="yes" />
+          <meta name="theme-color" content="#10b981" />
+          <link rel="apple-touch-icon" href="/logo.png" />
+        </head>
         <body className={`${inter.className} antialiased`}>
+          <PWARegister />
           <QueryProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
               <div className="flex min-h-screen flex-col">
@@ -84,6 +97,7 @@ export default function RootLayout({
                 <Footer />
               </div>
               <Toaster />
+              <PWAInstallPrompt />
             </ThemeProvider>
           </QueryProvider>
           <Analytics />
