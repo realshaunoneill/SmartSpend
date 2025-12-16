@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "last_exported_at" timestamp;

@@ -11,6 +11,7 @@ export type EventType =
   | 'cache'
   | 'cache-error'
   | 'image'
+  | 'user'
   | 'image-proxy'
   | 'image-metadata'
   | 'users'

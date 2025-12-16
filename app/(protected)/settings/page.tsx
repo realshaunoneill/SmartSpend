@@ -19,6 +19,7 @@ export default function SettingsPage() {
   const { user: userData, isLoading: userDataLoading } = useUserData();
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedHousehold, setSelectedHousehold] = useState<string>('none');
+  const [isExporting, setIsExporting] = useState(false);
   const queryClient = useQueryClient();
 
   // Update selected household when userData loads
@@ -121,6 +122,33 @@ export default function SettingsPage() {
 
   const handleManageSubscription = () => {
     billingPortalMutation.mutate();
+  };
+
+  const handleExport = async (format: string, type: string) => {
+    setIsExporting(true);
+    try {
+      const response = await fetch(`/api/users/export?format=${format}&type=${type}`);
+      if (!response.ok) throw new Error('Export failed');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `smartspend-export-${new Date().toISOString().split('T')[0]}.${format === 'json' ? 'json' : 'csv'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      // Refresh user data to show updated last export time
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      toast.success('Data exported successfully');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export data');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (!isLoaded || userDataLoading) {
@@ -331,6 +359,58 @@ export default function SettingsPage() {
             >
               {updateDefaultHousehold.isPending ? 'Saving...' : 'Save Default Household'}
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Data Export</CardTitle>
+            <CardDescription>Download your data for backup or tax purposes</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-muted/50 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">Last Export</span>
+                <span className="text-sm text-muted-foreground">
+                  {userData?.lastExportedAt
+                    ? new Date(userData.lastExportedAt).toLocaleString()
+                    : 'Never'}
+                </span>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Export all your receipts, subscriptions, and payment history in CSV or JSON format.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="outline"
+                onClick={() => handleExport('csv', 'all')}
+                disabled={isExporting}
+              >
+                {isExporting ? 'Exporting...' : 'Download CSV (All Data)'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleExport('json', 'all')}
+                disabled={isExporting}
+              >
+                {isExporting ? 'Exporting...' : 'Download JSON (All Data)'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleExport('csv', 'receipts')}
+                disabled={isExporting}
+              >
+                {isExporting ? 'Exporting...' : 'Download Receipts Only'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleExport('csv', 'subscriptions')}
+                disabled={isExporting}
+              >
+                {isExporting ? 'Exporting...' : 'Download Subscriptions Only'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
