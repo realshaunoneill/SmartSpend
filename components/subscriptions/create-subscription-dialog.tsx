@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Plus } from 'lucide-react';
+import { Plus, CreditCard, Calendar, Tag, Settings } from 'lucide-react';
 import { useCreateSubscription } from '@/hooks/use-subscriptions';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import type { HouseholdWithMembers } from '@/lib/types/api-responses';
@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
 
 type FormData = {
   name: string;
@@ -170,96 +171,103 @@ export function CreateSubscriptionDialog() {
         <DialogHeader>
           <DialogTitle>Add New Subscription</DialogTitle>
           <DialogDescription>
-            Track a recurring expense by adding it to your subscriptions
+            Track your recurring expenses in just a few simple steps
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Info */}
+          {/* Step 1: Basic Info */}
           <div className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">
-                Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="name"
-                placeholder="Netflix, Spotify, etc."
-                {...register('name', { required: true })}
-              />
-              {errors.name && (
-                <p className="text-sm text-destructive">Name is required</p>
-              )}
+            <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+              <Tag className="w-4 h-4" />
+              <span>Basic Information</span>
             </div>
+            <Separator />
 
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                placeholder="Premium plan"
-                {...register('description')}
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="category">Category</Label>
-              <Select
-                onValueChange={(value) => setValue('category', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Financial Info */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-2 grid gap-2">
-                <Label htmlFor="amount">
-                  Amount <span className="text-destructive">*</span>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name" className="text-base">
+                  Subscription Name <span className="text-destructive">*</span>
                 </Label>
                 <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  placeholder="9.99"
-                  {...register('amount', { required: true })}
+                  id="name"
+                  placeholder="e.g., Netflix, Spotify, Adobe Creative Cloud"
+                  className="text-base"
+                  {...register('name', { required: true })}
                 />
-                {errors.amount && (
-                  <p className="text-sm text-destructive">Amount is required</p>
+                {errors.name && (
+                  <p className="text-sm text-destructive">Name is required</p>
                 )}
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="currency">Currency</Label>
+                <Label htmlFor="category">Category</Label>
                 <Select
-                  onValueChange={(value) => setValue('currency', value)}
-                  defaultValue="EUR"
+                  onValueChange={(value) => setValue('category', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Choose a category (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="EUR">EUR €</SelectItem>
-                    <SelectItem value="USD">USD $</SelectItem>
-                    <SelectItem value="GBP">GBP £</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
+          {/* Step 2: Pricing */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+              <CreditCard className="w-4 h-4" />
+              <span>Pricing Details</span>
+            </div>
+            <Separator />
+
+            <div className="grid gap-4">
+              <div className="grid grid-cols-[1fr_auto] gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="amount" className="text-base">
+                    Amount <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    placeholder="9.99"
+                    className="text-lg font-semibold"
+                    {...register('amount', { required: true })}
+                  />
+                  {errors.amount && (
+                    <p className="text-sm text-destructive">Amount is required</p>
+                  )}
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select
+                    onValueChange={(value) => setValue('currency', value)}
+                    defaultValue="EUR"
+                  >
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="EUR">€ EUR</SelectItem>
+                      <SelectItem value="USD">$ USD</SelectItem>
+                      <SelectItem value="GBP">£ GBP</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="grid gap-2">
-                <Label htmlFor="billingFrequency">
-                  Billing Frequency <span className="text-destructive">*</span>
+                <Label htmlFor="billingFrequency" className="text-base">
+                  How often are you charged? <span className="text-destructive">*</span>
                 </Label>
                 <Select
                   onValueChange={(value) =>
@@ -272,120 +280,150 @@ export function CreateSubscriptionDialog() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="quarterly">Quarterly</SelectItem>
+                    <SelectItem value="quarterly">Every 3 months (Quarterly)</SelectItem>
                     <SelectItem value="yearly">Yearly</SelectItem>
-                    <SelectItem value="custom">Custom</SelectItem>
+                    <SelectItem value="custom">Custom frequency</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
+              {billingFrequency === 'custom' && (
+                <div className="grid gap-2">
+                  <Label htmlFor="customFrequencyDays" className="text-base">
+                    Every how many days? <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="customFrequencyDays"
+                    type="number"
+                    min="1"
+                    placeholder="e.g., 30 for every 30 days"
+                    {...register('customFrequencyDays')}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Step 3: Billing Schedule */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+              <Calendar className="w-4 h-4" />
+              <span>Billing Schedule</span>
+            </div>
+            <Separator />
+
+            <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="billingDay">
-                  Billing Day <span className="text-destructive">*</span>
+                <Label htmlFor="billingDay" className="text-base">
+                  What day of the month? <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="billingDay"
                   type="number"
                   min="1"
                   max="31"
-                  placeholder="1"
+                  placeholder="e.g., 1 for the 1st of each month"
                   {...register('billingDay', { required: true })}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Enter a number between 1-31
+                </p>
                 {errors.billingDay && (
                   <p className="text-sm text-destructive">
                     Billing day is required (1-31)
                   </p>
                 )}
               </div>
-            </div>
 
-            {billingFrequency === 'custom' && (
               <div className="grid gap-2">
-                <Label htmlFor="customFrequencyDays">
-                  Custom Frequency (days){' '}
-                  <span className="text-destructive">*</span>
+                <Label htmlFor="startDate" className="text-base">
+                  When did you start? <span className="text-destructive">*</span>
                 </Label>
                 <Input
-                  id="customFrequencyDays"
-                  type="number"
-                  min="1"
-                  placeholder="30"
-                  {...register('customFrequencyDays')}
+                  id="startDate"
+                  type="date"
+                  {...register('startDate', { required: true })}
                 />
+                {errors.startDate && (
+                  <p className="text-sm text-destructive">Start date is required</p>
+                )}
               </div>
-            )}
-
-            <div className="grid gap-2">
-              <Label htmlFor="startDate">
-                Start Date <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="startDate"
-                type="date"
-                {...register('startDate', { required: true })}
-              />
-              {errors.startDate && (
-                <p className="text-sm text-destructive">Start date is required</p>
-              )}
             </div>
           </div>
 
-          {/* Additional Options */}
+          {/* Step 4: Additional Details (Collapsible/Optional) */}
           <div className="space-y-4">
-            {households && households.length > 0 && (
+            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+              <Settings className="w-4 h-4" />
+              <span>Additional Details (Optional)</span>
+            </div>
+            <Separator />
+
+            <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="householdId">Household (Optional)</Label>
-                <Select
-                  onValueChange={(value) => setValue('householdId', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Personal subscription" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {households.map((household: HouseholdWithMembers) => (
-                      <SelectItem key={household.id} value={household.id}>
-                        {household.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  placeholder="e.g., Premium plan, Family account"
+                  {...register('description')}
+                />
               </div>
-            )}
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="isBusinessExpense">Business Expense</Label>
-                <p className="text-sm text-muted-foreground">
-                  Mark this as a tax-deductible business expense
-                </p>
+              {households && households.length > 0 && (
+                <div className="grid gap-2">
+                  <Label htmlFor="householdId">Household</Label>
+                  <Select
+                    onValueChange={(value) => setValue('householdId', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Personal subscription" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {households.map((household: HouseholdWithMembers) => (
+                        <SelectItem key={household.id} value={household.id}>
+                          {household.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="isBusinessExpense" className="text-base">Business Expense</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Tax-deductible business expense
+                  </p>
+                </div>
+                <Switch
+                  id="isBusinessExpense"
+                  checked={watch('isBusinessExpense')}
+                  onCheckedChange={(checked) =>
+                    setValue('isBusinessExpense', checked)
+                  }
+                />
               </div>
-              <Switch
-                id="isBusinessExpense"
-                checked={watch('isBusinessExpense')}
-                onCheckedChange={(checked) =>
-                  setValue('isBusinessExpense', checked)
-                }
-              />
-            </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                type="url"
-                placeholder="https://example.com"
-                {...register('website')}
-              />
-            </div>
+              <div className="grid gap-2">
+                <Label htmlFor="website">Website</Label>
+                <Input
+                  id="website"
+                  type="url"
+                  placeholder="https://example.com"
+                  {...register('website')}
+                />
+              </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                placeholder="Additional notes about this subscription"
-                rows={3}
-                {...register('notes')}
-              />
+              <div className="grid gap-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  placeholder="Any additional information..."
+                  rows={2}
+                  {...register('notes')}
+                />
+              </div>
             </div>
           </div>
 
