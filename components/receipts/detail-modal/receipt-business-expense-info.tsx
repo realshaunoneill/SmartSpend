@@ -38,7 +38,7 @@ export function ReceiptBusinessExpenseInfo({ receipt }: ReceiptBusinessExpenseIn
             </div>
           </div>
         )}
-        
+
         {receipt.businessNotes && (
           <div className="flex items-start gap-2">
             <FileText className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
@@ -48,7 +48,7 @@ export function ReceiptBusinessExpenseInfo({ receipt }: ReceiptBusinessExpenseIn
             </div>
           </div>
         )}
-        
+
         {!receipt.businessCategory && !receipt.businessNotes && (
           <p className="text-muted-foreground italic">
             This receipt is marked as a business expense.

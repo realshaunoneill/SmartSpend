@@ -55,8 +55,8 @@ export class SubscriptionService {
    */
   static async generateExpectedPayments(
     subscriptionId: string,
-    monthsAhead: number = 12,
-    generateHistorical: boolean = false,
+    _monthsAhead: number = 12,
+    _generateHistorical: boolean = false,
   ): Promise<number> {
     // Fetch subscription
     const [subscription] = await db
@@ -92,7 +92,7 @@ export class SubscriptionService {
     }> = [];
 
     const startDate = new Date(subscription.startDate);
-    
+
     // Special case: if subscription has started and there are no payments,
     // create the first expected payment so user can link their initial receipt
     if (existingPayments.length === 0 && startDate <= now) {
@@ -101,7 +101,7 @@ export class SubscriptionService {
         subscription.billingFrequency as 'monthly' | 'quarterly' | 'yearly' | 'custom',
         subscription.customFrequencyDays || undefined,
       );
-      
+
       paymentsToCreate.push({
         subscriptionId: subscription.id,
         expectedDate: new Date(firstBillingDate),
@@ -112,7 +112,7 @@ export class SubscriptionService {
 
     // Determine the starting point for payment generation
     let startingDate: Date;
-    
+
     if (existingPayments.length === 0) {
       // No payments exist - start from the first billing date we just created
       startingDate = this.calculateNextBillingDate(
@@ -167,7 +167,7 @@ export class SubscriptionService {
           return diff < 24 * 60 * 60 * 1000; // Within 1 day
         },
       );
-      
+
       const alreadyCreated = paymentsToCreate.find(
         (p) => {
           const diff = Math.abs(

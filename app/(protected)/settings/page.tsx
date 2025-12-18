@@ -132,7 +132,7 @@ export default function SettingsPage() {
     try {
       const response = await fetch(`/api/users/export?format=${format}&type=${type}`);
       if (!response.ok) throw new Error('Export failed');
-      
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -142,7 +142,7 @@ export default function SettingsPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       // Refresh user data to show updated last export time
       queryClient.invalidateQueries({ queryKey: ['user'] });
       toast.success('Data exported successfully');

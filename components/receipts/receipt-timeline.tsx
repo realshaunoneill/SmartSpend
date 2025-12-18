@@ -36,16 +36,16 @@ function groupReceiptsByDate(receipts: ReceiptWithItems[]) {
 
   receipts.forEach(receipt => {
     let dateStr: string | undefined;
-    
+
     if (receipt.transactionDate) {
       dateStr = receipt.transactionDate;
     } else if (receipt.createdAt) {
       // Handle both Date objects and string dates
-      dateStr = typeof receipt.createdAt === 'string' 
-        ? receipt.createdAt 
+      dateStr = typeof receipt.createdAt === 'string'
+        ? receipt.createdAt
         : receipt.createdAt.toISOString();
     }
-    
+
     if (!dateStr) return;
 
     const date = parseISO(dateStr);
@@ -93,7 +93,7 @@ export function ReceiptTimeline({ receipts, onReceiptClick }: ReceiptTimelinePro
           <div className="ml-16 space-y-4">
             {groupedReceipts[dateLabel].map((receipt) => {
               const categoryClass = categoryColors[receipt.category?.toLowerCase() || 'other'] || categoryColors.other;
-              
+
               // Determine border style based on processing status
               let borderClass = 'border-2';
               if (receipt.processingStatus === 'failed') {
@@ -163,7 +163,7 @@ export function ReceiptTimeline({ receipts, onReceiptClick }: ReceiptTimelinePro
                             ❌ Failed - Please contact support
                           </Badge>
                         )}
-                        
+
                         {receipt.category && receipt.processingStatus === 'completed' && (
                           <Badge variant="outline" className={categoryClass}>
                             {formatCategory(receipt.category)}

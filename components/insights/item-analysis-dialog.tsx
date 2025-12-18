@@ -345,7 +345,7 @@ export function ItemAnalysisDialog({
                                 </Badge>
                               )}
                             </div>
-                            
+
                             <div className="flex items-center gap-4 flex-wrap text-sm text-muted-foreground">
                               <div className="flex items-center gap-1.5">
                                 <Calendar className="h-3.5 w-3.5" />
@@ -363,7 +363,7 @@ export function ItemAnalysisDialog({
                               <div className="font-semibold text-lg">
                                 {analysis.summary.currency} {parseFloat(purchase.price).toFixed(2)}
                               </div>
-                              
+
                               {purchase.receiptId && (
                                 <Button
                                   variant="outline"
@@ -409,7 +409,7 @@ export function ItemAnalysisDialog({
         </div>
       </DialogContent>
     </Dialog>
-    
+
     {/* Receipt Detail Modal */}
     <ReceiptDetailModal
       receipt={selectedReceipt}

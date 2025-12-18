@@ -23,7 +23,7 @@ type StatCardProps = {
 
 function StatCard({ label, value, icon, iconColor, alert, onClick }: StatCardProps) {
   const CardWrapper = onClick ? 'button' : 'div';
-  
+
   return (
     <Card className={cn(
       'transition-all duration-300 hover:shadow-lg',

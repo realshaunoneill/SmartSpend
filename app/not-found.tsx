@@ -156,7 +156,7 @@ export default function NotFound() {
                       <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
-                  <a 
+                  <a
                     href="mailto:support@receiptwise.com"
                     className="flex-1 sm:flex-initial"
                   >

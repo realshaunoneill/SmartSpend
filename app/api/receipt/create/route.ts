@@ -11,7 +11,7 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
-  
+
   try {
     const authResult = await getAuthenticatedUser(correlationId);
     if (authResult instanceof NextResponse) return authResult;
