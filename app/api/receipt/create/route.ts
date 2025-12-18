@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { receipts } from '@/lib/db/schema';
 import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { getPostHogClient } from '@/lib/posthog-server';
 import { randomUUID } from 'crypto';
 
 // Route configuration
@@ -73,6 +74,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       householdId,
       processingStatus: 'pending',
       timestamp: new Date().toISOString(),
+    });
+
+    // Track receipt upload event in PostHog
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: clerkId,
+      event: 'receipt_uploaded',
+      properties: {
+        receiptId: receipt.id,
+        householdId,
+        imageUrl,
+        hasHousehold: !!householdId,
+        timestamp: new Date().toISOString(),
+      },
     });
 
     submitLogEvent('receipt-upload-complete', 'Receipt upload flow completed, ready for processing', correlationId, {

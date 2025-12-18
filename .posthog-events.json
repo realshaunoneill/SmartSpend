@@ -1,0 +1,72 @@
+[
+  {
+    "eventName": "checkout_started",
+    "description": "User initiates the Stripe checkout process by clicking upgrade/subscribe button",
+    "filePath": "components/upgrade/pricing-card.tsx"
+  },
+  {
+    "eventName": "checkout_started",
+    "description": "User clicks upgrade CTA button to start subscription checkout",
+    "filePath": "components/upgrade/upgrade-cta.tsx"
+  },
+  {
+    "eventName": "checkout_started",
+    "description": "User clicks upgrade from subscription banner",
+    "filePath": "components/subscriptions/subscription-banner.tsx"
+  },
+  {
+    "eventName": "subscription_success",
+    "description": "User successfully completes subscription payment and views success page",
+    "filePath": "app/payment/successful/content.tsx"
+  },
+  {
+    "eventName": "payment_failed_viewed",
+    "description": "User views payment failed page after unsuccessful checkout",
+    "filePath": "app/payment/failed/page.tsx"
+  },
+  {
+    "eventName": "receipt_upload_started",
+    "description": "User selects files to upload receipts via batch upload",
+    "filePath": "components/receipts/receipt-batch-upload.tsx"
+  },
+  {
+    "eventName": "receipt_upload_completed",
+    "description": "Receipt upload and processing completed successfully",
+    "filePath": "components/receipts/receipt-batch-upload.tsx"
+  },
+  {
+    "eventName": "receipt_upload_failed",
+    "description": "Receipt upload or processing failed",
+    "filePath": "components/receipts/receipt-batch-upload.tsx"
+  },
+  {
+    "eventName": "onboarding_started",
+    "description": "User starts the onboarding tour",
+    "filePath": "components/onboarding/onboarding-tour.tsx"
+  },
+  {
+    "eventName": "onboarding_completed",
+    "description": "User completes all onboarding steps",
+    "filePath": "components/onboarding/onboarding-tour.tsx"
+  },
+  {
+    "eventName": "onboarding_skipped",
+    "description": "User skips the onboarding tour",
+    "filePath": "components/onboarding/onboarding-tour.tsx"
+  },
+  {
+    "eventName": "household_created",
+    "description": "User creates a new household for sharing receipts",
+    "filePath": "components/households/create-household-dialog.tsx"
+  },
+  {
+    "eventName": "receipt_viewed",
+    "description": "User opens the receipt detail modal to view receipt details",
+    "filePath": "app/(protected)/receipts/page.tsx"
+  },
+  {
+    "eventName": "upgrade_page_viewed",
+    "description": "User views the upgrade/pricing page - top of conversion funnel",
+    "filePath": "app/(protected)/upgrade/page.tsx"
+  }
+]

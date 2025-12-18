@@ -6,6 +6,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@/components/layout/theme-provider';
 import { Footer } from '@/components/layout/footer';
 import { QueryProvider } from '@/lib/providers/query-provider';
+import { PostHogProvider } from '@/lib/providers/posthog-provider';
 import { Toaster } from 'sonner';
 import './globals.css';
 
@@ -78,13 +79,15 @@ export default function RootLayout({
       <html lang="en" suppressHydrationWarning>
         <body className={`${inter.className} antialiased`}>
           <QueryProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-              <div className="flex min-h-screen flex-col">
-                <div className="flex-1">{children}</div>
-                <Footer />
-              </div>
-              <Toaster />
-            </ThemeProvider>
+            <PostHogProvider>
+              <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+                <div className="flex min-h-screen flex-col">
+                  <div className="flex-1">{children}</div>
+                  <Footer />
+                </div>
+                <Toaster />
+              </ThemeProvider>
+            </PostHogProvider>
           </QueryProvider>
           <Analytics />
         </body>
