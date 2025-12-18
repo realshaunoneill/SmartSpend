@@ -29,7 +29,7 @@ const navItems = [
 
 export function Navigation() {
   const pathname = usePathname();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
@@ -63,6 +63,29 @@ export function Navigation() {
   const handleLogout = async () => {
     await signOut();
   };
+
+  // If user is not authenticated, show public navigation
+  if (isLoaded && !user) {
+    return (
+      <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+        <div className="container mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <img src="/logo.png" alt="ReceiptWise" className="h-6 w-auto" />
+            <span className="font-bold text-foreground">ReceiptWise</span>
+          </Link>
+
+          {/* Right Side Actions */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link href="/sign-in">
+              <Button size="sm">Get Started</Button>
+            </Link>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
