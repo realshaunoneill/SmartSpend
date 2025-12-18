@@ -10,13 +10,16 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUser } from '@clerk/nextjs';
 import { useUser as useUserData } from '@/lib/hooks/use-user';
+import { useOnboarding } from '@/components/onboarding/onboarding-provider';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { PlayCircle } from 'lucide-react';
 import type { HouseholdWithMembers } from '@/lib/types/api-responses';
 
 export default function SettingsPage() {
   const { user: clerkUser, isLoaded } = useUser();
   const { user: userData, isLoading: userDataLoading } = useUserData();
+  const { startOnboarding } = useOnboarding();
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedHousehold, setSelectedHousehold] = useState<string>('none');
   const [isExporting, setIsExporting] = useState(false);
@@ -241,7 +244,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted-foreground">
                       {userData?.subscribed
                         ? 'Unlimited receipts, advanced analytics, and household sharing'
-                        : 'Limited to 50 receipts per month'}
+                        : 'View-only access to existing data'}
                     </p>
                   </div>
                 </div>
@@ -358,6 +361,26 @@ export default function SettingsPage() {
               }
             >
               {updateDefaultHousehold.isPending ? 'Saving...' : 'Save Default Household'}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Onboarding Tour</CardTitle>
+            <CardDescription>Learn how to use SmartSpend</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Take a guided tour of SmartSpend's features and learn how to get the most out of the app.
+            </p>
+            <Button
+              variant="outline"
+              onClick={startOnboarding}
+              className="gap-2"
+            >
+              <PlayCircle className="w-4 h-4" />
+              Start Tour
             </Button>
           </CardContent>
         </Card>

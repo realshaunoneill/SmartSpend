@@ -3,7 +3,25 @@
 import type React from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useUser as useUserData } from '@/lib/hooks/use-user';
+import { OnboardingProvider } from '@/components/onboarding/onboarding-provider';
+import { OnboardingTour } from '@/components/onboarding/onboarding-tour';
+import { useOnboarding } from '@/components/onboarding/onboarding-provider';
 import { Loader2 } from 'lucide-react';
+
+function ProtectedContent({ children }: { children: React.ReactNode }) {
+  const { showOnboarding, completeOnboarding, skipOnboarding } = useOnboarding();
+
+  return (
+    <>
+      {children}
+      <OnboardingTour
+        open={showOnboarding}
+        onComplete={completeOnboarding}
+        onSkip={skipOnboarding}
+      />
+    </>
+  );
+}
 
 export default function ProtectedLayout({
   children,
@@ -30,5 +48,9 @@ export default function ProtectedLayout({
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <OnboardingProvider>
+      <ProtectedContent>{children}</ProtectedContent>
+    </OnboardingProvider>
+  );
 }
