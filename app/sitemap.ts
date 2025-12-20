@@ -6,21 +6,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Static routes
   const routes = [
     '',
-    '/dashboard',
-    '/receipts',
-    '/insights',
-    '/subscriptions',
-    '/sharing',
-    '/settings',
     '/support',
     '/privacy',
     '/terms',
+    '/refund',
     '/sign-in',
   ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: route === '' ? 'daily' as const : 'weekly' as const,
-    priority: route === '' ? 1 : route === '/dashboard' ? 0.9 : 0.8,
+    priority: route === '' ? 1 : route === '/support' ? 0.7 : 0.6,
   }));
 
   return routes;
