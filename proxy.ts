@@ -10,6 +10,12 @@ const isPublicRoute = createRouteMatcher([
   '/refund',
   '/sitemap.xml',
   '/robots.txt',
+  '/favicon.ico',
+  '/icon.svg',
+  '/apple-icon.png',
+  '/manifest.json',
+  '/opengraph-image(.*)',
+  '/twitter-image(.*)',
   '/api/webhooks(.*)',
   '/api/stripe/webhooks', // Stripe webhooks
   '/ingest(.*)', // PostHog analytics
