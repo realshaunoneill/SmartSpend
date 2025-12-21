@@ -9,6 +9,7 @@ export type EventType =
   | 'generate-retry'
   | 'credits'
   | 'cache'
+  | 'pricing'
   | 'cache-error'
   | 'image'
   | 'user'
