@@ -13,10 +13,10 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'ReceiptWise - Receipt & Expense Tracker',
-  description: 'Track receipts, manage spending, and sync your bank accounts in one place',
+  title: 'ReceiptWise - Family Expense & Receipt Tracker',
+  description: 'Share expenses with family, roommates, or partners. AI-powered receipt scanning and household collaboration in one place',
   applicationName: 'ReceiptWise',
-  keywords: ['receipt tracker', 'expense tracker', 'receipt scanner', 'spending tracker', 'subscription manager', 'receipt management', 'expense management'],
+  keywords: ['receipt tracker', 'expense tracker', 'family expenses', 'household sharing', 'receipt scanner', 'spending tracker', 'subscription manager', 'shared expenses', 'roommate expenses'],
   authors: [{ name: 'ReceiptWise' }],
   creator: 'ReceiptWise',
   publisher: 'ReceiptWise',
@@ -25,8 +25,8 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'ReceiptWise - Receipt & Expense Tracker',
-    description: 'Track receipts, manage spending, and sync your bank accounts in one place',
+    title: 'ReceiptWise - Family Expense & Receipt Tracker',
+    description: 'Share expenses with family, roommates, or partners. AI-powered receipt scanning and household collaboration in one place',
     url: '/',
     siteName: 'ReceiptWise',
     images: [
@@ -42,8 +42,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ReceiptWise - Receipt & Expense Tracker',
-    description: 'Track receipts, manage spending, and sync your bank accounts in one place',
+    title: 'ReceiptWise - Family Expense & Receipt Tracker',
+    description: 'Share expenses with family, roommates, or partners. AI-powered receipt scanning and household collaboration in one place',
     images: ['/opengraph.png'],
     creator: '@receiptwise',
   },

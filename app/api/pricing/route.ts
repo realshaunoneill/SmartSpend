@@ -12,48 +12,78 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-static';
 export const revalidate = 3600; // Cache for 1 hour
 
-// Cached function to fetch price details
+// Cached function to fetch price details for both monthly and annual plans
 const getCachedPriceDetails = unstable_cache(
   async (correlationId: CorrelationId) => {
-    const priceId = process.env.STRIPE_PRICE_ID;
+    const monthlyPriceId = process.env.STRIPE_PRICE_ID;
+    const annualPriceId = process.env.STRIPE_ANNUAL_PRICE_ID;
 
-    if (!priceId) {
-      submitLogEvent('pricing', 'Price ID not configured', correlationId, {}, true);
-      throw new Error('Price ID not configured');
+    if (!monthlyPriceId) {
+      submitLogEvent('pricing', 'Monthly price ID not configured', correlationId, {}, true);
+      throw new Error('Monthly price ID not configured');
     }
 
-    submitLogEvent('pricing', 'Fetching price details from Stripe', correlationId, { priceId });
+    submitLogEvent('pricing', 'Fetching price details from Stripe', correlationId, { monthlyPriceId, annualPriceId });
 
-    const price = await stripe.prices.retrieve(priceId, {
+    // Fetch monthly price
+    const monthlyPrice = await stripe.prices.retrieve(monthlyPriceId, {
       expand: ['product'],
     });
 
-    if (!price.active) {
-      submitLogEvent('pricing', 'Price is not active', correlationId, { priceId, active: price.active }, true);
+    if (!monthlyPrice.active) {
+      submitLogEvent('pricing', 'Monthly price is not active', correlationId, { monthlyPriceId, active: monthlyPrice.active }, true);
       throw new Error('This subscription plan is not available');
     }
 
-    const product = price.product as Stripe.Product;
+    const product = monthlyPrice.product as Stripe.Product;
 
-    const priceDetails = {
-      priceId: price.id,
-      amount: price.unit_amount || 0,
-      currency: price.currency,
-      interval: price.recurring?.interval || 'month',
-      intervalCount: price.recurring?.interval_count || 1,
+    const monthlyDetails = {
+      priceId: monthlyPrice.id,
+      amount: monthlyPrice.unit_amount || 0,
+      currency: monthlyPrice.currency,
+      interval: monthlyPrice.recurring?.interval || 'month',
+      intervalCount: monthlyPrice.recurring?.interval_count || 1,
       productName: product.name,
       productDescription: product.description,
-      active: price.active,
+      active: monthlyPrice.active,
     };
 
+    // Fetch annual price if configured
+    let annualDetails = null;
+    if (annualPriceId) {
+      try {
+        const annualPrice = await stripe.prices.retrieve(annualPriceId, {
+          expand: ['product'],
+        });
+
+        if (annualPrice.active) {
+          annualDetails = {
+            priceId: annualPrice.id,
+            amount: annualPrice.unit_amount || 0,
+            currency: annualPrice.currency,
+            interval: annualPrice.recurring?.interval || 'year',
+            intervalCount: annualPrice.recurring?.interval_count || 1,
+            productName: (annualPrice.product as Stripe.Product).name,
+            productDescription: (annualPrice.product as Stripe.Product).description,
+            active: annualPrice.active,
+          };
+        }
+      } catch (error) {
+        submitLogEvent('pricing', `Failed to fetch annual price: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { annualPriceId }, false);
+      }
+    }
+
     submitLogEvent('pricing', 'Successfully fetched price details', correlationId, {
-      priceId: priceDetails.priceId,
-      amount: priceDetails.amount,
-      currency: priceDetails.currency,
-      interval: priceDetails.interval,
+      monthlyPriceId: monthlyDetails.priceId,
+      monthlyAmount: monthlyDetails.amount,
+      annualPriceId: annualDetails?.priceId,
+      annualAmount: annualDetails?.amount,
     });
 
-    return priceDetails;
+    return {
+      monthly: monthlyDetails,
+      annual: annualDetails,
+    };
   },
   ['stripe-price-details'],
   {
@@ -75,7 +105,8 @@ export async function GET(request: NextRequest) {
     const priceDetails = await getCachedPriceDetails(correlationId);
 
     submitLogEvent('pricing', 'Pricing request completed successfully', correlationId, {
-      priceId: priceDetails.priceId,
+      monthlyPriceId: priceDetails.monthly.priceId,
+      hasAnnual: !!priceDetails.annual,
     });
 
     return NextResponse.json(priceDetails);

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/lib/hooks/use-user';
 
 interface SubscriptionGateProps {
-  feature: 'upload' | 'sharing' | 'analytics' | 'bank'
+  feature: 'upload' | 'sharing' | 'analytics'
   title?: string
   description?: string
   children?: React.ReactNode
@@ -46,17 +46,6 @@ const featureConfig = {
       'Spending trends analysis',
       'Category breakdowns',
       'Export capabilities',
-    ],
-  },
-  bank: {
-    icon: Lock,
-    title: 'Bank Integration',
-    description: 'Connect your bank accounts for automatic transaction matching',
-    benefits: [
-      'Multiple bank connections',
-      'Automatic transaction matching',
-      'Real-time balance updates',
-      'Enhanced security',
     ],
   },
 };

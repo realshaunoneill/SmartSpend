@@ -86,7 +86,7 @@ export function ReceiptImage({ imageUrl }: ReceiptImageProps) {
       {/* Fullscreen Modal */}
       {isFullscreen && imageUrl && (
         <div
-          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center"
+          className="fixed inset-0 z-100 bg-black/95 backdrop-blur-sm flex items-center justify-center"
           onClick={() => setIsFullscreen(false)}
         >
           <div className="absolute top-4 right-4 flex gap-2 z-10">

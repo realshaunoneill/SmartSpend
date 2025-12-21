@@ -27,11 +27,6 @@ const pageMessages = {
     description: 'Create unlimited households and collaborate with more family members',
     features: ['Unlimited households', 'Advanced permissions', 'Real-time sync'],
   },
-  bank: {
-    title: 'Premium Bank Integration',
-    description: 'Connect multiple bank accounts and get automatic transaction matching',
-    features: ['Multiple banks', 'Auto-matching', 'Transaction insights'],
-  },
   settings: {
     title: 'Premium Account Features',
     description: 'Unlock all premium features and priority support',

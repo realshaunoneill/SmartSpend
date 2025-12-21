@@ -10,39 +10,39 @@ import { useUser } from '@clerk/nextjs';
 
 const features = [
   {
+    icon: Users,
+    title: 'Household Sharing',
+    description: 'Create households for family, roommates, or partners. Everyone can upload receipts and track shared expenses together.',
+    gradient: 'from-orange-500/10 to-amber-500/10',
+  },
+  {
     icon: Scan,
     title: 'AI Receipt Scanning',
     description: 'Upload receipts and our AI extracts merchant, amount, date, and line items automatically.',
     gradient: 'from-emerald-500/10 to-teal-500/10',
   },
   {
-    icon: Search,
-    title: 'Powerful Search',
-    description: 'Search receipts by merchant name, category, or even specific items you purchased. Find any receipt instantly.',
-    gradient: 'from-violet-500/10 to-purple-500/10',
-  },
-  {
     icon: BarChart3,
     title: 'Spending Analytics',
-    description: 'Visualize your spending patterns with beautiful charts and category breakdowns.',
+    description: 'See who spent what with household breakdowns, category analysis, and spending trends.',
     gradient: 'from-blue-500/10 to-cyan-500/10',
   },
   {
     icon: Cloud,
     title: 'Cloud Sync',
-    description: 'Access your receipts from any device with automatic cloud synchronization.',
+    description: 'All household members see receipts in real-time with automatic cloud synchronization.',
     gradient: 'from-purple-500/10 to-pink-500/10',
   },
   {
-    icon: Users,
-    title: 'Household Sharing',
-    description: 'Share expenses with family members and track household spending together.',
-    gradient: 'from-orange-500/10 to-amber-500/10',
+    icon: Search,
+    title: 'Powerful Search',
+    description: 'Search all household receipts by merchant, category, or specific items. Find any receipt instantly.',
+    gradient: 'from-violet-500/10 to-purple-500/10',
   },
   {
     icon: Receipt,
     title: 'Receipt Storage',
-    description: 'Never lose a receipt again. All your receipts stored and searchable.',
+    description: 'Never lose a receipt again. All household receipts stored securely and searchable.',
     gradient: 'from-green-500/10 to-emerald-500/10',
   },
 ];
@@ -55,12 +55,12 @@ const stats = [
 ];
 
 const benefits = [
-  'Track all expenses in one place',
+  'Perfect for families & roommates',
+  'Real-time collaboration',
+  'Everyone can upload receipts',
   'Automatic categorization',
   'Export reports for taxes',
-  'Multi-currency support',
-  'Works on all devices',
-  'Subscription tracking',
+  'Track shared subscriptions',
 ];
 
 export default function LandingPage() {
@@ -106,8 +106,7 @@ export default function LandingPage() {
             </span>
           </h1>
           <p className="mx-auto mb-10 max-w-2xl text-pretty text-lg text-muted-foreground sm:text-xl">
-            ReceiptWise makes expense tracking simple. Snap receipts, connect your bank, and get insights into your
-            spending habits—all in one beautiful app.
+            The expense tracker built for sharing. Perfect for families, roommates, and couples who want to manage receipts and track spending together.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             {isSignedIn ? (
@@ -213,11 +212,11 @@ export default function LandingPage() {
                 Benefits
               </div>
               <h2 className="mb-6 text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
-                Take Control of Your Finances
+                Built for Sharing
               </h2>
               <p className="mb-8 text-lg text-muted-foreground">
-                Join thousands of users who have simplified their expense tracking with ReceiptWise. No more lost
-                receipts, no more guessing where your money went.
+                Join thousands of families, roommates, and couples who track expenses together with ReceiptWise. 
+                No more lost receipts, no more confusion about who paid what.
               </p>
               <ul className="mb-8 grid gap-3 sm:grid-cols-2">
                 {benefits.map((benefit) => (
@@ -247,9 +246,9 @@ export default function LandingPage() {
             </div>
             <div className="order-1 lg:order-2">
               <div className="relative">
-                <div className="absolute -inset-4 rounded-2xl bg-gradient-to-r from-primary/20 to-accent/20 opacity-20 blur-2xl" />
+                <div className="absolute -inset-4 rounded-2xl bg-linear-to-r from-primary/20 to-accent/20 opacity-20 blur-2xl" />
                 <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card/50 shadow-2xl backdrop-blur-sm">
-                  <div className="aspect-[4/5] w-full bg-gradient-to-br from-muted/50 to-muted/30">
+                  <div className="aspect-4/5 w-full bg-linear-to-br from-muted/50 to-muted/30">
                     <div className="flex h-full items-center justify-center">
                       <div className="text-center">
                         <Receipt className="mx-auto mb-4 h-16 w-16 text-muted-foreground/40" />
@@ -274,7 +273,7 @@ export default function LandingPage() {
             Your Data is Safe with Us
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
-            We use bank-level encryption and security measures to protect your financial data. Your privacy is our top priority.
+            We use military-grade encryption and security measures to protect your household financial data. Your privacy is our top priority.
           </p>
           <div className="grid gap-6 sm:grid-cols-3">
             <div className="rounded-lg border border-border/50 bg-card/50 p-6 backdrop-blur-sm">
@@ -299,7 +298,7 @@ export default function LandingPage() {
       {/* Mobile App Coming Soon Section */}
       <section className="border-t border-border/50 px-4 py-20">
         <div className="mx-auto max-w-6xl">
-          <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 p-8 shadow-xl backdrop-blur-sm sm:p-12 lg:p-16">
+          <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-linear-to-br from-primary/5 via-accent/5 to-primary/5 p-8 shadow-xl backdrop-blur-sm sm:p-12 lg:p-16">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(16,185,129,0.1),transparent_70%)]" />
             <div className="relative grid items-center gap-8 lg:grid-cols-2">
               <div>
@@ -349,10 +348,10 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="relative">
-                <div className="absolute -inset-4 rounded-2xl bg-gradient-to-r from-primary/20 to-accent/20 opacity-30 blur-3xl" />
+                <div className="absolute -inset-4 rounded-2xl bg-linear-to-r from-primary/20 to-accent/20 opacity-30 blur-3xl" />
                 <div className="relative mx-auto max-w-sm">
                   <div className="overflow-hidden rounded-3xl border-8 border-foreground/10 bg-card shadow-2xl">
-                    <div className="aspect-[9/19] w-full bg-gradient-to-br from-muted/50 to-muted/30">
+                    <div className="aspect-9/19 w-full bg-linear-to-br from-muted/50 to-muted/30">
                       <div className="flex h-full flex-col items-center justify-center p-8">
                         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
                           <Receipt className="h-10 w-10 text-primary" />
@@ -375,7 +374,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="border-t border-border/50 bg-gradient-to-br from-primary to-primary/80 px-4 py-20">
+      <section className="border-t border-border/50 bg-linear-to-br from-primary to-primary/80 px-4 py-20">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="mb-4 text-3xl font-bold text-primary-foreground sm:text-4xl lg:text-5xl">
             Ready to Start Saving?

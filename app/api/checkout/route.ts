@@ -23,7 +23,10 @@ export async function POST(request: NextRequest) {
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
-    const priceId = process.env.STRIPE_PRICE_ID;
+    const body = await request.json();
+
+    // Use provided priceId or default to monthly price
+    const priceId = body.priceId || process.env.STRIPE_PRICE_ID;
 
     if (!priceId) {
       return NextResponse.json(
@@ -31,8 +34,6 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-
-    const body = await request.json();
 
     // Verify the price exists and is active
     try {
