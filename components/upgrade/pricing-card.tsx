@@ -58,10 +58,10 @@ export function PricingCard() {
   });
 
   const handleUpgrade = () => {
-    const priceId = selectedInterval === 'annual' && pricing?.annual 
-      ? pricing.annual.priceId 
+    const priceId = selectedInterval === 'annual' && pricing?.annual
+      ? pricing.annual.priceId
       : pricing?.monthly?.priceId;
-    
+
     if (priceId) {
       upgradeMutation.mutate(priceId);
     }
@@ -81,7 +81,7 @@ export function PricingCard() {
   const trialDays = process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS ? parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) : 0;
 
   // Calculate savings percentage
-  const savingsPercentage = pricing?.monthly && pricing?.annual 
+  const savingsPercentage = pricing?.monthly && pricing?.annual
     ? Math.round(((pricing.monthly.amount * 12 - pricing.annual.amount) / (pricing.monthly.amount * 12)) * 100)
     : 17; // Default to 17% (2 months free)
 
@@ -140,8 +140,8 @@ export function PricingCard() {
         <div className="text-center">
           <div className="flex items-baseline justify-center gap-2">
             <span className="text-5xl font-bold">
-              {selectedInterval === 'annual' && annualMonthlyEquivalent 
-                ? annualMonthlyEquivalent 
+              {selectedInterval === 'annual' && annualMonthlyEquivalent
+                ? annualMonthlyEquivalent
                 : monthlyPrice}
             </span>
             <span className="text-muted-foreground">/ month</span>

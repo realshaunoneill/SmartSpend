@@ -252,7 +252,7 @@ export default function LandingPage() {
                     <div className="flex h-full items-center justify-center">
                       <div className="text-center">
                         <Receipt className="mx-auto mb-4 h-16 w-16 text-muted-foreground/40" />
-                        <p className="text-sm text-muted-foreground">Mobile App Preview</p>
+                        <p className="text-sm text-muted-foreground">Dashboard Preview</p>
                       </div>
                     </div>
                   </div>
@@ -295,85 +295,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Mobile App Coming Soon Section */}
-      <section className="border-t border-border/50 px-4 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-linear-to-br from-primary/5 via-accent/5 to-primary/5 p-8 shadow-xl backdrop-blur-sm sm:p-12 lg:p-16">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(16,185,129,0.1),transparent_70%)]" />
-            <div className="relative grid items-center gap-8 lg:grid-cols-2">
-              <div>
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-sm font-medium text-foreground backdrop-blur-sm">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" />
-                  Coming Soon
-                </div>
-                <h2 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
-                  ReceiptWise Mobile App
-                </h2>
-                <p className="mb-6 text-lg text-muted-foreground">
-                  Track expenses on the go with our upcoming mobile app. Snap receipts instantly, view your spending in real-time, and manage your finances from anywhere.
-                </p>
-                <ul className="mb-8 space-y-3">
-                  <li className="flex items-center gap-3">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                    </div>
-                    <span className="text-sm font-medium text-foreground">Instant receipt capture with camera</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                    </div>
-                    <span className="text-sm font-medium text-foreground">Real-time sync across all devices</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                    </div>
-                    <span className="text-sm font-medium text-foreground">Offline mode for on-the-go tracking</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                    </div>
-                    <span className="text-sm font-medium text-foreground">Push notifications for spending alerts</span>
-                  </li>
-                </ul>
-                <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
-                  <p className="text-sm font-medium text-foreground">
-                    🚀 Mobile apps for iOS and Android coming soon
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Sign up now to be notified when they launch
-                  </p>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="absolute -inset-4 rounded-2xl bg-linear-to-r from-primary/20 to-accent/20 opacity-30 blur-3xl" />
-                <div className="relative mx-auto max-w-sm">
-                  <div className="overflow-hidden rounded-3xl border-8 border-foreground/10 bg-card shadow-2xl">
-                    <div className="aspect-9/19 w-full bg-linear-to-br from-muted/50 to-muted/30">
-                      <div className="flex h-full flex-col items-center justify-center p-8">
-                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-                          <Receipt className="h-10 w-10 text-primary" />
-                        </div>
-                        <h3 className="mb-2 text-center text-lg font-semibold text-foreground">ReceiptWise</h3>
-                        <p className="text-center text-sm text-muted-foreground">Mobile App</p>
-                        <div className="mt-8 flex gap-2">
-                          <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                          <div className="h-2 w-2 animate-pulse rounded-full bg-primary delay-75" />
-                          <div className="h-2 w-2 animate-pulse rounded-full bg-primary delay-150" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
+      {/* CTA Section */
       <section className="border-t border-border/50 bg-linear-to-br from-primary to-primary/80 px-4 py-20">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="mb-4 text-3xl font-bold text-primary-foreground sm:text-4xl lg:text-5xl">

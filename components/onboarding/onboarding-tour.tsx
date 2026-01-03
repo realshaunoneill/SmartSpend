@@ -231,7 +231,7 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
     try {
       // Use annual price if available, otherwise monthly
       const priceId = pricingDetails?.annual?.priceId || pricingDetails?.monthly?.priceId;
-      
+
       if (!priceId) {
         throw new Error('No pricing information available');
       }

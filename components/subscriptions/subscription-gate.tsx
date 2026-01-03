@@ -1,6 +1,6 @@
 'use client';
 
-import { Crown, Sparkles, ArrowRight, Lock, Upload, Users, BarChart3 } from 'lucide-react';
+import { Crown, Sparkles, ArrowRight, Upload, Users, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
