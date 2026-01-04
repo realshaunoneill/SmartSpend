@@ -181,7 +181,6 @@ function ReceiptsPageContent() {
           <div className="space-y-4">
             <SubscriptionGate feature="upload">
               <ReceiptBatchUpload
-                clerkId={clerkUser.id}
                 userEmail={clerkUser.emailAddresses[0]?.emailAddress || ''}
                 householdId={selectedHouseholdId}
                 onUploadComplete={handleUploadComplete}
