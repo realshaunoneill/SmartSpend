@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQueryState, parseAsStringLiteral } from 'nuqs';
 import { Navigation } from '@/components/layout/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,9 +30,11 @@ import type { HouseholdWithMembers } from '@/lib/types/api-responses';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { SUPPORTED_CURRENCIES } from '@/lib/utils/currency';
 
+const VALID_TABS = ['profile', 'preferences', 'subscription', 'household', 'data'] as const;
+
 export default function SettingsPage() {
   const { user: clerkUser, isLoaded } = useUser();
-  const { user: userData, isLoading: userDataLoading } = useUserData();
+  const { user: userData, isLoading: userDataLoading, refetch: refetchUser } = useUserData();
   const { startOnboarding } = useOnboarding();
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedHousehold, setSelectedHousehold] = useState<string>('none');
@@ -40,6 +43,12 @@ export default function SettingsPage() {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const queryClient = useQueryClient();
+
+  // Tab state synced with URL using nuqs
+  const [currentTab, setCurrentTab] = useQueryState(
+    'tab',
+    parseAsStringLiteral(VALID_TABS).withDefault('profile'),
+  );
 
   // Update selected household when userData loads
   useEffect(() => {
@@ -203,8 +212,8 @@ export default function SettingsPage() {
       if (!response.ok) throw new Error('Failed to schedule account deletion');
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+    onSuccess: async () => {
+      await refetchUser();
       setShowDeleteDialog(false);
       setDeleteConfirmation('');
       toast.success('Account scheduled for deletion', {
@@ -227,8 +236,8 @@ export default function SettingsPage() {
       if (!response.ok) throw new Error('Failed to cancel account deletion');
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+    onSuccess: async () => {
+      await refetchUser();
       toast.success('Account deletion cancelled', {
         description: 'Your account is safe and will not be deleted.',
       });
@@ -285,7 +294,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <Tabs defaultValue="profile" className="w-full">
+        <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as typeof VALID_TABS[number])} className="w-full">
           <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:grid-cols-none lg:flex">
             <TabsTrigger value="profile" className="gap-2">
               <User className="h-4 w-4 hidden sm:block" />

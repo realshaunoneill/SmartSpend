@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { ClerkProvider } from '@clerk/nextjs';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { ThemeProvider } from '@/components/layout/theme-provider';
 import { Footer } from '@/components/layout/footer';
 import { QueryProvider } from '@/lib/providers/query-provider';
@@ -78,17 +79,19 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body className={`${inter.className} antialiased`}>
-          <QueryProvider>
-            <PostHogProvider>
-              <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-                <div className="flex min-h-screen flex-col">
-                  <div className="flex-1">{children}</div>
-                  <Footer />
-                </div>
-                <Toaster />
-              </ThemeProvider>
-            </PostHogProvider>
-          </QueryProvider>
+          <NuqsAdapter>
+            <QueryProvider>
+              <PostHogProvider>
+                <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+                  <div className="flex min-h-screen flex-col">
+                    <div className="flex-1">{children}</div>
+                    <Footer />
+                  </div>
+                  <Toaster />
+                </ThemeProvider>
+              </PostHogProvider>
+            </QueryProvider>
+          </NuqsAdapter>
           <Analytics />
         </body>
       </html>
