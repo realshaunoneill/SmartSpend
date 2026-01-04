@@ -1,9 +1,10 @@
 'use client';
 
-import { Crown } from 'lucide-react';
+import { useState } from 'react';
+import { Crown, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface SubscriptionUpsellProps {
   title?: string
@@ -23,10 +24,34 @@ export function SubscriptionUpsell({
   ],
   className = '',
 }: SubscriptionUpsellProps) {
-  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleUpgrade = () => {
-    router.push('/settings');
+  const handleUpgrade = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session');
+      }
+
+      const { url } = await response.json();
+      if (url) {
+        const trialDays = process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS ? parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) : 0;
+        if (trialDays > 0) {
+          toast.success(`Starting your ${trialDays}-day free trial...`);
+        }
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      toast.error('Failed to start checkout. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -51,9 +76,14 @@ export function SubscriptionUpsell({
         </ul>
         <Button
           onClick={handleUpgrade}
+          disabled={isLoading}
           className="w-full sm:w-auto gap-2"
         >
-          <Crown className="h-4 w-4" />
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Crown className="h-4 w-4" />
+          )}
           Upgrade Now
         </Button>
       </CardContent>

@@ -215,7 +215,7 @@ export default function LandingPage() {
                 Built for Sharing
               </h2>
               <p className="mb-8 text-lg text-muted-foreground">
-                Join thousands of families, roommates, and couples who track expenses together with ReceiptWise. 
+                Join thousands of families, roommates, and couples who track expenses together with ReceiptWise.
                 No more lost receipts, no more confusion about who paid what.
               </p>
               <ul className="mb-8 grid gap-3 sm:grid-cols-2">
@@ -295,7 +295,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */
+      {/* CTA Section */}
       <section className="border-t border-border/50 bg-linear-to-br from-primary to-primary/80 px-4 py-20">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="mb-4 text-3xl font-bold text-primary-foreground sm:text-4xl lg:text-5xl">

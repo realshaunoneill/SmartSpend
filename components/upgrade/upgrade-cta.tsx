@@ -48,7 +48,7 @@ export function UpgradeCTA() {
     <div className="text-center space-y-4">
       <h2 className="text-3xl font-bold">Ready to get started?</h2>
       <p className="text-muted-foreground max-w-xl mx-auto">
-        Join thousands of users who are taking control of their finances with SmartSpend Premium
+        Join thousands of users who are taking control of their finances with ReceiptWise Premium
       </p>
       <Button
         onClick={handleUpgrade}

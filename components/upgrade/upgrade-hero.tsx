@@ -12,7 +12,7 @@ export function UpgradeHero() {
         Upgrade to Premium
       </h1>
       <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-        Unlock the full power of SmartSpend and take control of your finances
+        Unlock the full power of ReceiptWise and take control of your finances
       </p>
     </div>
   );

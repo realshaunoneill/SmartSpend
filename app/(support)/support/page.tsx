@@ -40,9 +40,7 @@ export default function SupportPage() {
               </a>
 
               <a
-                href="https://github.com/realshaunoneill/SmartSpend/issues"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="mailto:support@receiptwise.com?subject=Feature%20Request"
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
                 <div className="p-2 rounded-full bg-neutral-100 dark:bg-neutral-900/30">
@@ -50,7 +48,7 @@ export default function SupportPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium group-hover:text-neutral-800 dark:group-hover:text-neutral-200 transition-colors">
-                    GitHub Issues
+                    Feature Requests
                   </p>
                   <p className="text-sm text-muted-foreground">Report bugs or request features</p>
                 </div>

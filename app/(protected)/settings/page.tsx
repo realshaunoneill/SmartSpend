@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useUser } from '@clerk/nextjs';
 import { useUser as useUserData } from '@/lib/hooks/use-user';
 import { useOnboarding } from '@/components/onboarding/onboarding-provider';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { PlayCircle } from 'lucide-react';
 import type { HouseholdWithMembers } from '@/lib/types/api-responses';
+import { useHouseholds } from '@/lib/hooks/use-households';
 
 export default function SettingsPage() {
   const { user: clerkUser, isLoaded } = useUser();
@@ -32,16 +33,8 @@ export default function SettingsPage() {
     }
   }, [userData?.defaultHouseholdId]);
 
-  // Fetch user's households
-  const { data: households = [], isLoading: householdsLoading } = useQuery({
-    queryKey: ['households'],
-    queryFn: async () => {
-      const response = await fetch('/api/households');
-      if (!response.ok) throw new Error('Failed to fetch households');
-      const data = await response.json();
-      return data.households || [];
-    },
-  });
+  // Fetch user's households using the shared hook
+  const { data: households = [], isLoading: householdsLoading } = useHouseholds();
 
   // Update default household mutation
   const updateDefaultHousehold = useMutation({
@@ -368,11 +361,11 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Onboarding Tour</CardTitle>
-            <CardDescription>Learn how to use SmartSpend</CardDescription>
+            <CardDescription>Learn how to use ReceiptWise</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Take a guided tour of SmartSpend's features and learn how to get the most out of the app.
+              Take a guided tour of ReceiptWise's features and learn how to get the most out of the app.
             </p>
             <Button
               variant="outline"
