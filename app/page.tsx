@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { Navigation } from '@/components/layout/navigation';
+import { Testimonials, SocialProofBanner } from '@/components/landing/testimonials';
+import { ExitIntentPopup } from '@/components/landing/exit-intent-popup';
 import { useUser } from '@clerk/nextjs';
 
 const features = [
@@ -135,6 +137,13 @@ export default function LandingPage() {
             <p className="mt-4 text-sm text-muted-foreground">
               Start your {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS}-day free trial • No credit card required
             </p>
+          )}
+
+          {/* Social Proof Banner */}
+          {!isSignedIn && (
+            <div className="mt-8">
+              <SocialProofBanner />
+            </div>
           )}
 
           {/* Stats */}
@@ -271,6 +280,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      {!isSignedIn && <Testimonials />}
+
       {/* Security Section */}
       <section className="border-t border-border/50 px-4 py-20">
         <div className="mx-auto max-w-4xl text-center">
@@ -340,6 +352,9 @@ export default function LandingPage() {
           )}
         </div>
       </section>
+
+      {/* Exit Intent Popup - only for non-signed-in users */}
+      {!isSignedIn && <ExitIntentPopup />}
     </div>
   );
 }
