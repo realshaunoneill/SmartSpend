@@ -3,7 +3,6 @@
 import { TrendingUp, Calendar, Bell, PieChart, Pause, XCircle, PlayCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { CreateSubscriptionDialog } from './create-subscription-dialog';
-import { Button } from '@/components/ui/button';
 
 type SubscriptionEmptyStateProps = {
   status: string;

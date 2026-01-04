@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { receipts, users, households } from '@/lib/db/schema';
 import { getAuthenticatedUser, requireAdmin } from '@/lib/auth-helpers';
-import { sql, eq, isNull } from 'drizzle-orm';
+import { sql, eq, isNull, desc } from 'drizzle-orm';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { randomUUID } from 'crypto';
 
@@ -29,6 +29,9 @@ export async function GET(req: NextRequest) {
         currency: receipts.currency,
         transactionDate: receipts.transactionDate,
         processingStatus: receipts.processingStatus,
+        processingError: receipts.processingError,
+        category: receipts.category,
+        isBusinessExpense: receipts.isBusinessExpense,
         createdAt: receipts.createdAt,
         userEmail: sql<string>`COALESCE(${users.email}, 'Unknown')`,
         householdName: households.name,
@@ -37,7 +40,8 @@ export async function GET(req: NextRequest) {
       .leftJoin(users, eq(receipts.userId, users.id))
       .leftJoin(households, eq(receipts.householdId, households.id))
       .where(isNull(receipts.deletedAt))
-      .limit(500); // Limit to prevent huge responses
+      .orderBy(desc(receipts.createdAt))
+      .limit(1000); // Increased limit for better admin view
 
     submitLogEvent('admin', 'Admin viewed receipts list', correlationId, { adminId: user.id });
 
