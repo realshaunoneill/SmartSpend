@@ -74,10 +74,12 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
   // Text search across merchant name, category, and line items
   if (search) {
     // Search in receipt items for matching product names
+    // Limit to 1000 to prevent performance issues with large datasets
     const matchingReceiptIds = await db
       .selectDistinct({ receiptId: receiptItems.receiptId })
       .from(receiptItems)
       .where(ilike(receiptItems.name, `%${search}%`))
+      .limit(1000)
       .then(rows => rows.map(r => r.receiptId));
 
     if (matchingReceiptIds.length > 0) {
