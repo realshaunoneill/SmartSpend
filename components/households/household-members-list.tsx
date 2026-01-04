@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Crown, User, MoreVertical, Trash2, UserPlus, Mail } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Crown, User, MoreVertical, Trash2, UserPlus, Mail, Users, Clock, Shield } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { SubscriptionUpsell } from '@/components/subscriptions/subscription-upsell';
 import { removeMember } from '@/lib/household-actions';
 import { useSendInvitation, useHouseholdInvitations } from '@/lib/hooks/use-invitations';
@@ -91,22 +91,36 @@ export function HouseholdMembersList({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle>Members</CardTitle>
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-muted-foreground" />
+              Members
+            </CardTitle>
+            <CardDescription className="mt-1">
+              {members.length} {members.length === 1 ? 'person' : 'people'} in this household
+            </CardDescription>
+          </div>
           {isCurrentUserAdmin && isSubscribed && (
             <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm">
                   <UserPlus className="h-4 w-4 mr-2" />
-                  Invite Member
+                  Invite
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Invite New Member</DialogTitle>
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                    <Mail className="h-6 w-6 text-primary" />
+                  </div>
+                  <DialogTitle className="text-center">Invite New Member</DialogTitle>
+                  <DialogDescription className="text-center">
+                    They&apos;ll receive a notification to accept the invitation.
+                  </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="space-y-4 py-4">
                   <div>
                     <label className="text-sm font-medium">Email Address</label>
                     <Input
@@ -114,6 +128,7 @@ export function HouseholdMembersList({
                       placeholder="Enter email address"
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
+                      className="mt-2"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           handleSendInvitation();
@@ -143,7 +158,7 @@ export function HouseholdMembersList({
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         {!isSubscribed && isCurrentUserAdmin && (
           <div className="mb-4">
             <SubscriptionUpsell
@@ -158,15 +173,22 @@ export function HouseholdMembersList({
             />
           </div>
         )}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {members.map((member) => {
             const isCurrentUser = member.user_id === currentUserId;
             const canManage = isCurrentUserAdmin && !isCurrentUser && isSubscribed;
+            const joinedDate = new Date(member.joined_at).toLocaleDateString('en-US', {
+              month: 'short',
+              year: 'numeric',
+            });
 
             return (
-              <div key={`member-${member.user_id}`} className="flex items-center justify-between rounded-lg border bg-card p-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 overflow-hidden rounded-full bg-primary/10">
+              <div
+                key={`member-${member.user_id}`}
+                className="flex items-center justify-between rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary/20 to-primary/5">
                     {member.avatar_url ? (
                       <img
                         src={member.avatar_url || '/placeholder.svg'}
@@ -179,21 +201,23 @@ export function HouseholdMembersList({
                       </div>
                     )}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-foreground">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-medium text-foreground truncate">
                         {member.full_name}
-                        {isCurrentUser && <span className="ml-2 text-xs text-muted-foreground">(You)</span>}
                       </p>
+                      {isCurrentUser && (
+                        <Badge variant="outline" className="text-xs shrink-0">You</Badge>
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground">{member.email}</p>
+                    <p className="text-xs text-muted-foreground truncate">{member.email}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <Badge
                     variant={member.role === 'admin' ? 'default' : 'secondary'}
-                    className={member.role === 'admin' ? 'bg-primary' : ''}
+                    className={member.role === 'admin' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20' : ''}
                   >
                     {member.role === 'admin' ? (
                       <>
@@ -201,19 +225,22 @@ export function HouseholdMembersList({
                         Admin
                       </>
                     ) : (
-                      'Member'
+                      <>
+                        <Shield className="mr-1 h-3 w-3" />
+                        Member
+                      </>
                     )}
                   </Badge>
 
                   {canManage && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" disabled={loadingMemberId === member.user_id}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={loadingMemberId === member.user_id}>
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleRemove(member.user_id)} className="text-destructive">
+                        <DropdownMenuItem onClick={() => handleRemove(member.user_id)} className="text-destructive focus:text-destructive">
                           <Trash2 className="mr-2 h-4 w-4" />
                           Remove Member
                         </DropdownMenuItem>
@@ -227,28 +254,34 @@ export function HouseholdMembersList({
 
           {/* Pending Invitations */}
           {invitations.length > 0 && (
-            <div className="mt-6 pt-4 border-t">
-              <h4 className="text-sm font-medium text-muted-foreground mb-3">
-                Pending Invitations
+            <div className="mt-4 pt-4 border-t">
+              <h4 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Pending Invitations ({invitations.length})
               </h4>
               <div className="space-y-2">
                 {invitations.map((invitation: HouseholdInvitation) => (
                   <div
                     key={invitation.id}
-                    className="flex items-center justify-between rounded-lg border bg-muted/50 p-3"
+                    className="flex items-center justify-between rounded-lg border border-dashed bg-muted/30 p-3"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-8 w-8 shrink-0 rounded-full bg-muted flex items-center justify-center">
                         <Mail className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">{invitation.invitedEmail}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{invitation.invitedEmail}</p>
                         <p className="text-xs text-muted-foreground">
-                          Invited {new Date(invitation.createdAt).toLocaleDateString()}
+                          Invited {new Date(invitation.createdAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
                         </p>
                       </div>
                     </div>
-                    <Badge variant="outline">Pending</Badge>
+                    <Badge variant="outline" className="shrink-0 text-amber-600 dark:text-amber-400 border-amber-500/30">
+                      Pending
+                    </Badge>
                   </div>
                 ))}
               </div>

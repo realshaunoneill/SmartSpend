@@ -1,6 +1,6 @@
 'use client';
 
-import { Store, MapPin, Info, Calendar, Clock, CreditCard, Hash, Receipt as ReceiptIcon, Tag, Building2, Users, AlertCircle, RefreshCw, CheckCircle } from 'lucide-react';
+import { Store, MapPin, Info, Calendar, Clock, CreditCard, Hash, Receipt as ReceiptIcon, Tag, Building2, Users, AlertCircle, RefreshCw, CheckCircle, Share2, Lock, Home } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ReceiptAssignmentDialog } from '@/components/receipts/receipt-assignment-dialog';
@@ -148,10 +148,15 @@ export function ReceiptHeader({
 
       {/* Current Household Badge and Business Expense Display */}
       <div className="mt-4 flex flex-wrap gap-2">
-        {household && (
-          <Badge variant="secondary" className="flex items-center gap-2 w-fit">
-            <Users className="h-3 w-3" />
+        {household ? (
+          <Badge variant="secondary" className="flex items-center gap-2 w-fit bg-primary/10 text-primary">
+            <Home className="h-3 w-3" />
             Shared with {household.name}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="flex items-center gap-2 w-fit">
+            <Lock className="h-3 w-3" />
+            Private
           </Badge>
         )}
         {receipt.isBusinessExpense && !isReceiptOwner && (
@@ -214,14 +219,23 @@ export function ReceiptHeader({
               isOwner={isReceiptOwner}
               canRemoveOnly={!isReceiptOwner && !!receipt.householdId}
             >
-              <Button variant="secondary" size="sm" className="flex-1">
-                <Users className="h-4 w-4 mr-2" />
-                {!isReceiptOwner && receipt.householdId
-                  ? 'Remove from Household'
-                  : receipt.householdId
-                    ? 'Change Household'
-                    : 'Assign to Household'
-                }
+              <Button variant="outline" size="sm" className="flex-1">
+                {!isReceiptOwner && receipt.householdId ? (
+                  <>
+                    <Lock className="h-4 w-4 mr-2" />
+                    Make Private
+                  </>
+                ) : receipt.householdId ? (
+                  <>
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Change Sharing
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share Receipt
+                  </>
+                )}
               </Button>
             </ReceiptAssignmentDialog>
 

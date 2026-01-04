@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { HouseholdReceipts } from '@/components/households/household-receipts';
-import { Users } from 'lucide-react';
+import { Users, Home, Share2, Receipt, Shield } from 'lucide-react';
 import type { HouseholdWithMembers, MemberWithUser } from '@/lib/types/api-responses';
 
 export default function SharingPage() {
@@ -111,13 +111,34 @@ export default function SharingPage() {
         ) : households.length === 0 ? (
           isSubscribed ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="rounded-full bg-muted p-6 mb-6">
-                <Users className="h-12 w-12 text-muted-foreground" />
+              <div className="relative mb-6">
+                <div className="rounded-full bg-gradient-to-br from-primary/20 to-primary/5 p-8">
+                  <Home className="h-12 w-12 text-primary" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 rounded-full bg-background p-1">
+                  <div className="rounded-full bg-primary/10 p-1.5">
+                    <Users className="h-4 w-4 text-primary" />
+                  </div>
+                </div>
               </div>
-              <h3 className="text-2xl font-semibold mb-2">No households yet</h3>
-              <p className="text-muted-foreground mb-6 max-w-md">
-                Create your first household to start sharing receipts with family members or roommates.
+              <h3 className="text-2xl font-semibold mb-2">Create Your First Household</h3>
+              <p className="text-muted-foreground mb-8 max-w-md">
+                Households let you share receipts and track expenses with family, partners, or roommates.
               </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 max-w-lg">
+                <div className="flex flex-col items-center p-4 rounded-lg bg-muted/50">
+                  <Share2 className="h-5 w-5 text-primary mb-2" />
+                  <p className="text-xs text-muted-foreground text-center">Share receipts instantly</p>
+                </div>
+                <div className="flex flex-col items-center p-4 rounded-lg bg-muted/50">
+                  <Receipt className="h-5 w-5 text-primary mb-2" />
+                  <p className="text-xs text-muted-foreground text-center">Track shared expenses</p>
+                </div>
+                <div className="flex flex-col items-center p-4 rounded-lg bg-muted/50">
+                  <Shield className="h-5 w-5 text-primary mb-2" />
+                  <p className="text-xs text-muted-foreground text-center">Manage permissions</p>
+                </div>
+              </div>
               <CreateHouseholdDialog
                 onHouseholdCreated={handleHouseholdCreated}
               />
@@ -162,9 +183,13 @@ export default function SharingPage() {
                     )}
                   </>
                 ) : (
-                  <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-12 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      Select a household to view members
+                  <div className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-8 text-center">
+                    <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                      <Users className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground">Select a household</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Choose a household to view and manage its members
                     </p>
                   </div>
                 )}
