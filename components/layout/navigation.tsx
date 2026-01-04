@@ -8,6 +8,7 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { InvitationNotifications } from '@/components/households/invitation-notifications';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,6 +64,37 @@ export function Navigation() {
   const handleLogout = async () => {
     await signOut();
   };
+
+  // Show loading skeleton while checking auth state
+  if (!isLoaded) {
+    return (
+      <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+        <div className="container mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <img src="/logo.png" alt="ReceiptWise" className="h-6 w-auto" />
+            <span className="hidden font-bold text-foreground lg:inline">ReceiptWise</span>
+          </Link>
+
+          {/* Desktop Navigation Skeleton - Centered */}
+          <div className="hidden md:flex md:flex-1 md:justify-center">
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Skeleton key={i} className="h-8 w-24 rounded-md" />
+              ))}
+            </div>
+          </div>
+
+          {/* Right Side Skeleton */}
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <ThemeToggle />
+            <Skeleton className="h-8 w-8 rounded-full" />
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   // If user is not authenticated, show public navigation
   if (isLoaded && !user) {

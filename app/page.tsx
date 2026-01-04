@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Receipt, Scan, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock, Search, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { Navigation } from '@/components/layout/navigation';
 import { Testimonials, SocialProofBanner } from '@/components/landing/testimonials';
@@ -68,27 +69,42 @@ const benefits = [
 export default function LandingPage() {
   const { isLoaded, isSignedIn } = useUser();
 
-  return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* Header */}
-      {isLoaded && isSignedIn ? (
-        <Navigation />
-      ) : (
-        <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-lg supports-backdrop-filter:bg-background/60">
-          <div className="container mx-auto flex h-16 items-center justify-between px-4">
-            <Link href="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="ReceiptWise" className="h-8 w-auto" />
-              <span className="text-xl font-bold text-foreground">ReceiptWise</span>
-            </Link>
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
+  // Header component that handles loading state gracefully
+  const Header = () => {
+    // If loaded and signed in, show full navigation
+    if (isLoaded && isSignedIn) {
+      return <Navigation />;
+    }
+
+    // Show landing header (works for both loading and not-signed-in states)
+    // This prevents the flash because we show the same header during loading
+    return (
+      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-lg supports-backdrop-filter:bg-background/60">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <Link href="/" className="flex items-center gap-2">
+            <img src="/logo.png" alt="ReceiptWise" className="h-8 w-auto" />
+            <span className="text-xl font-bold text-foreground">ReceiptWise</span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            {!isLoaded ? (
+              // Show skeleton button while loading to prevent flash
+              <Skeleton className="h-10 w-[72px] rounded-md" />
+            ) : (
               <Link href="/sign-in">
                 <Button className="shadow-lg shadow-primary/20">Login</Button>
               </Link>
-            </div>
+            )}
           </div>
-        </header>
-      )}
+        </div>
+      </header>
+    );
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      {/* Header */}
+      <Header />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden px-4 py-20 sm:py-28">
@@ -111,7 +127,13 @@ export default function LandingPage() {
             The expense tracker built for sharing. Perfect for families, roommates, and couples who want to manage receipts and track spending together.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            {isSignedIn ? (
+            {!isLoaded ? (
+              // Show skeleton buttons while loading
+              <>
+                <Skeleton className="h-12 w-[180px] rounded-md" />
+                <Skeleton className="h-12 w-[160px] rounded-md" />
+              </>
+            ) : isSignedIn ? (
               <Link href="/dashboard">
                 <Button size="lg" className="gap-2 shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30">
                   Go to Dashboard
@@ -133,18 +155,16 @@ export default function LandingPage() {
               </>
             )}
           </div>
-          {!isSignedIn && process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 && (
+          {isLoaded && !isSignedIn && process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 && (
             <p className="mt-4 text-sm text-muted-foreground">
               Start your {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS}-day free trial • No credit card required
             </p>
           )}
 
           {/* Social Proof Banner */}
-          {!isSignedIn && (
-            <div className="mt-8">
-              <SocialProofBanner />
-            </div>
-          )}
+          <div className="mt-8">
+            <SocialProofBanner />
+          </div>
 
           {/* Stats */}
           <div className="mt-16 grid grid-cols-2 gap-6 sm:grid-cols-4">
@@ -241,7 +261,9 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              {isSignedIn ? (
+              {!isLoaded ? (
+                <Skeleton className="h-12 w-[180px] rounded-md" />
+              ) : isSignedIn ? (
                 <Link href="/dashboard">
                   <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
                     Go to Dashboard
@@ -281,7 +303,7 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials Section */}
-      {!isSignedIn && <Testimonials />}
+      <Testimonials />
 
       {/* Security Section */}
       <section className="border-t border-border/50 px-4 py-20">
@@ -322,12 +344,14 @@ export default function LandingPage() {
             Ready to Start Saving?
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-lg text-primary-foreground/90">
-            {isSignedIn
+            {isLoaded && isSignedIn
               ? 'Start tracking your expenses and take control of your finances today.'
               : 'Join ReceiptWise today and start tracking your expenses. Free to get started, no credit card required.'
             }
           </p>
-          {isSignedIn ? (
+          {!isLoaded ? (
+            <Skeleton className="mx-auto h-12 w-[200px] rounded-md bg-primary-foreground/20" />
+          ) : isSignedIn ? (
             <Link href="/dashboard">
               <Button
                 size="lg"
@@ -354,7 +378,7 @@ export default function LandingPage() {
       </section>
 
       {/* Exit Intent Popup - only for non-signed-in users */}
-      {!isSignedIn && <ExitIntentPopup />}
+      {isLoaded && !isSignedIn && <ExitIntentPopup />}
     </div>
   );
 }

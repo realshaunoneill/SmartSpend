@@ -88,7 +88,7 @@ export async function PATCH(req: NextRequest) {
       if (SUPPORTED_CURRENCIES.includes(body.currency)) {
         updates.currency = body.currency;
       } else {
-        Logger.warn('Invalid currency provided', { requestId, currency: body.currency });
+        Logger.warn('Invalid currency provided', { requestId, context: { currency: body.currency } });
       }
     }
 
@@ -109,7 +109,7 @@ export async function PATCH(req: NextRequest) {
       Logger.info('User profile updated successfully', {
         requestId,
         userId: user.id,
-        updatedFields: Object.keys(updates).filter(k => k !== 'updatedAt'),
+        context: { updatedFields: Object.keys(updates).filter(k => k !== 'updatedAt') },
       });
       return NextResponse.json(updatedUser);
     }
