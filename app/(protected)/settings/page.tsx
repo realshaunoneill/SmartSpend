@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { PlayCircle } from 'lucide-react';
 import type { HouseholdWithMembers } from '@/lib/types/api-responses';
 import { useHouseholds } from '@/lib/hooks/use-households';
+import { SUPPORTED_CURRENCIES } from '@/lib/utils/currency';
 
 export default function SettingsPage() {
   const { user: clerkUser, isLoaded } = useUser();
@@ -23,6 +24,7 @@ export default function SettingsPage() {
   const { startOnboarding } = useOnboarding();
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedHousehold, setSelectedHousehold] = useState<string>('none');
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('EUR');
   const [isExporting, setIsExporting] = useState(false);
   const queryClient = useQueryClient();
 
@@ -32,6 +34,13 @@ export default function SettingsPage() {
       setSelectedHousehold(userData.defaultHouseholdId);
     }
   }, [userData?.defaultHouseholdId]);
+
+  // Update selected currency when userData loads
+  useEffect(() => {
+    if (userData?.currency) {
+      setSelectedCurrency(userData.currency);
+    }
+  }, [userData?.currency]);
 
   // Fetch user's households using the shared hook
   const { data: households = [], isLoading: householdsLoading } = useHouseholds();
@@ -57,9 +66,34 @@ export default function SettingsPage() {
     },
   });
 
+  // Update currency mutation
+  const updateCurrency = useMutation({
+    mutationFn: async (currency: string) => {
+      const response = await fetch('/api/users/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currency }),
+      });
+      if (!response.ok) throw new Error('Failed to update currency');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      toast.success('Currency preference updated');
+    },
+    onError: (error) => {
+      console.error('Error updating currency:', error);
+      toast.error('Failed to update currency');
+    },
+  });
+
   const handleSaveDefaultHousehold = () => {
     const householdId = selectedHousehold === 'none' ? null : selectedHousehold;
     updateDefaultHousehold.mutate(householdId);
+  };
+
+  const handleSaveCurrency = () => {
+    updateCurrency.mutate(selectedCurrency);
   };
 
   const handleUpgrade = async () => {
@@ -212,6 +246,45 @@ export default function SettingsPage() {
                 disabled
                 className="font-mono text-xs"
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Preferences</CardTitle>
+            <CardDescription>Customize your ReceiptWise experience</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-3">
+              <Label htmlFor="currency">Display Currency</Label>
+              <p className="text-sm text-muted-foreground">
+                Choose the currency used to display amounts throughout the app.
+                Don&apos;t see your currency? <a href="mailto:support@receiptwise.app" className="text-primary hover:underline">Email us</a> and we&apos;ll add it!
+              </p>
+              <div className="flex gap-3">
+                <Select
+                  value={selectedCurrency}
+                  onValueChange={setSelectedCurrency}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUPPORTED_CURRENCIES.map((currency) => (
+                      <SelectItem key={currency.code} value={currency.code}>
+                        {currency.symbol} {currency.code} - {currency.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={handleSaveCurrency}
+                  disabled={updateCurrency.isPending || selectedCurrency === userData?.currency}
+                >
+                  {updateCurrency.isPending ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -85,13 +85,11 @@ export default function SharingPage() {
             )}
             {isSubscribed ? (
               <CreateHouseholdDialog
-                userId={currentUserId!}
                 onHouseholdCreated={handleHouseholdCreated}
               />
             ) : (
               <SubscriptionGate feature="sharing" variant="inline">
                 <CreateHouseholdDialog
-                  userId={currentUserId!}
                   onHouseholdCreated={handleHouseholdCreated}
                 />
               </SubscriptionGate>
@@ -121,7 +119,6 @@ export default function SharingPage() {
                 Create your first household to start sharing receipts with family members or roommates.
               </p>
               <CreateHouseholdDialog
-                userId={currentUserId!}
                 onHouseholdCreated={handleHouseholdCreated}
               />
             </div>

@@ -19,11 +19,10 @@ import { Label } from '@/components/ui/label';
 import { createHousehold } from '@/lib/household-actions';
 
 interface CreateHouseholdDialogProps {
-  userId: string
   onHouseholdCreated: () => void
 }
 
-export function CreateHouseholdDialog({ userId, onHouseholdCreated }: CreateHouseholdDialogProps) {
+export function CreateHouseholdDialog({ onHouseholdCreated }: CreateHouseholdDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -34,7 +33,7 @@ export function CreateHouseholdDialog({ userId, onHouseholdCreated }: CreateHous
 
     setIsCreating(true);
     try {
-      await createHousehold({ name: name.trim(), userId });
+      await createHousehold({ name: name.trim() });
       onHouseholdCreated();
       setOpen(false);
       setName('');

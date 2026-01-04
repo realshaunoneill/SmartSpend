@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ReceiptDetailModal } from '@/components/receipts/receipt-detail-modal';
 import { formatCategory } from '@/lib/utils/format-category';
 import type { ReceiptWithItems } from '@/lib/types/api-responses';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface ReceiptListProps {
   receipts: ReceiptWithItems[];
@@ -32,7 +32,6 @@ export function ReceiptList({ receipts, onReceiptClick, onRetry }: ReceiptListPr
   const [selectedReceipt, setSelectedReceipt] = useState<ReceiptWithItems | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [retryingId, setRetryingId] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -52,21 +51,14 @@ export function ReceiptList({ receipts, onReceiptClick, onRetry }: ReceiptListPr
         throw new Error('Failed to retry processing');
       }
 
-      toast({
-        title: 'Success',
-        description: 'Receipt processing completed successfully',
-      });
+      toast.success('Receipt processing completed successfully');
 
       // Call the onRetry callback to refresh the list
       if (onRetry) {
         onRetry();
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to retry processing',
-        variant: 'destructive',
-      });
+      toast.error(error instanceof Error ? error.message : 'Failed to retry processing');
     } finally {
       setRetryingId(null);
     }

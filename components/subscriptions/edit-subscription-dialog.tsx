@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { type Subscription } from '@/lib/db/schema';
 
 type EditSubscriptionDialogProps = {
@@ -69,7 +69,6 @@ export function EditSubscriptionDialog({
   onOpenChange,
 }: EditSubscriptionDialogProps) {
   const { mutate: updateSubscription, isPending } = useUpdateSubscription(subscription.id);
-  const { toast } = useToast();
   useHouseholds();
 
   const {
@@ -132,17 +131,12 @@ export function EditSubscriptionDialog({
       },
       {
         onSuccess: () => {
-          toast({
-            title: 'Subscription updated',
-            description: `${data.name} has been updated successfully`,
-          });
+          toast.success(`${data.name} has been updated successfully`);
           onOpenChange(false);
         },
         onError: (error) => {
-          toast({
-            title: 'Failed to update subscription',
+          toast.error('Failed to update subscription', {
             description: error.message,
-            variant: 'destructive',
           });
         },
       },

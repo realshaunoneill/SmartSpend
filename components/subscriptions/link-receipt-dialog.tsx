@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { type Subscription, type SubscriptionPayment } from '@/lib/db/schema';
 
 type LinkReceiptDialogProps = {
@@ -43,7 +43,6 @@ export function LinkReceiptDialog({ subscription, payments, children }: LinkRece
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
   const [selectedReceiptId, setSelectedReceiptId] = useState<string | null>(null);
-  const { toast } = useToast();
   const { mutate: linkReceipt, isPending } = useUpdatePayment(subscription.id);
   const { mutate: unlinkReceipt, isPending: isUnlinking } = useUnlinkPayment(subscription.id);
 
@@ -75,11 +74,7 @@ export function LinkReceiptDialog({ subscription, payments, children }: LinkRece
 
   const handleLink = () => {
     if (!selectedPaymentId || !selectedReceiptId) {
-      toast({
-        title: 'Selection required',
-        description: 'Please select both a payment and a receipt to link',
-        variant: 'destructive',
-      });
+      toast.error('Please select both a payment and a receipt to link');
       return;
     }
 
@@ -90,21 +85,14 @@ export function LinkReceiptDialog({ subscription, payments, children }: LinkRece
       },
       {
         onSuccess: () => {
-          toast({
-            title: 'Receipt linked',
-            description: 'The receipt has been linked to the payment',
-          });
+          toast.success('Receipt linked successfully');
           setOpen(false);
           setSelectedPaymentId(null);
           setSelectedReceiptId(null);
           setSearchQuery('');
         },
         onError: () => {
-          toast({
-            title: 'Failed to link receipt',
-            description: 'Please try again',
-            variant: 'destructive',
-          });
+          toast.error('Failed to link receipt. Please try again.');
         },
       },
     );
@@ -114,17 +102,10 @@ export function LinkReceiptDialog({ subscription, payments, children }: LinkRece
     e.stopPropagation();
     unlinkReceipt(paymentId, {
       onSuccess: () => {
-        toast({
-          title: 'Receipt unlinked',
-          description: 'The receipt has been unlinked from the payment',
-        });
+        toast.success('Receipt unlinked');
       },
       onError: () => {
-        toast({
-          title: 'Failed to unlink receipt',
-          description: 'Please try again',
-          variant: 'destructive',
-        });
+        toast.error('Failed to unlink receipt. Please try again.');
       },
     });
   };

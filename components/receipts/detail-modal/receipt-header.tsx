@@ -9,7 +9,7 @@ import { BusinessExpenseDialog } from './business-expense-dialog';
 import { formatCategory, capitalizeText } from '@/lib/utils/format-category';
 import type { ReceiptWithItems, OCRData } from '@/lib/types/api-responses';
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface HouseholdInfo {
   id: string;
@@ -37,7 +37,6 @@ export function ReceiptHeader({
   onRetrySuccess,
 }: ReceiptHeaderProps) {
   const [isRetrying, setIsRetrying] = useState(false);
-  const { toast } = useToast();
 
   const handleRetry = async () => {
     setIsRetrying(true);
@@ -51,21 +50,14 @@ export function ReceiptHeader({
         throw new Error('Failed to retry processing');
       }
 
-      toast({
-        title: 'Success',
-        description: 'Receipt processing completed successfully',
-      });
+      toast.success('Receipt processing completed successfully');
 
       // Call the callback to refresh the receipt data
       if (onRetrySuccess) {
         onRetrySuccess();
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to retry processing',
-        variant: 'destructive',
-      });
+      toast.error(error instanceof Error ? error.message : 'Failed to retry processing');
     } finally {
       setIsRetrying(false);
     }

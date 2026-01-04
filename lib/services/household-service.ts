@@ -53,7 +53,7 @@ export class HouseholdService {
 
     // Get member counts for each household
     const householdIds = userHouseholds.map(h => h.id);
-    
+
     if (householdIds.length === 0) {
       return [];
     }
@@ -66,7 +66,7 @@ export class HouseholdService {
           .from(householdUsers)
           .where(eq(householdUsers.householdId, householdId));
         return { householdId, count: members.length };
-      })
+      }),
     );
 
     const countMap = new Map(memberCounts.map(mc => [mc.householdId, mc.count]));
@@ -274,7 +274,7 @@ export class HouseholdService {
     // Update the member's role
     await db
       .update(householdUsers)
-      .set({ role: newRole, updatedAt: new Date() })
+      .set({ role: newRole })
       .where(and(
         eq(householdUsers.householdId, householdId),
         eq(householdUsers.userId, targetUserId),

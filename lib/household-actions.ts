@@ -20,7 +20,7 @@ async function getCurrentUser() {
   return user;
 }
 
-export async function createHousehold(data: { name: string; userId: string }) {
+export async function createHousehold(data: { name: string }) {
   const user = await getCurrentUser();
   const household = await HouseholdService.createHousehold(user.id, data.name);
   return household;

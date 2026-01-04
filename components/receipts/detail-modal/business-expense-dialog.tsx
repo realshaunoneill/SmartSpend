@@ -17,7 +17,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 type BusinessExpenseDialogProps = {
   receiptId: string;
@@ -52,7 +52,6 @@ export function BusinessExpenseDialog({
   const [category, setCategory] = useState(businessCategory || '');
   const [notes, setNotes] = useState(businessNotes || '');
   const [deductible, setDeductible] = useState(taxDeductible);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { mutate: updateReceipt, isPending } = useMutation({
@@ -73,20 +72,15 @@ export function BusinessExpenseDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['receipt', receiptId] });
       queryClient.invalidateQueries({ queryKey: ['receipts'] });
-      toast({
-        title: 'Business expense updated',
-        description: enabled
+      toast.success(
+        enabled
           ? 'Receipt marked as business expense'
           : 'Business expense status removed',
-      });
+      );
       setOpen(false);
     },
     onError: () => {
-      toast({
-        title: 'Failed to update',
-        description: 'Please try again',
-        variant: 'destructive',
-      });
+      toast.error('Failed to update. Please try again.');
     },
   });
 

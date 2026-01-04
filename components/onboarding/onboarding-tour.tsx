@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload,
@@ -24,9 +25,11 @@ import {
   ChevronLeft,
   Gift,
   Check,
+  Globe,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { SUPPORTED_CURRENCIES, DEFAULT_CURRENCY, type CurrencyCode } from '@/lib/utils/currency';
 
 type PricingDetails = {
   monthly: {
@@ -61,6 +64,7 @@ type OnboardingStep = {
   features?: Array<{ icon: typeof Sparkles; text: string }>;
   pricing?: boolean;
   cta?: boolean;
+  currencySelect?: boolean;
 };
 
 const onboardingSteps: OnboardingStep[] = [
@@ -80,6 +84,15 @@ const onboardingSteps: OnboardingStep[] = [
   },
   {
     id: 2,
+    title: 'Select Your Currency',
+    description: 'Choose your preferred currency for displaying amounts throughout the app.',
+    icon: Globe,
+    color: 'text-emerald-500',
+    bgColor: 'bg-emerald-500/10',
+    currencySelect: true,
+  },
+  {
+    id: 3,
     title: 'Household Sharing',
     description: 'Create households for your family, roommates, or partner. Everyone can upload and view receipts together.',
     icon: Users,
@@ -93,7 +106,7 @@ const onboardingSteps: OnboardingStep[] = [
     ],
   },
   {
-    id: 3,
+    id: 4,
     title: 'Upload & Scan Receipts',
     description: 'Easily capture and organize all your receipts with intelligent AI extraction.',
     icon: Upload,
@@ -107,7 +120,7 @@ const onboardingSteps: OnboardingStep[] = [
     ],
   },
   {
-    id: 4,
+    id: 5,
     title: 'Track Subscriptions',
     description: 'Never miss a payment or forget about a shared subscription again.',
     icon: CreditCard,
@@ -121,7 +134,7 @@ const onboardingSteps: OnboardingStep[] = [
     ],
   },
   {
-    id: 5,
+    id: 6,
     title: 'Insights & Analytics',
     description: 'Understand your household spending patterns with powerful analytics and visualizations.',
     icon: BarChart3,
@@ -135,7 +148,7 @@ const onboardingSteps: OnboardingStep[] = [
     ],
   },
   {
-    id: 6,
+    id: 7,
     title: 'Get Started with Premium',
     description: 'Unlock unlimited receipts, households, and advanced features. Perfect for families sharing expenses.',
     icon: Gift,
@@ -157,7 +170,7 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
   const [isProcessing, setIsProcessing] = useState(false);
   const [pricingDetails, setPricingDetails] = useState<PricingDetails | null>(null);
   const [isLoadingPrice, setIsLoadingPrice] = useState(true);
-  const { toast } = useToast();
+  const [selectedCurrency, setSelectedCurrency] = useState(DEFAULT_CURRENCY);
 
   // Fetch pricing details when component mounts and dialog is open
   useEffect(() => {
@@ -173,18 +186,14 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
         setPricingDetails(data);
       } catch (error) {
         console.error('Error fetching pricing:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to load pricing information.',
-        });
+        toast.error('Failed to load pricing information.');
       } finally {
         setIsLoadingPrice(false);
       }
     };
 
     fetchPricing();
-  }, [open, toast]);
+  }, [open]);
 
   // Reset step when dialog closes
   useEffect(() => {
@@ -206,7 +215,29 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
     }).format(amount / 100);
   };
 
-  const handleNext = () => {
+  // Save currency preference
+  const saveCurrency = async () => {
+    try {
+      const response = await fetch('/api/users/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currency: selectedCurrency }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to save currency');
+      }
+    } catch (error) {
+      console.error('Error saving currency:', error);
+      // Don't block the flow, just log the error
+    }
+  };
+
+  const handleNext = async () => {
+    // If we're on the currency step, save the currency preference
+    if (step.currencySelect) {
+      await saveCurrency();
+    }
+
     if (isLastStep) {
       // Last step is pricing, which has its own CTAs
       // This shouldn't be called for the pricing step
@@ -257,11 +288,7 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to start checkout. Please try again.',
-      });
+      toast.error('Failed to start checkout. Please try again.');
       setIsProcessing(false);
     }
   };
@@ -333,6 +360,38 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
                         <span className="text-xs sm:text-sm font-medium">{feature.text}</span>
                       </motion.div>
                     ))}
+                  </div>
+                )}
+
+                {/* Currency Selection */}
+                {step.currencySelect && (
+                  <div className="py-4 space-y-4">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-3"
+                    >
+                      <label className="text-sm font-medium">Select your currency</label>
+                      <Select
+                        value={selectedCurrency}
+                        onValueChange={(value) => setSelectedCurrency(value as CurrencyCode)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SUPPORTED_CURRENCIES.map((currency) => (
+                            <SelectItem key={currency.code} value={currency.code}>
+                              {currency.symbol} {currency.code} - {currency.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        This will be used to display amounts in your dashboard and reports. You can change this later in Settings.
+                        Don&apos;t see your currency? <a href="mailto:support@receiptwise.app" className="text-primary hover:underline">Email us</a> and we&apos;ll add it!
+                      </p>
+                    </motion.div>
                   </div>
                 )}
 

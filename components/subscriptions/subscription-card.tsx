@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LinkReceiptDialog } from './link-receipt-dialog';
 import { type Subscription, type SubscriptionPayment } from '@/lib/db/schema';
+import { useCurrency } from '@/lib/hooks/use-currency';
 import { differenceInDays, format, isToday, isTomorrow, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +21,8 @@ type SubscriptionCardProps = {
 };
 
 export function SubscriptionCard({ subscription, onClick }: SubscriptionCardProps) {
+  const { format: formatCurrency } = useCurrency();
+
   // Calculate next payment info
   let nextPaymentInfo = null;
   if (subscription.nextBillingDate) {
@@ -88,7 +91,7 @@ export function SubscriptionCard({ subscription, onClick }: SubscriptionCardProp
           <div className="flex items-baseline gap-2">
             <TrendingUp className="w-5 h-5 text-muted-foreground" />
             <span className="text-3xl font-bold tracking-tight">
-              €{parseFloat(subscription.amount).toFixed(2)}
+              {formatCurrency(parseFloat(subscription.amount))}
             </span>
             <span className="text-sm text-muted-foreground font-medium">
               per {subscription.billingFrequency}

@@ -57,15 +57,15 @@ export function SubscriptionGate({
   children,
   variant = 'full',
 }: SubscriptionGateProps) {
-  const { user, isSubscribed } = useUser();
+  const { user, isSubscribed, isLoading } = useUser();
 
   // If user is subscribed, render children normally
   if (isSubscribed) {
     return <>{children}</>;
   }
 
-  // If user data isn't loaded yet, show loading
-  if (!user) {
+  // If user data is loading, show loading state
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
         <div className="text-center">
@@ -74,6 +74,11 @@ export function SubscriptionGate({
         </div>
       </div>
     );
+  }
+
+  // If user data failed to load, render children (fail open for better UX)
+  if (!user) {
+    return <>{children}</>;
   }
 
   const config = featureConfig[feature];

@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { type Subscription } from '@/lib/db/schema';
+import { useCurrency } from '@/lib/hooks/use-currency';
 import { differenceInDays, format, isToday, isTomorrow } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -14,6 +15,7 @@ type NextSubscriptionCardProps = {
 };
 
 export function NextSubscriptionCard({ subscription, onClick }: NextSubscriptionCardProps) {
+  const { format: formatCurrency } = useCurrency();
   const now = new Date();
   const billingDate = subscription.nextBillingDate ? new Date(subscription.nextBillingDate) : null;
   const daysUntil = billingDate ? differenceInDays(billingDate, now) : null;
@@ -106,7 +108,7 @@ export function NextSubscriptionCard({ subscription, onClick }: NextSubscription
             <div className="text-left sm:text-right w-full sm:w-auto">
               <div className="flex items-baseline gap-1 sm:justify-end">
                 <span className="text-2xl sm:text-3xl font-bold tracking-tight">
-                  €{parseFloat(subscription.amount).toFixed(2)}
+                  {formatCurrency(parseFloat(subscription.amount))}
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">

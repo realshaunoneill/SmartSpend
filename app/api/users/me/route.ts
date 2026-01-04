@@ -71,24 +71,45 @@ export async function PATCH(req: NextRequest) {
 
     const body = await req.json();
 
-    // For now, we only support updating email
-    // Additional fields can be added as needed
+    // Build update object based on provided fields
+    const updates: Record<string, unknown> = {};
+
+    // Update email if provided
     if (body.email && typeof body.email === 'string') {
       // Note: In a real application, you'd want to validate the email format
       // and potentially require email verification
+      updates.email = body.email;
+    }
+
+    // Update currency if provided
+    if (body.currency && typeof body.currency === 'string') {
+      // Validate against supported currencies
+      const SUPPORTED_CURRENCIES = ['EUR', 'USD', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'SEK', 'NOK', 'DKK', 'PLN', 'NZD'];
+      if (SUPPORTED_CURRENCIES.includes(body.currency)) {
+        updates.currency = body.currency;
+      } else {
+        Logger.warn('Invalid currency provided', { requestId, currency: body.currency });
+      }
+    }
+
+    // If there are fields to update
+    if (Object.keys(updates).length > 0) {
       const { db } = await import('@/lib/db');
       const { users } = await import('@/lib/db/schema');
       const { eq } = await import('drizzle-orm');
 
+      updates.updatedAt = new Date();
+
       const [updatedUser] = await db
         .update(users)
-        .set({ email: body.email, updatedAt: new Date() })
+        .set(updates)
         .where(eq(users.id, user.id))
         .returning();
 
       Logger.info('User profile updated successfully', {
         requestId,
         userId: user.id,
+        updatedFields: Object.keys(updates).filter(k => k !== 'updatedAt'),
       });
       return NextResponse.json(updatedUser);
     }

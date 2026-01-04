@@ -68,6 +68,13 @@ export function HouseholdMembersList({
       return;
     }
 
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(inviteEmail.trim())) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
     try {
       await sendInvitation.mutateAsync({
         householdId,

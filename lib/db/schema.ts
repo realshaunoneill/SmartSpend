@@ -9,6 +9,7 @@ export const users = pgTable('users', {
   isAdmin: boolean('is_admin').notNull().default(false),
   stripeCustomerId: text('stripe_customer_id').unique(),
   defaultHouseholdId: uuid('default_household_id').references(() => households.id, { onDelete: 'set null' }),
+  currency: text('currency').notNull().default('EUR'),
   onboardingCompletedAt: timestamp('onboarding_completed_at'),
   lastExportedAt: timestamp('last_exported_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),

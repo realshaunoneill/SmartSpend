@@ -1,5 +1,8 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Receipt, CreditCard, TrendingUp, Wallet } from 'lucide-react';
+import { useCurrency } from '@/lib/hooks/use-currency';
 
 interface QuickStatsProps {
   stats: {
@@ -11,6 +14,8 @@ interface QuickStatsProps {
 }
 
 export function QuickStats({ stats }: QuickStatsProps) {
+  const { format: formatCurrency } = useCurrency();
+
   return (
     <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
       <Card>
@@ -26,12 +31,12 @@ export function QuickStats({ stats }: QuickStatsProps) {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Bank Transactions</CardTitle>
+          <CardTitle className="text-sm font-medium">Total Items</CardTitle>
           <CreditCard className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-foreground">{stats.totalTransactions}</div>
-          <p className="text-xs text-muted-foreground">Synced automatically</p>
+          <p className="text-xs text-muted-foreground">Items tracked</p>
         </CardContent>
       </Card>
 
@@ -41,7 +46,7 @@ export function QuickStats({ stats }: QuickStatsProps) {
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-foreground">${stats.avgSpending.toFixed(2)}</div>
+          <div className="text-2xl font-bold text-foreground">{formatCurrency(stats.avgSpending)}</div>
           <p className="text-xs text-muted-foreground">Past 30 days</p>
         </CardContent>
       </Card>

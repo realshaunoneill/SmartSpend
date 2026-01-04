@@ -26,7 +26,6 @@ export function ReceiptBatchUpload({
   householdId,
   onUploadComplete,
 }: {
-  clerkId: string
   userEmail: string
   householdId?: string
   onUploadComplete?: () => void

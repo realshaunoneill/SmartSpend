@@ -28,10 +28,23 @@ export function InviteMemberDialog({ householdId, onMemberInvited }: InviteMembe
   const [email, setEmail] = useState('');
   const [isInviting, setIsInviting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    setErrorMessage('');
+
+    if (!email.trim()) {
+      setErrorMessage('Please enter an email address');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setErrorMessage('Please enter a valid email address');
+      return;
+    }
 
     setIsInviting(true);
     setSuccessMessage('');
@@ -45,7 +58,7 @@ export function InviteMemberDialog({ householdId, onMemberInvited }: InviteMembe
         setSuccessMessage('');
       }, 2000);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to send invitation');
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to send invitation');
     } finally {
       setIsInviting(false);
     }
@@ -73,11 +86,17 @@ export function InviteMemberDialog({ householdId, onMemberInvited }: InviteMembe
                 type="email"
                 placeholder="member@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setErrorMessage('');
+                }}
                 className="mt-2"
                 required
               />
             </div>
+            {errorMessage && (
+              <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{errorMessage}</div>
+            )}
             {successMessage && (
               <div className="rounded-lg bg-primary/10 p-3 text-sm text-primary">{successMessage}</div>
             )}
