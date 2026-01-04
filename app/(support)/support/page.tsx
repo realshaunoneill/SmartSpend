@@ -26,7 +26,7 @@ export default function SupportPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <a
-                href="mailto:support@receiptwise.com"
+                href="mailto:support@receiptwise.io"
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
                 <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20">
@@ -34,13 +34,13 @@ export default function SupportPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium group-hover:text-blue-500 transition-colors">Email Support</p>
-                  <p className="text-sm text-muted-foreground truncate">support@receiptwise.com</p>
+                  <p className="text-sm text-muted-foreground truncate">support@receiptwise.io</p>
                 </div>
                 <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
               </a>
 
               <a
-                href="mailto:support@receiptwise.com?subject=Feature%20Request"
+                href="mailto:support@receiptwise.io?subject=Feature%20Request"
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
                 <div className="p-2 rounded-full bg-neutral-100 dark:bg-neutral-900/30">
@@ -152,7 +152,7 @@ export default function SupportPage() {
               </Link>
 
               <a
-                href="mailto:support@receiptwise.com?subject=Account%20Help"
+                href="mailto:support@receiptwise.io?subject=Account%20Help"
                 className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
                 <div className="flex items-start gap-3">

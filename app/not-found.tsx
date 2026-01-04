@@ -157,7 +157,7 @@ export default function NotFound() {
                     </Button>
                   </Link>
                   <a
-                    href="mailto:support@receiptwise.com"
+                    href="mailto:support@receiptwise.io"
                     className="flex-1 sm:flex-initial"
                   >
                     <Button variant="outline" className="w-full group">

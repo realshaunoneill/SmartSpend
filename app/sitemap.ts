@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://receiptwise.io';
+  const baseUrl = 'https://www.receiptwise.io';
 
   // Public routes that should be indexed
   const routes = [

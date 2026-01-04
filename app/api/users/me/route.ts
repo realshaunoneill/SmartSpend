@@ -133,3 +133,60 @@ export async function PATCH(req: NextRequest) {
     });
   }
 }
+
+// DELETE - Schedule account deletion (24 hours)
+export async function DELETE(request: NextRequest) {
+  const requestId = generateRequestId();
+  const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
+
+  try {
+    const authResult = await getAuthenticatedUser(correlationId);
+
+    if (authResult instanceof NextResponse) {
+      Logger.warn('Unauthorized deletion attempt', { requestId });
+      return authResult;
+    }
+
+    const { user } = authResult;
+
+    const { db } = await import('@/lib/db');
+    const { users } = await import('@/lib/db/schema');
+    const { eq } = await import('drizzle-orm');
+
+    // Schedule deletion for 24 hours from now
+    const deletionDate = new Date();
+    deletionDate.setHours(deletionDate.getHours() + 24);
+
+    const [_updatedUser] = await db
+      .update(users)
+      .set({
+        deletionScheduledAt: deletionDate,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+
+    Logger.info('Account deletion scheduled', {
+      requestId,
+      userId: user.id,
+      context: { deletionScheduledAt: deletionDate.toISOString() },
+    });
+
+    return NextResponse.json({
+      success: true,
+      deletionScheduledAt: deletionDate.toISOString(),
+      message: 'Your account has been scheduled for deletion in 24 hours. Contact support@receiptwise.io to cancel.',
+    });
+  } catch (error) {
+    Logger.error('Error scheduling account deletion', error as Error, { requestId });
+    const errorResponse = createErrorResponse(
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      'Failed to schedule account deletion',
+      undefined,
+      requestId,
+    );
+    return NextResponse.json(errorResponse, {
+      status: getHttpStatusCode(ErrorCode.INTERNAL_SERVER_ERROR),
+    });
+  }
+}

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'ReceiptWise' }],
   creator: 'ReceiptWise',
   publisher: 'ReceiptWise',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://receiptwise.io'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://www.receiptwise.io'),
   alternates: {
     canonical: '/',
   },

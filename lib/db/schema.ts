@@ -12,6 +12,7 @@ export const users = pgTable('users', {
   currency: text('currency').notNull().default('EUR'),
   onboardingCompletedAt: timestamp('onboarding_completed_at'),
   lastExportedAt: timestamp('last_exported_at'),
+  deletionScheduledAt: timestamp('deletion_scheduled_at'), // When account is scheduled for deletion (24 hours from request)
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

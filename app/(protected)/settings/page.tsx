@@ -9,12 +9,22 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useUser } from '@clerk/nextjs';
 import { useUser as useUserData } from '@/lib/hooks/use-user';
 import { useOnboarding } from '@/components/onboarding/onboarding-provider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { PlayCircle, User, CreditCard, Home, Download, AlertTriangle, Settings2, Sparkles } from 'lucide-react';
+import { PlayCircle, User, CreditCard, Home, Download, AlertTriangle, Settings2, Sparkles, Trash2, Clock, Mail } from 'lucide-react';
 import type { HouseholdWithMembers } from '@/lib/types/api-responses';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { SUPPORTED_CURRENCIES } from '@/lib/utils/currency';
@@ -27,6 +37,8 @@ export default function SettingsPage() {
   const [selectedHousehold, setSelectedHousehold] = useState<string>('none');
   const [selectedCurrency, setSelectedCurrency] = useState<string>('EUR');
   const [isExporting, setIsExporting] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const queryClient = useQueryClient();
 
   // Update selected household when userData loads
@@ -181,6 +193,63 @@ export default function SettingsPage() {
       setIsExporting(false);
     }
   };
+
+  // Delete account mutation
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/users/me', {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to schedule account deletion');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      setShowDeleteDialog(false);
+      setDeleteConfirmation('');
+      toast.success('Account scheduled for deletion', {
+        description: 'Your account will be deleted in 24 hours. Contact support to cancel.',
+        duration: 10000,
+      });
+    },
+    onError: (error) => {
+      console.error('Error scheduling account deletion:', error);
+      toast.error('Failed to schedule account deletion');
+    },
+  });
+
+  // Cancel deletion mutation
+  const cancelDeletionMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/users/cancel-deletion', {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to cancel account deletion');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      toast.success('Account deletion cancelled', {
+        description: 'Your account is safe and will not be deleted.',
+      });
+    },
+    onError: (error) => {
+      console.error('Error cancelling account deletion:', error);
+      toast.error('Failed to cancel account deletion');
+    },
+  });
+
+  const handleDeleteAccount = () => {
+    if (deleteConfirmation.toLowerCase() !== 'delete my account') {
+      toast.error('Please type "delete my account" to confirm');
+      return;
+    }
+    deleteAccountMutation.mutate();
+  };
+
+  // Check if deletion is scheduled
+  const isDeletionScheduled = userData?.deletionScheduledAt !== null && userData?.deletionScheduledAt !== undefined;
+  const deletionDate = isDeletionScheduled ? new Date(userData.deletionScheduledAt!) : null;
 
   if (!isLoaded || userDataLoading) {
     return (
@@ -577,14 +646,127 @@ export default function SettingsPage() {
                 <CardDescription>Irreversible actions</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-                  <p className="mb-4 text-sm text-muted-foreground">
-                    Deleting your account will permanently remove all your data, including receipts, households, and settings. This action cannot be undone.
-                  </p>
-                  <Button variant="destructive" disabled>
-                    Delete Account (Coming Soon)
-                  </Button>
-                </div>
+                {isDeletionScheduled ? (
+                  <div className="space-y-4">
+                    <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+                      <div className="flex items-start gap-3">
+                        <Clock className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                        <div className="space-y-2">
+                          <p className="font-medium text-amber-700 dark:text-amber-500">
+                            Account Scheduled for Deletion
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Your account is scheduled to be permanently deleted on{' '}
+                            <strong className="text-foreground">
+                              {deletionDate?.toLocaleString(undefined, {
+                                dateStyle: 'full',
+                                timeStyle: 'short',
+                              })}
+                            </strong>
+                          </p>
+                          <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+                            <Mail className="h-4 w-4" />
+                            <span>
+                              Changed your mind? Contact{' '}
+                              <a
+                                href="mailto:support@receiptwise.io?subject=Cancel Account Deletion"
+                                className="text-primary underline underline-offset-2 hover:text-primary/80"
+                              >
+                                support@receiptwise.io
+                              </a>
+                              {' '}or click the button below to cancel.
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => cancelDeletionMutation.mutate()}
+                      disabled={cancelDeletionMutation.isPending}
+                      className="w-full sm:w-auto"
+                    >
+                      {cancelDeletionMutation.isPending ? 'Cancelling...' : 'Cancel Account Deletion'}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+                    <p className="mb-4 text-sm text-muted-foreground">
+                      Deleting your account will permanently remove all your data, including receipts, households, and settings. This action cannot be undone.
+                    </p>
+                    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Account
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                            <AlertTriangle className="h-5 w-5" />
+                            Delete Your Account?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription asChild>
+                            <div className="space-y-4 text-sm text-muted-foreground">
+                              <p>
+                                Your account will be scheduled for deletion in <strong className="text-foreground">24 hours</strong>. During this time, you can cancel the deletion by contacting support.
+                              </p>
+                              <div className="rounded-lg bg-muted p-3 space-y-2">
+                                <p className="text-sm font-medium text-foreground">What will be deleted:</p>
+                                <ul className="text-sm list-disc list-inside space-y-1 text-muted-foreground">
+                                  <li>All your receipts and images</li>
+                                  <li>Subscription tracking data</li>
+                                  <li>Household memberships</li>
+                                  <li>Account settings and preferences</li>
+                                </ul>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <Mail className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">
+                                  To cancel after confirming, email{' '}
+                                  <a
+                                    href="mailto:support@receiptwise.io?subject=Cancel Account Deletion"
+                                    className="text-primary underline underline-offset-2"
+                                  >
+                                    support@receiptwise.io
+                                  </a>
+                                </span>
+                              </div>
+                              <div className="space-y-2 pt-2">
+                                <Label htmlFor="delete-confirmation" className="text-sm font-medium text-foreground">
+                                  Type <span className="font-mono bg-muted px-1 rounded">delete my account</span> to confirm:
+                                </Label>
+                                <Input
+                                  id="delete-confirmation"
+                                  placeholder="delete my account"
+                                  value={deleteConfirmation}
+                                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                                  className="font-mono"
+                                />
+                              </div>
+                            </div>
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel onClick={() => setDeleteConfirmation('')}>
+                            Cancel
+                          </AlertDialogCancel>
+                          <Button
+                            variant="destructive"
+                            onClick={handleDeleteAccount}
+                            disabled={
+                              deleteAccountMutation.isPending ||
+                              deleteConfirmation.toLowerCase() !== 'delete my account'
+                            }
+                          >
+                            {deleteAccountMutation.isPending ? 'Scheduling...' : 'Delete My Account'}
+                          </Button>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

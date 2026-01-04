@@ -247,7 +247,7 @@ export default function TermsPage() {
               If you have any questions about these Terms, please contact us at:
             </p>
             <p>
-              Email: <a href="mailto:support@receiptwise.com" className="text-primary hover:underline">support@receiptwise.com</a>
+              Email: <a href="mailto:support@receiptwise.io" className="text-primary hover:underline">support@receiptwise.io</a>
             </p>
           </CardContent>
         </Card>
