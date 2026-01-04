@@ -152,14 +152,18 @@ export default function LandingPage() {
         <div className="mx-auto mt-20 w-full max-w-6xl">
           <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card/50 shadow-2xl backdrop-blur-sm">
             <div className="absolute inset-0 bg-linear-to-tr from-primary/5 via-transparent to-accent/5" />
-            <div className="aspect-video w-full bg-linear-to-br from-muted/50 to-muted/30">
-              <div className="flex h-full items-center justify-center">
-                <div className="text-center">
-                  <BarChart3 className="mx-auto mb-4 h-16 w-16 text-muted-foreground/40" />
-                  <p className="text-sm text-muted-foreground">Dashboard Preview</p>
-                </div>
-              </div>
-            </div>
+            {/* Light mode screenshot */}
+            <img
+              src="/dashboard-full-light.png"
+              alt="ReceiptWise Dashboard"
+              className="w-full dark:hidden"
+            />
+            {/* Dark mode screenshot */}
+            <img
+              src="/dashboard-full-dark.png"
+              alt="ReceiptWise Dashboard"
+              className="hidden w-full dark:block"
+            />
           </div>
         </div>
       </section>
@@ -248,14 +252,18 @@ export default function LandingPage() {
               <div className="relative">
                 <div className="absolute -inset-4 rounded-2xl bg-linear-to-r from-primary/20 to-accent/20 opacity-20 blur-2xl" />
                 <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card/50 shadow-2xl backdrop-blur-sm">
-                  <div className="aspect-4/5 w-full bg-linear-to-br from-muted/50 to-muted/30">
-                    <div className="flex h-full items-center justify-center">
-                      <div className="text-center">
-                        <Receipt className="mx-auto mb-4 h-16 w-16 text-muted-foreground/40" />
-                        <p className="text-sm text-muted-foreground">Dashboard Preview</p>
-                      </div>
-                    </div>
-                  </div>
+                  {/* Light mode screenshot */}
+                  <img
+                    src="/dashboard-full-light.png"
+                    alt="ReceiptWise Dashboard"
+                    className="w-full dark:hidden"
+                  />
+                  {/* Dark mode screenshot */}
+                  <img
+                    src="/dashboard-full-dark.png"
+                    alt="ReceiptWise Dashboard"
+                    className="hidden w-full dark:block"
+                  />
                 </div>
               </div>
             </div>
