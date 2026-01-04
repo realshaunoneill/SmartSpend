@@ -1,14 +1,55 @@
 'use client';
 
-import { TrendingUp, Calendar, Bell, PieChart } from 'lucide-react';
+import { TrendingUp, Calendar, Bell, PieChart, Pause, XCircle, PlayCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { CreateSubscriptionDialog } from './create-subscription-dialog';
+import { Button } from '@/components/ui/button';
 
 type SubscriptionEmptyStateProps = {
   status: string;
 };
 
 export function SubscriptionEmptyState({ status }: SubscriptionEmptyStateProps) {
+  if (status === 'paused') {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <div className="rounded-full bg-amber-500/10 p-4 mb-4">
+            <Pause className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">No paused subscriptions</h3>
+          <p className="text-sm text-muted-foreground text-center max-w-sm mb-4">
+            When you pause a subscription, it will appear here. Pausing is useful for services you&apos;re temporarily not using.
+          </p>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <PlayCircle className="h-4 w-4" />
+            <span>Paused subscriptions can be resumed at any time</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (status === 'cancelled') {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <div className="rounded-full bg-muted p-4 mb-4">
+            <XCircle className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">No cancelled subscriptions</h3>
+          <p className="text-sm text-muted-foreground text-center max-w-sm mb-4">
+            Cancelled subscriptions appear here for your records. You can reactivate them if needed.
+          </p>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            <span>Keep track of your subscription history</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (status !== 'active') {
     return (
       <Card>

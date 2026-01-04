@@ -68,7 +68,9 @@ export function useSubscriptions(
       if (!res.ok) throw new Error('Failed to fetch subscriptions');
       return res.json();
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes - subscriptions don't change frequently
+    staleTime: 5 * 60 * 1000, // 5 minutes - subscriptions don't change frequently
+    gcTime: 15 * 60 * 1000, // Keep in cache for 15 minutes
+    refetchOnWindowFocus: false, // Don't refetch on tab focus
   });
 }
 

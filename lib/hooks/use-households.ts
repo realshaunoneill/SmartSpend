@@ -10,6 +10,8 @@ export function useHouseholds() {
       }
       return response.json();
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes - households rarely change
+    staleTime: 10 * 60 * 1000, // 10 minutes - households rarely change
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    refetchOnWindowFocus: false,
   });
 }

@@ -85,7 +85,9 @@ export function useReceipts(
       }
       return response.json();
     },
-    staleTime: 1 * 60 * 1000, // 1 minute - receipts update more frequently
+    staleTime: 2 * 60 * 1000, // 2 minutes - balance between freshness and performance
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch on tab focus to reduce API calls
   });
 
   const refetch = () => {
@@ -105,4 +107,3 @@ export function useReceipts(
 export function useRecentReceipts(householdId?: string, limit: number = 5, personalOnly: boolean = false) {
   return useReceipts(householdId, 1, limit, undefined, personalOnly);
 }
-
