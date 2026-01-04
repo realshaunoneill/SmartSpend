@@ -64,7 +64,7 @@ export function InvitationNotifications() {
       <DropdownMenuContent align="end" className="w-80">
         {pendingCount === 0 ? (
           <div className="p-4 text-center text-sm text-muted-foreground">
-            No pending invitations
+            No pending household invitations
           </div>
         ) : (
           <div className="space-y-1">

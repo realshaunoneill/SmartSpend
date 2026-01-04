@@ -59,7 +59,7 @@ export default function SharingPage() {
   const selectedHousehold = households.find((h: HouseholdWithMembers) => h.id === selectedHouseholdId);
   const currentUserId = user?.id;
   const isCurrentUserAdmin = selectedHousehold && user ?
-    members.find((m: MemberWithUser) => m.user_id === user.id)?.role === 'owner' : false;
+    members.find((m: { user_id: string; role: string }) => m.user_id === user.id)?.role === 'admin' : false;
 
   return (
     <>

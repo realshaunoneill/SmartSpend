@@ -34,22 +34,51 @@ export class HouseholdService {
   }
 
   /**
-   * Get all households a user belongs to
+   * Get all households a user belongs to with member count and user's role
    * Validates: Requirements 3.6
    */
-  static async getHouseholdsByUser(userId: string): Promise<Household[]> {
-    const result = await db
+  static async getHouseholdsByUser(userId: string): Promise<(Household & { memberCount: number; isAdmin: boolean })[]> {
+    // First get all households the user belongs to with their role
+    const userHouseholds = await db
       .select({
         id: households.id,
         name: households.name,
         createdAt: households.createdAt,
         updatedAt: households.updatedAt,
+        userRole: householdUsers.role,
       })
       .from(households)
       .innerJoin(householdUsers, eq(households.id, householdUsers.householdId))
       .where(eq(householdUsers.userId, userId));
 
-    return result;
+    // Get member counts for each household
+    const householdIds = userHouseholds.map(h => h.id);
+    
+    if (householdIds.length === 0) {
+      return [];
+    }
+
+    // Count members for each household
+    const memberCounts = await Promise.all(
+      householdIds.map(async (householdId) => {
+        const members = await db
+          .select({ count: householdUsers.householdId })
+          .from(householdUsers)
+          .where(eq(householdUsers.householdId, householdId));
+        return { householdId, count: members.length };
+      })
+    );
+
+    const countMap = new Map(memberCounts.map(mc => [mc.householdId, mc.count]));
+
+    return userHouseholds.map(h => ({
+      id: h.id,
+      name: h.name,
+      createdAt: h.createdAt,
+      updatedAt: h.updatedAt,
+      memberCount: countMap.get(h.id) || 1,
+      isAdmin: h.userRole === 'owner',
+    }));
   }
 
   /**
@@ -218,5 +247,37 @@ export class HouseholdService {
       .limit(1);
 
     return !!householdUser;
+  }
+
+  /**
+   * Update a member's role in a household (owner only)
+   * Note: Cannot change role of the owner
+   */
+  static async updateMemberRole(
+    householdId: string,
+    targetUserId: string,
+    newRole: 'admin' | 'member',
+    updatedBy: string,
+  ): Promise<void> {
+    // Verify the updater is the owner
+    const isOwnerResult = await this.isOwner(householdId, updatedBy);
+    if (!isOwnerResult) {
+      throw new Error('Only household owners can update member roles');
+    }
+
+    // Check if target is the owner (cannot change owner role)
+    const isTargetOwner = await this.isOwner(householdId, targetUserId);
+    if (isTargetOwner) {
+      throw new Error('Cannot change the role of the household owner');
+    }
+
+    // Update the member's role
+    await db
+      .update(householdUsers)
+      .set({ role: newRole, updatedAt: new Date() })
+      .where(and(
+        eq(householdUsers.householdId, householdId),
+        eq(householdUsers.userId, targetUserId),
+      ));
   }
 }

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { SubscriptionUpsell } from '@/components/subscriptions/subscription-upsell';
-import { removeMember, updateMemberRole } from '@/lib/household-actions';
+import { removeMember } from '@/lib/household-actions';
 import { useSendInvitation, useHouseholdInvitations } from '@/lib/hooks/use-invitations';
 import { toast } from 'sonner';
 import type { HouseholdInvitation } from '@/lib/db/schema';
@@ -57,19 +57,6 @@ export function HouseholdMembersList({
       onUpdate();
     } catch {
       alert('Failed to remove member');
-    } finally {
-      setLoadingMemberId(undefined);
-    }
-  };
-
-  const handleToggleRole = async (userId: string, currentRole: 'admin' | 'member') => {
-    const newRole = currentRole === 'admin' ? 'member' : 'admin';
-    setLoadingMemberId(userId);
-    try {
-      await updateMemberRole({ householdId, userId, role: newRole });
-      onUpdate();
-    } catch {
-      alert('Failed to update role');
     } finally {
       setLoadingMemberId(undefined);
     }
@@ -219,9 +206,6 @@ export function HouseholdMembersList({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleToggleRole(member.user_id, member.role)}>
-                          {member.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
-                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleRemove(member.user_id)} className="text-destructive">
                           <Trash2 className="mr-2 h-4 w-4" />
                           Remove Member
