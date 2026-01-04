@@ -1,9 +1,22 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
+Allow: /support
+Allow: /privacy
+Allow: /terms
+Allow: /refund
+
+# Disallow protected/private routes
 Disallow: /api/
 Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /receipts/
+Disallow: /subscriptions/
+Disallow: /insights/
+Disallow: /sharing/
 Disallow: /settings/
 Disallow: /sign-in/
+Disallow: /upgrade/
+Disallow: /payment/
 
 Sitemap: https://receiptwise.io/sitemap.xml

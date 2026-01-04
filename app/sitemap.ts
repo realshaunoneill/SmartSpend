@@ -3,19 +3,18 @@ import type { MetadataRoute } from 'next';
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://receiptwise.io';
 
-  // Static routes
+  // Public routes that should be indexed
   const routes = [
-    '',
-    '/support',
-    '/privacy',
-    '/terms',
-    '/refund',
-    '/sign-in',
+    { path: '', changeFreq: 'daily' as const, priority: 1 },
+    { path: '/support', changeFreq: 'monthly' as const, priority: 0.7 },
+    { path: '/privacy', changeFreq: 'monthly' as const, priority: 0.5 },
+    { path: '/terms', changeFreq: 'monthly' as const, priority: 0.5 },
+    { path: '/refund', changeFreq: 'monthly' as const, priority: 0.5 },
   ].map((route) => ({
-    url: `${baseUrl}${route}`,
+    url: `${baseUrl}${route.path}`,
     lastModified: new Date(),
-    changeFrequency: route === '' ? 'daily' as const : 'weekly' as const,
-    priority: route === '' ? 1 : route === '/support' ? 0.7 : 0.6,
+    changeFrequency: route.changeFreq,
+    priority: route.priority,
   }));
 
   return routes;
