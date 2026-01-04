@@ -13,6 +13,7 @@ import { ReceiptDetailModal } from '@/components/receipts/receipt-detail-modal';
 import { ReceiptSearchFilters, type ReceiptFilters } from '@/components/receipts/receipt-search-filters';
 import { SubscriptionGate } from '@/components/subscriptions/subscription-gate';
 import { Card, CardContent } from '@/components/ui/card';
+import { Calendar } from 'lucide-react';
 import { useUser as useClerkUser } from '@clerk/nextjs';
 import { useReceipts, useRecentReceipts } from '@/lib/hooks/use-receipts';
 import { useHouseholds } from '@/lib/hooks/use-households';
@@ -210,11 +211,20 @@ function ReceiptsPageContent() {
 
         {/* All Receipts Section */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">All Receipts</h2>
-              <p className="text-muted-foreground">
-                {pagination ? `${pagination.total} total receipts` : 'Loading...'}
+              <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                <Calendar className="h-6 w-6 text-muted-foreground" />
+                Receipt Timeline
+              </h2>
+              <p className="text-muted-foreground mt-1">
+                {pagination ? (
+                  <>
+                    <span className="font-medium">{pagination.total}</span> receipts organized by date
+                  </>
+                ) : (
+                  'Loading your receipts...'
+                )}
               </p>
             </div>
           </div>

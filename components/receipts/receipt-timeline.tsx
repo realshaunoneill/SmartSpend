@@ -1,10 +1,13 @@
 'use client';
 
-import { Calendar, Store } from 'lucide-react';
+import { Calendar, Store, MapPin, Clock, CreditCard, Users, ChevronRight, Receipt as ReceiptIcon, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { formatCategory } from '@/lib/utils/format-category';
-import { format, parseISO, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
+import { format, parseISO, isToday, isYesterday, isThisWeek, isThisMonth, startOfDay } from 'date-fns';
 import type { ReceiptWithItems } from '@/lib/types/api-responses';
+import { useCurrency } from '@/lib/hooks/use-currency';
+import { cn } from '@/lib/utils';
 
 interface ReceiptTimelineProps {
   receipts: ReceiptWithItems[];
@@ -20,7 +23,23 @@ const categoryColors: Record<string, string> = {
   entertainment: 'bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-500/20',
   healthcare: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20',
   travel: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20',
+  gas: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
+  coffee: 'bg-amber-600/10 text-amber-800 dark:text-amber-300 border-amber-600/20',
   other: 'bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20',
+};
+
+const categoryIcons: Record<string, string> = {
+  groceries: '🛒',
+  dining: '🍽️',
+  transportation: '🚗',
+  shopping: '🛍️',
+  utilities: '💡',
+  entertainment: '🎬',
+  healthcare: '💊',
+  travel: '✈️',
+  gas: '⛽',
+  coffee: '☕',
+  other: '📄',
 };
 
 function getDateLabel(date: Date): string {
@@ -31,8 +50,27 @@ function getDateLabel(date: Date): string {
   return format(date, 'MMMM d, yyyy'); // January 15, 2025
 }
 
-function groupReceiptsByDate(receipts: ReceiptWithItems[]) {
-  const groups: Record<string, ReceiptWithItems[]> = {};
+function getDateSubtitle(date: Date): string {
+  if (isToday(date) || isYesterday(date)) {
+    return format(date, 'EEEE, MMMM d');
+  }
+  if (isThisWeek(date)) {
+    return format(date, 'MMMM d');
+  }
+  return format(date, 'EEEE');
+}
+
+interface GroupedReceipts {
+  label: string;
+  subtitle: string;
+  date: Date;
+  receipts: ReceiptWithItems[];
+  totalSpent: number;
+  currency: string;
+}
+
+function groupReceiptsByDate(receipts: ReceiptWithItems[]): GroupedReceipts[] {
+  const groups: Record<string, { receipts: ReceiptWithItems[]; date: Date; totalSpent: number; currency: string }> = {};
 
   receipts.forEach(receipt => {
     let dateStr: string | undefined;
@@ -40,7 +78,6 @@ function groupReceiptsByDate(receipts: ReceiptWithItems[]) {
     if (receipt.transactionDate) {
       dateStr = receipt.transactionDate;
     } else if (receipt.createdAt) {
-      // Handle both Date objects and string dates
       dateStr = typeof receipt.createdAt === 'string'
         ? receipt.createdAt
         : receipt.createdAt.toISOString();
@@ -49,143 +86,189 @@ function groupReceiptsByDate(receipts: ReceiptWithItems[]) {
     if (!dateStr) return;
 
     const date = parseISO(dateStr);
-    const label = getDateLabel(date);
+    const dayKey = startOfDay(date).toISOString();
 
-    if (!groups[label]) {
-      groups[label] = [];
+    if (!groups[dayKey]) {
+      groups[dayKey] = { receipts: [], date, totalSpent: 0, currency: receipt.currency || 'EUR' };
     }
-    groups[label].push(receipt);
+    groups[dayKey].receipts.push(receipt);
+    groups[dayKey].totalSpent += parseFloat(receipt.totalAmount || '0');
   });
 
-  return groups;
+  return Object.entries(groups)
+    .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
+    .map(([_, group]) => ({
+      label: getDateLabel(group.date),
+      subtitle: getDateSubtitle(group.date),
+      date: group.date,
+      receipts: group.receipts,
+      totalSpent: group.totalSpent,
+      currency: group.currency,
+    }));
 }
 
 export function ReceiptTimeline({ receipts, onReceiptClick }: ReceiptTimelineProps) {
+  const { format: formatCurrency } = useCurrency();
   const groupedReceipts = groupReceiptsByDate(receipts);
-  const dateLabels = Object.keys(groupedReceipts);
 
   if (receipts.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        No receipts found. Upload your first receipt to get started!
-      </div>
+      <Card className="border-2 border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="rounded-full bg-muted p-4 mb-4">
+            <ReceiptIcon className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">No receipts found</h3>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Upload your first receipt to start building your spending timeline
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="relative space-y-8">
-      {/* Timeline line */}
-      <div className="absolute left-[19px] top-8 bottom-0 w-0.5 bg-border" />
-
-      {dateLabels.map((dateLabel) => (
-        <div key={dateLabel} className="relative">
-          {/* Date badge */}
-          <div className="sticky top-4 z-10 mb-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-primary bg-background">
-              <Calendar className="h-5 w-5 text-primary" />
-            </div>
-            <div className="rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground shadow-sm">
-              {dateLabel}
+    <div className="space-y-6">
+      {groupedReceipts.map((group, groupIndex) => (
+        <div key={group.date.toISOString()} className="relative">
+          {/* Date header */}
+          <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 border-2 border-primary">
+                  <Calendar className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">{group.label}</h3>
+                  <p className="text-xs text-muted-foreground">{group.subtitle}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <TrendingUp className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    {group.receipts.length} receipt{group.receipts.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <p className="text-lg font-bold text-foreground">
+                  {formatCurrency(group.totalSpent)}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Receipts for this date */}
-          <div className="ml-16 space-y-4">
-            {groupedReceipts[dateLabel].map((receipt) => {
-              const categoryClass = categoryColors[receipt.category?.toLowerCase() || 'other'] || categoryColors.other;
-
-              // Determine border style based on processing status
-              let borderClass = 'border-2';
-              if (receipt.processingStatus === 'failed') {
-                borderClass = 'border-2 border-red-500';
-              } else if (receipt.processingStatus === 'pending' || receipt.processingStatus === 'processing') {
-                borderClass = 'border-2 border-yellow-500';
-              }
+          {/* Receipt cards for this date */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {group.receipts.map((receipt) => {
+              const categoryKey = receipt.category?.toLowerCase() || 'other';
+              const categoryClass = categoryColors[categoryKey] || categoryColors.other;
+              const categoryIcon = categoryIcons[categoryKey] || categoryIcons.other;
+              
+              const isProcessing = receipt.processingStatus === 'pending' || receipt.processingStatus === 'processing';
+              const isFailed = receipt.processingStatus === 'failed';
 
               return (
-                <div
+                <Card
                   key={receipt.id}
                   onClick={() => onReceiptClick(receipt)}
-                  className={`group relative cursor-pointer rounded-lg bg-card p-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:-translate-y-1 ${borderClass}`}
+                  className={cn(
+                    'group cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 overflow-hidden',
+                    isFailed && 'border-red-500/50 bg-red-500/5',
+                    isProcessing && 'border-yellow-500/50 bg-yellow-500/5'
+                  )}
                 >
-                  {/* Timeline connector dot */}
-                  <div className="absolute -left-[45px] top-6 h-3 w-3 rounded-full border-2 border-primary bg-background group-hover:bg-primary transition-colors" />
+                  <CardContent className="p-0">
+                    {/* Top section with thumbnail and main info */}
+                    <div className="flex gap-3 p-4">
+                      {/* Receipt thumbnail */}
+                      <div className="shrink-0">
+                        <div className="h-16 w-16 overflow-hidden rounded-lg border bg-muted">
+                          {receipt.imageUrl ? (
+                            <img
+                              src={receipt.imageUrl}
+                              alt={`Receipt from ${receipt.merchantName || 'merchant'}`}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-2xl">
+                              {categoryIcon}
+                            </div>
+                          )}
+                        </div>
+                      </div>
 
-                  <div className="flex items-start gap-4">
-                    {/* Receipt thumbnail */}
-                    <div className="shrink-0">
-                      <div className="h-20 w-20 overflow-hidden rounded-lg border-2 bg-muted">
-                        {receipt.imageUrl ? (
-                          <img
-                            src={receipt.imageUrl}
-                            alt={`Receipt from ${receipt.merchantName || 'merchant'}`}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <Store className="h-8 w-8 text-muted-foreground" />
+                      {/* Main info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h4 className="font-semibold truncate group-hover:text-primary transition-colors">
+                              {receipt.merchantName || 'Unknown Merchant'}
+                            </h4>
+                            {receipt.location && (
+                              <p className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                                <MapPin className="h-3 w-3 shrink-0" />
+                                {receipt.location}
+                              </p>
+                            )}
                           </div>
-                        )}
+                          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+
+                        {/* Amount */}
+                        <p className="text-xl font-bold mt-2">
+                          {receipt.currency || '€'}{receipt.totalAmount || '0.00'}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Receipt info */}
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <Store className="h-4 w-4 text-muted-foreground" />
-                          <h3 className="font-bold text-lg">
-                            {receipt.merchantName || 'Unknown Merchant'}
-                          </h3>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold">
-                            {receipt.currency || '€'}{receipt.totalAmount || '0.00'}
-                          </p>
-                        </div>
-                      </div>
+                    {/* Bottom section with badges */}
+                    <div className="px-4 pb-3 flex flex-wrap items-center gap-1.5">
+                      {/* Status badges */}
+                      {isProcessing && (
+                        <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/30 text-xs">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Processing
+                        </Badge>
+                      )}
+                      {isFailed && (
+                        <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30 text-xs">
+                          Failed
+                        </Badge>
+                      )}
 
-                      {/* Badges */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        {/* Processing status badges */}
-                        {receipt.processingStatus === 'pending' && (
-                          <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20">
-                            ⏳ Processing - Wait a minute, if it doesn't complete contact support
-                          </Badge>
-                        )}
-                        {receipt.processingStatus === 'processing' && (
-                          <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20">
-                            ⏳ Processing - Wait a minute, if it doesn't complete contact support
-                          </Badge>
-                        )}
-                        {receipt.processingStatus === 'failed' && (
-                          <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20">
-                            ❌ Failed - Please contact support
-                          </Badge>
-                        )}
+                      {/* Category badge */}
+                      {receipt.category && !isProcessing && !isFailed && (
+                        <Badge variant="outline" className={cn('text-xs', categoryClass)}>
+                          {formatCategory(receipt.category)}
+                        </Badge>
+                      )}
 
-                        {receipt.category && receipt.processingStatus === 'completed' && (
-                          <Badge variant="outline" className={categoryClass}>
-                            {formatCategory(receipt.category)}
-                          </Badge>
-                        )}
-                        {receipt.transactionDate && (
-                          <Badge variant="outline" className="text-xs">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {format(parseISO(receipt.transactionDate), 'MMM d, h:mm a')}
-                          </Badge>
-                        )}
-                      </div>
+                      {/* Time badge */}
+                      {receipt.transactionDate && (
+                        <Badge variant="outline" className="text-xs bg-muted/50">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {format(parseISO(receipt.transactionDate), 'h:mm a')}
+                        </Badge>
+                      )}
 
-                      {/* Additional info */}
-                      {receipt.location && (
-                        <p className="text-sm text-muted-foreground">
-                          📍 {receipt.location}
-                        </p>
+                      {/* Payment method */}
+                      {receipt.paymentMethod && (
+                        <Badge variant="outline" className="text-xs bg-muted/50">
+                          <CreditCard className="h-3 w-3 mr-1" />
+                          {receipt.paymentMethod}
+                        </Badge>
+                      )}
+
+                      {/* Household indicator */}
+                      {receipt.householdId && (
+                        <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
+                          <Users className="h-3 w-3 mr-1" />
+                          Shared
+                        </Badge>
                       )}
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>

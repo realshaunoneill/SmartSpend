@@ -12,10 +12,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useDashboardStats } from '@/lib/hooks/use-dashboard-stats';
 import { useHouseholds } from '@/lib/hooks/use-households';
-import { Upload, Receipt, BarChart3, ArrowRight, Loader2 } from 'lucide-react';
+import { Upload, Receipt, BarChart3, ArrowRight, Loader2, Sparkles, PieChart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { UpcomingPayments } from '@/components/subscriptions/upcoming-payments';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
+import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 export default function DashboardPage() {
   const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month');
@@ -105,6 +107,46 @@ export default function DashboardPage() {
               personalOnly={isPersonalOnly}
             />
           </div>
+
+          {/* Category Breakdown */}
+          {stats?.spendingByCategory && stats.spendingByCategory.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <PieChart className="h-5 w-5 text-muted-foreground" />
+                    <CardTitle className="text-lg">Spending by Category</CardTitle>
+                  </div>
+                  <Link href="/insights">
+                    <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
+                      <Sparkles className="h-4 w-4" />
+                      View AI Insights
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {stats.spendingByCategory.slice(0, 6).map((category) => (
+                    <div
+                      key={category.category}
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="capitalize">
+                          {category.category}
+                        </Badge>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">{category.percentage}%</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </SubscriptionGate>
 
         {subscriptions.length > 0 && (
