@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload,
@@ -24,19 +25,33 @@ import {
   ChevronLeft,
   Gift,
   Check,
+  Globe,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { SUPPORTED_CURRENCIES, DEFAULT_CURRENCY, type CurrencyCode } from '@/lib/utils/currency';
 
 type PricingDetails = {
-  priceId: string;
-  amount: number;
-  currency: string;
-  interval: string;
-  intervalCount: number;
-  productName: string;
-  productDescription: string | null;
-  active: boolean;
+  monthly: {
+    priceId: string;
+    amount: number;
+    currency: string;
+    interval: string;
+    intervalCount: number;
+    productName: string;
+    productDescription: string | null;
+    active: boolean;
+  };
+  annual: {
+    priceId: string;
+    amount: number;
+    currency: string;
+    interval: string;
+    intervalCount: number;
+    productName: string;
+    productDescription: string | null;
+    active: boolean;
+  } | null;
 };
 
 type OnboardingStep = {
@@ -49,25 +64,49 @@ type OnboardingStep = {
   features?: Array<{ icon: typeof Sparkles; text: string }>;
   pricing?: boolean;
   cta?: boolean;
+  currencySelect?: boolean;
 };
 
 const onboardingSteps: OnboardingStep[] = [
   {
     id: 1,
     title: 'Welcome to ReceiptWise! 🎉',
-    description: 'Your personal expense tracker and subscription manager with AI-powered receipt scanning.',
+    description: 'The expense tracker built for sharing. Perfect for families, roommates, and couples.',
     icon: Sparkles,
     color: 'text-primary',
     bgColor: 'bg-primary/10',
     features: [
+      { icon: Users, text: 'Share expenses with family & roommates' },
       { icon: Zap, text: 'AI-powered receipt scanning' },
-      { icon: CreditCard, text: 'Automatic subscription tracking' },
       { icon: Shield, text: 'Secure & encrypted data' },
       { icon: BarChart3, text: 'Powerful spending insights' },
     ],
   },
   {
     id: 2,
+    title: 'Select Your Currency',
+    description: 'Choose your preferred currency for displaying amounts throughout the app.',
+    icon: Globe,
+    color: 'text-emerald-500',
+    bgColor: 'bg-emerald-500/10',
+    currencySelect: true,
+  },
+  {
+    id: 3,
+    title: 'Household Sharing',
+    description: 'Create households for your family, roommates, or partner. Everyone can upload and view receipts together.',
+    icon: Users,
+    color: 'text-orange-500',
+    bgColor: 'bg-orange-500/10',
+    features: [
+      { icon: Users, text: 'Unlimited household members' },
+      { icon: Upload, text: 'Everyone can upload receipts' },
+      { icon: BarChart3, text: 'See combined spending' },
+      { icon: Shield, text: 'Perfect for shared expenses' },
+    ],
+  },
+  {
+    id: 4,
     title: 'Upload & Scan Receipts',
     description: 'Easily capture and organize all your receipts with intelligent AI extraction.',
     icon: Upload,
@@ -77,55 +116,41 @@ const onboardingSteps: OnboardingStep[] = [
       { icon: Upload, text: 'Take photos or upload images' },
       { icon: Sparkles, text: 'AI extracts items & prices automatically' },
       { icon: Zap, text: 'Batch upload multiple receipts' },
-      { icon: Download, text: 'Download receipts anytime' },
+      { icon: Download, text: 'All household members can access' },
     ],
   },
   {
-    id: 3,
+    id: 5,
     title: 'Track Subscriptions',
-    description: 'Never miss a payment or forget about a subscription again.',
+    description: 'Never miss a payment or forget about a shared subscription again.',
     icon: CreditCard,
     color: 'text-green-500',
     bgColor: 'bg-green-500/10',
     features: [
-      { icon: CreditCard, text: 'Add all recurring subscriptions' },
-      { icon: Zap, text: 'Get notified about payments' },
+      { icon: CreditCard, text: 'Track all recurring subscriptions' },
+      { icon: Users, text: 'Share subscription costs with household' },
       { icon: CheckCircle2, text: 'Link receipts to payments' },
       { icon: BarChart3, text: 'See total monthly costs' },
     ],
   },
   {
-    id: 4,
+    id: 6,
     title: 'Insights & Analytics',
-    description: 'Understand your spending patterns with powerful analytics and visualizations.',
+    description: 'Understand your household spending patterns with powerful analytics and visualizations.',
     icon: BarChart3,
     color: 'text-purple-500',
     bgColor: 'bg-purple-500/10',
     features: [
       { icon: BarChart3, text: 'View spending trends over time' },
-      { icon: Sparkles, text: 'See top purchased items' },
+      { icon: Users, text: 'See who spent what in your household' },
       { icon: CreditCard, text: 'Analyze by category' },
-      { icon: Zap, text: 'Track subscription savings' },
+      { icon: Sparkles, text: 'AI-powered spending insights' },
     ],
   },
   {
-    id: 5,
-    title: 'Household Sharing',
-    description: 'Collaborate with family or roommates to manage shared expenses.',
-    icon: Users,
-    color: 'text-orange-500',
-    bgColor: 'bg-orange-500/10',
-    features: [
-      { icon: Users, text: 'Create households & invite members' },
-      { icon: Upload, text: 'Share receipts and subscriptions' },
-      { icon: BarChart3, text: 'See combined expenses' },
-      { icon: Shield, text: 'Perfect for families' },
-    ],
-  },
-  {
-    id: 6,
+    id: 7,
     title: 'Get Started with Premium',
-    description: 'Unlock unlimited receipts, subscriptions, and advanced features with Premium.',
+    description: 'Unlock unlimited receipts, households, and advanced features. Perfect for families sharing expenses.',
     icon: Gift,
     color: 'text-primary',
     bgColor: 'bg-primary/10',
@@ -145,7 +170,7 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
   const [isProcessing, setIsProcessing] = useState(false);
   const [pricingDetails, setPricingDetails] = useState<PricingDetails | null>(null);
   const [isLoadingPrice, setIsLoadingPrice] = useState(true);
-  const { toast } = useToast();
+  const [selectedCurrency, setSelectedCurrency] = useState(DEFAULT_CURRENCY);
 
   // Fetch pricing details when component mounts and dialog is open
   useEffect(() => {
@@ -161,18 +186,14 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
         setPricingDetails(data);
       } catch (error) {
         console.error('Error fetching pricing:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to load pricing information.',
-        });
+        toast.error('Failed to load pricing information.');
       } finally {
         setIsLoadingPrice(false);
       }
     };
 
     fetchPricing();
-  }, [open, toast]);
+  }, [open]);
 
   // Reset step when dialog closes
   useEffect(() => {
@@ -194,7 +215,29 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
     }).format(amount / 100);
   };
 
-  const handleNext = () => {
+  // Save currency preference
+  const saveCurrency = async () => {
+    try {
+      const response = await fetch('/api/users/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currency: selectedCurrency }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to save currency');
+      }
+    } catch (error) {
+      console.error('Error saving currency:', error);
+      // Don't block the flow, just log the error
+    }
+  };
+
+  const handleNext = async () => {
+    // If we're on the currency step, save the currency preference
+    if (step.currencySelect) {
+      await saveCurrency();
+    }
+
     if (isLastStep) {
       // Last step is pricing, which has its own CTAs
       // This shouldn't be called for the pricing step
@@ -217,12 +260,19 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
   const handleStartTrial = async () => {
     setIsProcessing(true);
     try {
+      // Use annual price if available, otherwise monthly
+      const priceId = pricingDetails?.annual?.priceId || pricingDetails?.monthly?.priceId;
+
+      if (!priceId) {
+        throw new Error('No pricing information available');
+      }
+
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ priceId }),
       });
 
       if (!response.ok) {
@@ -238,11 +288,7 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to start checkout. Please try again.',
-      });
+      toast.error('Failed to start checkout. Please try again.');
       setIsProcessing(false);
     }
   };
@@ -317,6 +363,38 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
                   </div>
                 )}
 
+                {/* Currency Selection */}
+                {step.currencySelect && (
+                  <div className="py-4 space-y-4">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-3"
+                    >
+                      <label className="text-sm font-medium">Select your currency</label>
+                      <Select
+                        value={selectedCurrency}
+                        onValueChange={(value) => setSelectedCurrency(value as CurrencyCode)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SUPPORTED_CURRENCIES.map((currency) => (
+                            <SelectItem key={currency.code} value={currency.code}>
+                              {currency.symbol} {currency.code} - {currency.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        This will be used to display amounts in your dashboard and reports. You can change this later in Settings.
+                        Don&apos;t see your currency? <a href="mailto:support@receiptwise.app" className="text-primary hover:underline">Email us</a> and we&apos;ll add it!
+                      </p>
+                    </motion.div>
+                  </div>
+                )}
+
                 {/* Pricing Section */}
                 {step.pricing && (
                   <div className="space-y-4 py-4">
@@ -338,21 +416,41 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
                             </div>
                           ) : pricingDetails ? (
                             <>
-                              <div className="text-4xl font-bold text-primary">
-                                {formatPrice(pricingDetails.amount, pricingDetails.currency)}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                per {pricingDetails.interval}
-                              </div>
+                              {pricingDetails.annual ? (
+                                <>
+                                  <div className="text-4xl font-bold text-primary">
+                                    {formatPrice(pricingDetails.annual.amount / 12, pricingDetails.annual.currency)}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground">
+                                    per month
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {formatPrice(pricingDetails.annual.amount, pricingDetails.annual.currency)} billed annually
+                                  </div>
+                                  <Badge variant="secondary" className="mt-2">
+                                    Save 2 months (17% off)
+                                  </Badge>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="text-4xl font-bold text-primary">
+                                    {formatPrice(pricingDetails.monthly.amount, pricingDetails.monthly.currency)}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground">
+                                    per {pricingDetails.monthly.interval}
+                                  </div>
+                                </>
+                              )}
                             </>
                           ) : (
                             <>
-                              <div className="text-4xl font-bold text-primary">€9.99</div>
+                              <div className="text-4xl font-bold text-primary">€1.66</div>
                               <div className="text-sm text-muted-foreground">per month</div>
+                              <div className="text-xs text-muted-foreground mt-1">€19.99 billed annually</div>
                             </>
                           )}
                           {trialDays > 0 && (
-                            <Badge variant="secondary" className="mt-2">
+                            <Badge variant="default" className="mt-2">
                               {trialDays}-day free trial
                             </Badge>
                           )}
@@ -360,11 +458,11 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
 
                         <div className="space-y-2 text-left">
                           {[
+                            'Perfect for families & roommates',
                             'Unlimited receipt uploads',
-                            'Unlimited subscriptions',
+                            'Unlimited household sharing',
                             'Advanced analytics & insights',
-                            'Household sharing',
-                            'Priority support',
+                            'Track shared subscriptions',
                             'Export data anytime',
                           ].map((feature, index) => (
                             <div key={index} className="flex items-center gap-2">

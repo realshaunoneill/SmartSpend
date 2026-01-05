@@ -57,6 +57,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       ...result,
       receipts: filteredReceipts,
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
+      },
     });
   } catch (error) {
     submitLogEvent('receipt', `Error fetching receipts: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);

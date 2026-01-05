@@ -1,14 +1,15 @@
 'use client';
 
-import { Users, Crown, MoreVertical, Trash2, LogOut } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Crown, MoreVertical, Trash2, LogOut, UserPlus, Receipt, Calendar } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { InviteMemberDialog } from '@/components/households/invite-member-dialog';
 import { SubscriptionUpsell } from '@/components/subscriptions/subscription-upsell';
 import type { Household } from '@/lib/types';
 import { leaveHousehold, deleteHousehold } from '@/lib/household-actions';
+import { toast } from 'sonner';
 
 interface HouseholdCardProps {
   household: Household & {
@@ -26,9 +27,10 @@ export function HouseholdCard({ household, currentUserId, isSubscribed = false, 
 
     try {
       await leaveHousehold({ householdId: household.id, userId: currentUserId });
+      toast.success(`Left "${household.name}"`);
       onUpdate();
     } catch (_error) {
-      alert('Failed to leave household');
+      toast.error('Failed to leave household');
     }
   };
 
@@ -37,46 +39,73 @@ export function HouseholdCard({ household, currentUserId, isSubscribed = false, 
 
     try {
       await deleteHousehold(household.id);
+      toast.success(`"${household.name}" deleted`);
       onUpdate();
     } catch (_error) {
-      alert('Failed to delete household');
+      toast.error('Failed to delete household');
     }
   };
 
+  // Format date
+  const createdDate = household.created_at
+    ? new Date(household.created_at).toLocaleDateString('en-US', {
+        month: 'short',
+        year: 'numeric',
+      })
+    : null;
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-              <Users className="h-6 w-6 text-primary" />
+    <Card className="overflow-hidden transition-all hover:shadow-md">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
+              <Users className="h-5 w-5 text-primary" />
             </div>
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                {household.name}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-semibold text-foreground truncate">{household.name}</h3>
                 {household.isAdmin && (
-                  <Badge variant="secondary" className="gap-1">
+                  <Badge variant="secondary" className="gap-1 shrink-0 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20">
                     <Crown className="h-3 w-3" />
                     Admin
                   </Badge>
                 )}
-              </CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {household.memberCount} {household.memberCount === 1 ? 'member' : 'members'}
-              </p>
+              </div>
+              <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Users className="h-3 w-3" />
+                  {household.memberCount} {household.memberCount === 1 ? 'member' : 'members'}
+                </span>
+                {createdDate && (
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {createdDate}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
           {isSubscribed && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {household.isAdmin && (
+                  <>
+                    <DropdownMenuItem className="text-muted-foreground" disabled>
+                      <Receipt className="mr-2 h-4 w-4" />
+                      View Shared Receipts
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 {household.isAdmin ? (
-                  <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                  <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete Household
                   </DropdownMenuItem>
@@ -91,14 +120,20 @@ export function HouseholdCard({ household, currentUserId, isSubscribed = false, 
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         {isSubscribed ? (
           household.isAdmin ? (
-            <InviteMemberDialog householdId={household.id} onMemberInvited={onUpdate} />
+            <div className="flex items-center gap-2">
+              <InviteMemberDialog householdId={household.id} onMemberInvited={onUpdate} />
+              <p className="text-xs text-muted-foreground">Invite family or roommates</p>
+            </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-3">
-              Only admins can invite members
-            </p>
+            <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
+              <UserPlus className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                Only admins can invite new members
+              </p>
+            </div>
           )
         ) : (
           <SubscriptionUpsell

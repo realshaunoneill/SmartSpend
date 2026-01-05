@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { receipts, subscriptions, subscriptionPayments, households, householdUsers, users } from '@/lib/db/schema';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, inArray } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 
@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
         createdAt: subscriptionPayments.createdAt,
       })
       .from(subscriptionPayments)
-      .where(eq(subscriptionPayments.subscriptionId, subscriptionIds[0])) // Will be filtered below
+      .where(inArray(subscriptionPayments.subscriptionId, subscriptionIds))
       : [];
 
     // Fetch household memberships

@@ -73,8 +73,9 @@ export interface SpendingInsight {
 }
 
 /**
- * Analyze receipt image using GPT-4o (for /api/receipt/process)
+ * Analyze receipt image using GPT-4o-mini (for /api/receipt/process)
  * This is the main receipt processing function with full extraction
+ * Using GPT-4o-mini for cost efficiency - structured data extraction works well with smaller models
  */
 export async function analyzeReceiptWithGPT4o(
   imageUrl: string,
@@ -96,8 +97,10 @@ export async function analyzeReceiptWithGPT4o(
   const base64Image = buffer.toString('base64');
   const mimeType = contentType || 'image/png';
 
-  submitLogEvent('receipt-process', 'Calling OpenAI Vision API with Vercel AI SDK', correlationId, { userId, userEmail });
+  submitLogEvent('receipt-process', 'Calling OpenAI Vision API with GPT-4o', correlationId, { userId, userEmail });
 
+  // Use GPT-4o for receipt analysis - best accuracy for OCR tasks
+  // especially important for faded, crumpled, or hard-to-read receipts
   const result = await generateObject({
     model: openai('gpt-4o'),
     schema: receiptDataSchema,
@@ -198,7 +201,7 @@ Extract all numeric values as numbers (not strings).`,
     promptTokens: result.usage.promptTokens,
     completionTokens: result.usage.completionTokens,
     totalTokens: result.usage.totalTokens,
-    model: 'gpt-4o',
+    model: 'gpt-4o-mini',
     userEmail,
     userId,
   });

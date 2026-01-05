@@ -71,24 +71,45 @@ export async function PATCH(req: NextRequest) {
 
     const body = await req.json();
 
-    // For now, we only support updating email
-    // Additional fields can be added as needed
+    // Build update object based on provided fields
+    const updates: Record<string, unknown> = {};
+
+    // Update email if provided
     if (body.email && typeof body.email === 'string') {
       // Note: In a real application, you'd want to validate the email format
       // and potentially require email verification
+      updates.email = body.email;
+    }
+
+    // Update currency if provided
+    if (body.currency && typeof body.currency === 'string') {
+      // Validate against supported currencies
+      const SUPPORTED_CURRENCIES = ['EUR', 'USD', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'SEK', 'NOK', 'DKK', 'PLN', 'NZD'];
+      if (SUPPORTED_CURRENCIES.includes(body.currency)) {
+        updates.currency = body.currency;
+      } else {
+        Logger.warn('Invalid currency provided', { requestId, context: { currency: body.currency } });
+      }
+    }
+
+    // If there are fields to update
+    if (Object.keys(updates).length > 0) {
       const { db } = await import('@/lib/db');
       const { users } = await import('@/lib/db/schema');
       const { eq } = await import('drizzle-orm');
 
+      updates.updatedAt = new Date();
+
       const [updatedUser] = await db
         .update(users)
-        .set({ email: body.email, updatedAt: new Date() })
+        .set(updates)
         .where(eq(users.id, user.id))
         .returning();
 
       Logger.info('User profile updated successfully', {
         requestId,
         userId: user.id,
+        context: { updatedFields: Object.keys(updates).filter(k => k !== 'updatedAt') },
       });
       return NextResponse.json(updatedUser);
     }
@@ -104,6 +125,63 @@ export async function PATCH(req: NextRequest) {
     const errorResponse = createErrorResponse(
       ErrorCode.INTERNAL_SERVER_ERROR,
       'Failed to update user profile',
+      undefined,
+      requestId,
+    );
+    return NextResponse.json(errorResponse, {
+      status: getHttpStatusCode(ErrorCode.INTERNAL_SERVER_ERROR),
+    });
+  }
+}
+
+// DELETE - Schedule account deletion (24 hours)
+export async function DELETE(request: NextRequest) {
+  const requestId = generateRequestId();
+  const correlationId = (request.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
+
+  try {
+    const authResult = await getAuthenticatedUser(correlationId);
+
+    if (authResult instanceof NextResponse) {
+      Logger.warn('Unauthorized deletion attempt', { requestId });
+      return authResult;
+    }
+
+    const { user } = authResult;
+
+    const { db } = await import('@/lib/db');
+    const { users } = await import('@/lib/db/schema');
+    const { eq } = await import('drizzle-orm');
+
+    // Schedule deletion for 24 hours from now
+    const deletionDate = new Date();
+    deletionDate.setHours(deletionDate.getHours() + 24);
+
+    const [_updatedUser] = await db
+      .update(users)
+      .set({
+        deletionScheduledAt: deletionDate,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+
+    Logger.info('Account deletion scheduled', {
+      requestId,
+      userId: user.id,
+      context: { deletionScheduledAt: deletionDate.toISOString() },
+    });
+
+    return NextResponse.json({
+      success: true,
+      deletionScheduledAt: deletionDate.toISOString(),
+      message: 'Your account has been scheduled for deletion in 24 hours. Contact support@receiptwise.io to cancel.',
+    });
+  } catch (error) {
+    Logger.error('Error scheduling account deletion', error as Error, { requestId });
+    const errorResponse = createErrorResponse(
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      'Failed to schedule account deletion',
       undefined,
       requestId,
     );

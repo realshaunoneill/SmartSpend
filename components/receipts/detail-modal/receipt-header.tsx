@@ -1,6 +1,6 @@
 'use client';
 
-import { Store, MapPin, Info, Calendar, Clock, CreditCard, Hash, Receipt as ReceiptIcon, Tag, Building2, Users, AlertCircle, RefreshCw, CheckCircle } from 'lucide-react';
+import { Store, MapPin, Info, Calendar, Clock, CreditCard, Hash, Receipt as ReceiptIcon, Tag, Building2, Users, AlertCircle, RefreshCw, CheckCircle, Share2, Lock, Home } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ReceiptAssignmentDialog } from '@/components/receipts/receipt-assignment-dialog';
@@ -9,7 +9,7 @@ import { BusinessExpenseDialog } from './business-expense-dialog';
 import { formatCategory, capitalizeText } from '@/lib/utils/format-category';
 import type { ReceiptWithItems, OCRData } from '@/lib/types/api-responses';
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface HouseholdInfo {
   id: string;
@@ -37,7 +37,6 @@ export function ReceiptHeader({
   onRetrySuccess,
 }: ReceiptHeaderProps) {
   const [isRetrying, setIsRetrying] = useState(false);
-  const { toast } = useToast();
 
   const handleRetry = async () => {
     setIsRetrying(true);
@@ -51,21 +50,14 @@ export function ReceiptHeader({
         throw new Error('Failed to retry processing');
       }
 
-      toast({
-        title: 'Success',
-        description: 'Receipt processing completed successfully',
-      });
+      toast.success('Receipt processing completed successfully');
 
       // Call the callback to refresh the receipt data
       if (onRetrySuccess) {
         onRetrySuccess();
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to retry processing',
-        variant: 'destructive',
-      });
+      toast.error(error instanceof Error ? error.message : 'Failed to retry processing');
     } finally {
       setIsRetrying(false);
     }
@@ -156,10 +148,15 @@ export function ReceiptHeader({
 
       {/* Current Household Badge and Business Expense Display */}
       <div className="mt-4 flex flex-wrap gap-2">
-        {household && (
-          <Badge variant="secondary" className="flex items-center gap-2 w-fit">
-            <Users className="h-3 w-3" />
+        {household ? (
+          <Badge variant="secondary" className="flex items-center gap-2 w-fit bg-primary/10 text-primary">
+            <Home className="h-3 w-3" />
             Shared with {household.name}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="flex items-center gap-2 w-fit">
+            <Lock className="h-3 w-3" />
+            Private
           </Badge>
         )}
         {receipt.isBusinessExpense && !isReceiptOwner && (
@@ -222,14 +219,23 @@ export function ReceiptHeader({
               isOwner={isReceiptOwner}
               canRemoveOnly={!isReceiptOwner && !!receipt.householdId}
             >
-              <Button variant="secondary" size="sm" className="flex-1">
-                <Users className="h-4 w-4 mr-2" />
-                {!isReceiptOwner && receipt.householdId
-                  ? 'Remove from Household'
-                  : receipt.householdId
-                    ? 'Change Household'
-                    : 'Assign to Household'
-                }
+              <Button variant="outline" size="sm" className="flex-1">
+                {!isReceiptOwner && receipt.householdId ? (
+                  <>
+                    <Lock className="h-4 w-4 mr-2" />
+                    Make Private
+                  </>
+                ) : receipt.householdId ? (
+                  <>
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Change Sharing
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share Receipt
+                  </>
+                )}
               </Button>
             </ReceiptAssignmentDialog>
 

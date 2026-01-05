@@ -73,7 +73,7 @@ export default function NotFound() {
                   </div>
                 </Link>
               </CardContent>
-              <div className="absolute -z-10 right-0 bottom-0 top-1/2 left-1/2 bg-gradient-to-br from-primary/5 via-primary/5 to-transparent blur-3xl" />
+              <div className="absolute -z-10 right-0 bottom-0 top-1/2 left-1/2 bg-linear-to-br from-primary/5 via-primary/5 to-transparent blur-3xl" />
             </Card>
 
             {/* Help & Support */}
@@ -132,7 +132,7 @@ export default function NotFound() {
                   </Link>
                 </div>
               </CardContent>
-              <div className="absolute -z-10 left-0 bottom-0 top-1/2 right-1/2 bg-gradient-to-bl from-blue-500/5 via-primary/5 to-transparent blur-3xl" />
+              <div className="absolute -z-10 left-0 bottom-0 top-1/2 right-1/2 bg-linear-to-bl from-blue-500/5 via-primary/5 to-transparent blur-3xl" />
             </Card>
           </div>
 
@@ -157,7 +157,7 @@ export default function NotFound() {
                     </Button>
                   </Link>
                   <a
-                    href="mailto:support@receiptwise.com"
+                    href="mailto:support@receiptwise.io"
                     className="flex-1 sm:flex-initial"
                   >
                     <Button variant="outline" className="w-full group">
@@ -167,7 +167,7 @@ export default function NotFound() {
                   </a>
                 </div>
               </div>
-              <div className="absolute -z-10 inset-0 bg-gradient-to-br from-primary/5 via-transparent to-blue-500/5 blur-2xl" />
+              <div className="absolute -z-10 inset-0 bg-linear-to-br from-primary/5 via-transparent to-blue-500/5 blur-2xl" />
             </CardContent>
           </Card>
         </div>

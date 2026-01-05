@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSpendingTrends } from '@/lib/hooks/use-spending-trends';
+import { useCurrency } from '@/lib/hooks/use-currency';
 
 interface SpendingSummaryProps {
   period: 'week' | 'month' | 'year'
@@ -13,6 +14,7 @@ interface SpendingSummaryProps {
 
 export function SpendingSummary({ period, onPeriodChange, householdId, personalOnly = false }: SpendingSummaryProps) {
   const { data: trendsData, isLoading, error } = useSpendingTrends(householdId, period, personalOnly);
+  const { format: formatCurrency } = useCurrency();
 
   const periodLabels = {
     week: 'This Week',
@@ -137,7 +139,7 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
         {/* Total Amount */}
         <div className="flex items-baseline gap-2">
           <span className="text-4xl font-bold text-foreground">
-            ${trendsData.totalSpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {formatCurrency(trendsData.totalSpent)}
           </span>
           {trendsData.change !== 0 && (
             <div
@@ -160,7 +162,7 @@ export function SpendingSummary({ period, onPeriodChange, householdId, personalO
                 <div key={item.category} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="capitalize text-muted-foreground">{item.category}</span>
-                    <span className="font-medium text-foreground">${item.amount.toFixed(2)}</span>
+                    <span className="font-medium text-foreground">{formatCurrency(item.amount)}</span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-muted/50">
                     <div

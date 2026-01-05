@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, TrendingUp } from 'lucide-react';
 import { type Subscription } from '@/lib/db/schema';
+import { useCurrency } from '@/lib/hooks/use-currency';
 import { differenceInDays, format, isToday, isTomorrow, startOfDay } from 'date-fns';
 
 type UpcomingSubscriptionCardProps = {
@@ -12,6 +13,8 @@ type UpcomingSubscriptionCardProps = {
 };
 
 export function UpcomingSubscriptionCard({ subscription, onClick }: UpcomingSubscriptionCardProps) {
+  const { format: formatCurrency } = useCurrency();
+
   if (!subscription.nextBillingDate) return null;
 
   const billingDate = startOfDay(new Date(subscription.nextBillingDate));
@@ -79,7 +82,7 @@ export function UpcomingSubscriptionCard({ subscription, onClick }: UpcomingSubs
             </span>
           </div>
           <span className="text-3xl font-bold">
-            €{parseFloat(subscription.amount).toFixed(2)}
+            {formatCurrency(parseFloat(subscription.amount))}
           </span>
         </div>
       </CardContent>

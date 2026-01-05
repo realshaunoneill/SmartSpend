@@ -154,7 +154,7 @@ export default function RefundPage() {
           <CardContent className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <a
-                href="mailto:support@receiptwise.com?subject=Refund%20Request"
+                href="mailto:support@receiptwise.io?subject=Refund%20Request"
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
                 <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20 shrink-0">
@@ -162,7 +162,7 @@ export default function RefundPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium group-hover:text-blue-500 transition-colors">Email Support</p>
-                  <p className="text-sm text-muted-foreground truncate">support@receiptwise.com</p>
+                  <p className="text-sm text-muted-foreground truncate">support@receiptwise.io</p>
                 </div>
                 <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
               </a>
@@ -242,8 +242,8 @@ export default function RefundPage() {
               </ul>
               <p className="text-sm text-muted-foreground mt-4">
                 For any questions about our refund policy, please contact us at{' '}
-                <a href="mailto:support@receiptwise.com" className="text-primary hover:underline">
-                  support@receiptwise.com
+                <a href="mailto:support@receiptwise.io" className="text-primary hover:underline">
+                  support@receiptwise.io
                 </a>
               </p>
             </div>

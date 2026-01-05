@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 
 type FormData = {
@@ -65,7 +65,6 @@ export function CreateSubscriptionDialog() {
   const [open, setOpen] = useState(false);
   const { data: households } = useHouseholds();
   const { mutate: createSubscription, isPending } = useCreateSubscription();
-  const { toast } = useToast();
 
   const {
     register,
@@ -94,20 +93,12 @@ export function CreateSubscriptionDialog() {
       : undefined;
 
     if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: 'Invalid amount',
-        description: 'Please enter a valid amount greater than 0',
-        variant: 'destructive',
-      });
+      toast.error('Please enter a valid amount greater than 0');
       return;
     }
 
     if (billingDay < 1 || billingDay > 31) {
-      toast({
-        title: 'Invalid billing day',
-        description: 'Billing day must be between 1 and 31',
-        variant: 'destructive',
-      });
+      toast.error('Billing day must be between 1 and 31');
       return;
     }
 
@@ -115,11 +106,7 @@ export function CreateSubscriptionDialog() {
       data.billingFrequency === 'custom' &&
       (!customFrequencyDays || customFrequencyDays < 1)
     ) {
-      toast({
-        title: 'Invalid custom frequency',
-        description: 'Please enter a valid number of days',
-        variant: 'destructive',
-      });
+      toast.error('Please enter a valid number of days');
       return;
     }
 
@@ -141,19 +128,12 @@ export function CreateSubscriptionDialog() {
       },
       {
         onSuccess: () => {
-          toast({
-            title: 'Subscription created',
-            description: `${data.name} has been added to your subscriptions`,
-          });
+          toast.success(`${data.name} has been added to your subscriptions`);
           setOpen(false);
           reset();
         },
         onError: () => {
-          toast({
-            title: 'Failed to create subscription',
-            description: 'Please try again',
-            variant: 'destructive',
-          });
+          toast.error('Failed to create subscription. Please try again.');
         },
       },
     );

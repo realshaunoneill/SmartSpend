@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { type Subscription } from '@/lib/db/schema';
+import { useCurrency } from '@/lib/hooks/use-currency';
 import { differenceInDays, format, isToday, isTomorrow, addDays } from 'date-fns';
 
 type UpcomingPaymentsProps = {
@@ -20,6 +21,7 @@ export function UpcomingPayments({
   onSelectSubscription,
 }: UpcomingPaymentsProps) {
   const router = useRouter();
+  const { format: formatCurrency } = useCurrency();
 
   // Filter for active subscriptions with upcoming payments in the next X days
   const now = new Date();
@@ -76,7 +78,7 @@ export function UpcomingPayments({
           </div>
           <div className="text-right">
             <p className="text-sm text-muted-foreground">Total</p>
-            <p className="text-2xl font-bold">€{totalUpcoming.toFixed(2)}</p>
+            <p className="text-2xl font-bold">{formatCurrency(totalUpcoming)}</p>
           </div>
         </div>
       </CardHeader>
@@ -114,7 +116,7 @@ export function UpcomingPayments({
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-right">
-                    <p className="font-semibold">€{parseFloat(subscription.amount).toFixed(2)}</p>
+                    <p className="font-semibold">{formatCurrency(parseFloat(subscription.amount))}</p>
                     <p className="text-xs text-muted-foreground">{subscription.billingFrequency}</p>
                   </div>
                 </div>

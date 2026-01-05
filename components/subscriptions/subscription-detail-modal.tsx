@@ -38,7 +38,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { LinkReceiptDialog } from './link-receipt-dialog';
 import { EditSubscriptionDialog } from './edit-subscription-dialog';
 
@@ -58,7 +58,6 @@ export function SubscriptionDetailModal({
   const { mutate: deleteSubscription } = useDeleteSubscription();
   const { mutate: updateSubscription } = useUpdateSubscription(subscriptionId || '');
   const { mutate: unlinkPayment } = useUnlinkPayment(subscriptionId || '');
-  const { toast } = useToast();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
 
@@ -67,19 +66,12 @@ export function SubscriptionDetailModal({
 
     deleteSubscription(subscriptionId, {
       onSuccess: () => {
-        toast({
-          title: 'Subscription deleted',
-          description: 'The subscription has been removed',
-        });
+        toast.success('Subscription deleted');
         onOpenChange(false);
         setShowDeleteConfirm(false);
       },
       onError: () => {
-        toast({
-          title: 'Failed to delete',
-          description: 'Please try again',
-          variant: 'destructive',
-        });
+        toast.error('Failed to delete. Please try again.');
       },
     });
   };
@@ -93,17 +85,10 @@ export function SubscriptionDetailModal({
       { status: newStatus },
       {
         onSuccess: () => {
-          toast({
-            title: `Subscription ${newStatus === 'active' ? 'resumed' : 'paused'}`,
-            description: `${subscription.name} is now ${newStatus}`,
-          });
+          toast.success(`${subscription.name} is now ${newStatus}`);
         },
         onError: () => {
-          toast({
-            title: 'Failed to update status',
-            description: 'Please try again',
-            variant: 'destructive',
-          });
+          toast.error('Failed to update status. Please try again.');
         },
       },
     );
@@ -116,17 +101,10 @@ export function SubscriptionDetailModal({
       { status: 'cancelled', endDate: new Date() },
       {
         onSuccess: () => {
-          toast({
-            title: 'Subscription cancelled',
-            description: `${subscription.name} has been cancelled`,
-          });
+          toast.success(`${subscription.name} has been cancelled`);
         },
         onError: () => {
-          toast({
-            title: 'Failed to cancel',
-            description: 'Please try again',
-            variant: 'destructive',
-          });
+          toast.error('Failed to cancel. Please try again.');
         },
       },
     );
@@ -135,17 +113,10 @@ export function SubscriptionDetailModal({
   const handleUnlinkReceipt = (paymentId: string) => {
     unlinkPayment(paymentId, {
       onSuccess: () => {
-        toast({
-          title: 'Receipt unlinked',
-          description: 'The receipt has been unlinked from this payment',
-        });
+        toast.success('Receipt unlinked');
       },
       onError: () => {
-        toast({
-          title: 'Failed to unlink',
-          description: 'Please try again',
-          variant: 'destructive',
-        });
+        toast.error('Failed to unlink. Please try again.');
       },
     });
   };

@@ -20,7 +20,7 @@ async function getCurrentUser() {
   return user;
 }
 
-export async function createHousehold(data: { name: string; userId: string }) {
+export async function createHousehold(data: { name: string }) {
   const user = await getCurrentUser();
   const household = await HouseholdService.createHousehold(user.id, data.name);
   return household;
@@ -48,13 +48,14 @@ export async function leaveHousehold(data: { householdId: string; userId: string
   return { success: true };
 }
 
-export async function updateMemberRole(_data: {
+export async function updateMemberRole(data: {
   householdId: string
   userId: string
   role: 'admin' | 'member'
 }) {
-  // This would need to be implemented in HouseholdService
-  throw new Error('Update member role is not yet implemented');
+  const user = await getCurrentUser();
+  await HouseholdService.updateMemberRole(data.householdId, data.userId, data.role, user.id);
+  return { success: true };
 }
 
 export async function deleteHousehold(householdId: string) {

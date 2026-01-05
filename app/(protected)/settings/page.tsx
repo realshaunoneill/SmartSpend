@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQueryState, parseAsStringLiteral } from 'nuqs';
 import { Navigation } from '@/components/layout/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,22 +9,46 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useUser } from '@clerk/nextjs';
 import { useUser as useUserData } from '@/lib/hooks/use-user';
 import { useOnboarding } from '@/components/onboarding/onboarding-provider';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { PlayCircle } from 'lucide-react';
+import { PlayCircle, User, CreditCard, Home, Download, AlertTriangle, Settings2, Sparkles, Trash2, Clock, Mail } from 'lucide-react';
 import type { HouseholdWithMembers } from '@/lib/types/api-responses';
+import { useHouseholds } from '@/lib/hooks/use-households';
+import { SUPPORTED_CURRENCIES } from '@/lib/utils/currency';
+
+const VALID_TABS = ['profile', 'preferences', 'subscription', 'household', 'data'] as const;
 
 export default function SettingsPage() {
   const { user: clerkUser, isLoaded } = useUser();
-  const { user: userData, isLoading: userDataLoading } = useUserData();
+  const { user: userData, isLoading: userDataLoading, refetch: refetchUser } = useUserData();
   const { startOnboarding } = useOnboarding();
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedHousehold, setSelectedHousehold] = useState<string>('none');
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('EUR');
   const [isExporting, setIsExporting] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const queryClient = useQueryClient();
+
+  // Tab state synced with URL using nuqs
+  const [currentTab, setCurrentTab] = useQueryState(
+    'tab',
+    parseAsStringLiteral(VALID_TABS).withDefault('profile'),
+  );
 
   // Update selected household when userData loads
   useEffect(() => {
@@ -32,16 +57,15 @@ export default function SettingsPage() {
     }
   }, [userData?.defaultHouseholdId]);
 
-  // Fetch user's households
-  const { data: households = [], isLoading: householdsLoading } = useQuery({
-    queryKey: ['households'],
-    queryFn: async () => {
-      const response = await fetch('/api/households');
-      if (!response.ok) throw new Error('Failed to fetch households');
-      const data = await response.json();
-      return data.households || [];
-    },
-  });
+  // Update selected currency when userData loads
+  useEffect(() => {
+    if (userData?.currency) {
+      setSelectedCurrency(userData.currency);
+    }
+  }, [userData?.currency]);
+
+  // Fetch user's households using the shared hook
+  const { data: households = [], isLoading: householdsLoading } = useHouseholds();
 
   // Update default household mutation
   const updateDefaultHousehold = useMutation({
@@ -64,9 +88,34 @@ export default function SettingsPage() {
     },
   });
 
+  // Update currency mutation
+  const updateCurrency = useMutation({
+    mutationFn: async (currency: string) => {
+      const response = await fetch('/api/users/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currency }),
+      });
+      if (!response.ok) throw new Error('Failed to update currency');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      toast.success('Currency preference updated');
+    },
+    onError: (error) => {
+      console.error('Error updating currency:', error);
+      toast.error('Failed to update currency');
+    },
+  });
+
   const handleSaveDefaultHousehold = () => {
     const householdId = selectedHousehold === 'none' ? null : selectedHousehold;
     updateDefaultHousehold.mutate(householdId);
+  };
+
+  const handleSaveCurrency = () => {
+    updateCurrency.mutate(selectedCurrency);
   };
 
   const handleUpgrade = async () => {
@@ -154,6 +203,63 @@ export default function SettingsPage() {
     }
   };
 
+  // Delete account mutation
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/users/me', {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to schedule account deletion');
+      return response.json();
+    },
+    onSuccess: async () => {
+      await refetchUser();
+      setShowDeleteDialog(false);
+      setDeleteConfirmation('');
+      toast.success('Account scheduled for deletion', {
+        description: 'Your account will be deleted in 24 hours. Contact support to cancel.',
+        duration: 10000,
+      });
+    },
+    onError: (error) => {
+      console.error('Error scheduling account deletion:', error);
+      toast.error('Failed to schedule account deletion');
+    },
+  });
+
+  // Cancel deletion mutation
+  const cancelDeletionMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/users/cancel-deletion', {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to cancel account deletion');
+      return response.json();
+    },
+    onSuccess: async () => {
+      await refetchUser();
+      toast.success('Account deletion cancelled', {
+        description: 'Your account is safe and will not be deleted.',
+      });
+    },
+    onError: (error) => {
+      console.error('Error cancelling account deletion:', error);
+      toast.error('Failed to cancel account deletion');
+    },
+  });
+
+  const handleDeleteAccount = () => {
+    if (deleteConfirmation.toLowerCase() !== 'delete my account') {
+      toast.error('Please type "delete my account" to confirm');
+      return;
+    }
+    deleteAccountMutation.mutate();
+  };
+
+  // Check if deletion is scheduled
+  const isDeletionScheduled = userData?.deletionScheduledAt !== null && userData?.deletionScheduledAt !== undefined;
+  const deletionDate = isDeletionScheduled ? new Date(userData.deletionScheduledAt!) : null;
+
   if (!isLoaded || userDataLoading) {
     return (
       <>
@@ -174,285 +280,506 @@ export default function SettingsPage() {
     return null;
   }
 
-
-
   return (
     <>
       <Navigation />
       <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Settings</h1>
-          <p className="mt-1 text-sm text-muted-foreground sm:mt-2">Manage your account and preferences</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl flex items-center gap-2">
+              <Settings2 className="h-7 w-7 text-muted-foreground" />
+              Settings
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground sm:mt-2">Manage your account and preferences</p>
+          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile</CardTitle>
-            <CardDescription>Your account information from Clerk</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={clerkUser.fullName || 'Not set'}
-                disabled
-              />
-              <p className="text-xs text-muted-foreground">
-                To update your name, please use your Clerk account settings
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={clerkUser.emailAddresses[0]?.emailAddress || 'No email'}
-                disabled
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="clerk-id">User ID</Label>
-              <Input
-                id="clerk-id"
-                value={clerkUser.id}
-                disabled
-                className="font-mono text-xs"
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as typeof VALID_TABS[number])} className="w-full">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:grid-cols-none lg:flex">
+            <TabsTrigger value="profile" className="gap-2">
+              <User className="h-4 w-4 hidden sm:block" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="preferences" className="gap-2">
+              <Sparkles className="h-4 w-4 hidden sm:block" />
+              Preferences
+            </TabsTrigger>
+            <TabsTrigger value="subscription" className="gap-2">
+              <CreditCard className="h-4 w-4 hidden sm:block" />
+              Subscription
+            </TabsTrigger>
+            <TabsTrigger value="household" className="gap-2">
+              <Home className="h-4 w-4 hidden sm:block" />
+              Household
+            </TabsTrigger>
+            <TabsTrigger value="data" className="gap-2">
+              <Download className="h-4 w-4 hidden sm:block" />
+              Data
+            </TabsTrigger>
+          </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Subscription</CardTitle>
-            <CardDescription>Manage your ReceiptWise subscription</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center gap-3">
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-6 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Information</CardTitle>
+                <CardDescription>Your account information from Clerk</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    value={clerkUser.fullName || 'Not set'}
+                    disabled
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    To update your name, please use your Clerk account settings
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={clerkUser.emailAddresses[0]?.emailAddress || 'No email'}
+                    disabled
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="clerk-id">User ID</Label>
+                  <Input
+                    id="clerk-id"
+                    value={clerkUser.id}
+                    disabled
+                    className="font-mono text-xs"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Information</CardTitle>
+                <CardDescription>Your ReceiptWise account details</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-foreground">
-                        {userData?.subscribed ? 'Premium Plan' : 'Free Plan'}
-                      </p>
-                      <Badge variant={userData?.subscribed ? 'default' : 'secondary'}>
-                        {userData?.subscribed ? 'Premium' : 'Free'}
-                      </Badge>
-                    </div>
+                    <Label className="text-sm font-medium">Member Since</Label>
                     <p className="text-sm text-muted-foreground">
-                      {userData?.subscribed
-                        ? 'Unlimited receipts, advanced analytics, and household sharing'
-                        : 'View-only access to existing data'}
+                      {userData?.createdAt
+                        ? new Date(userData.createdAt).toLocaleDateString()
+                        : 'Unknown'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Last Updated</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {userData?.updatedAt
+                        ? new Date(userData.updatedAt).toLocaleDateString()
+                        : 'Unknown'}
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  {!userData?.subscribed ? (
-                    <Button
-                      onClick={handleUpgrade}
-                      disabled={isUpdating}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Preferences Tab */}
+          <TabsContent value="preferences" className="space-y-6 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Display Preferences</CardTitle>
+                <CardDescription>Customize your ReceiptWise experience</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-3">
+                  <Label htmlFor="currency">Display Currency</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Choose the currency used to display amounts throughout the app.
+                    Don&apos;t see your currency? <a href="mailto:support@receiptwise.app" className="text-primary hover:underline">Email us</a> and we&apos;ll add it!
+                  </p>
+                  <div className="flex gap-3">
+                    <Select
+                      value={selectedCurrency}
+                      onValueChange={setSelectedCurrency}
                     >
-                      {isUpdating ? 'Processing...' : 'Upgrade to Premium'}
-                    </Button>
-                  ) : (
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SUPPORTED_CURRENCIES.map((currency) => (
+                          <SelectItem key={currency.code} value={currency.code}>
+                            {currency.symbol} {currency.code} - {currency.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <Button
-                      variant="outline"
-                      onClick={handleManageSubscription}
-                      disabled={billingPortalMutation.isPending}
+                      onClick={handleSaveCurrency}
+                      disabled={updateCurrency.isPending || selectedCurrency === userData?.currency}
                     >
-                      {billingPortalMutation.isPending ? 'Loading...' : 'Manage Subscription'}
+                      {updateCurrency.isPending ? 'Saving...' : 'Save'}
                     </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Onboarding Tour</CardTitle>
+                <CardDescription>Learn how to use ReceiptWise</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Take a guided tour of ReceiptWise's features and learn how to get the most out of the app.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={startOnboarding}
+                  className="gap-2"
+                >
+                  <PlayCircle className="w-4 h-4" />
+                  Start Tour
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Subscription Tab */}
+          <TabsContent value="subscription" className="space-y-6 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Subscription Plan</CardTitle>
+                <CardDescription>Manage your ReceiptWise subscription</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-foreground">
+                            {userData?.subscribed ? 'Premium Plan' : 'Free Plan'}
+                          </p>
+                          <Badge variant={userData?.subscribed ? 'default' : 'secondary'}>
+                            {userData?.subscribed ? 'Premium' : 'Free'}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {userData?.subscribed
+                            ? 'Unlimited receipts, advanced analytics, and household sharing'
+                            : 'View-only access to existing data'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {!userData?.subscribed ? (
+                        <Button
+                          onClick={handleUpgrade}
+                          disabled={isUpdating}
+                        >
+                          {isUpdating ? 'Processing...' : 'Upgrade to Premium'}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          onClick={handleManageSubscription}
+                          disabled={billingPortalMutation.isPending}
+                        >
+                          {billingPortalMutation.isPending ? 'Loading...' : 'Manage Subscription'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {userData?.subscribed && (
+                    <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+                      <h4 className="font-medium text-sm">Premium Features</h4>
+                      <ul className="space-y-1 text-sm text-muted-foreground">
+                        <li className="flex items-center gap-2">
+                          <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                          Unlimited receipt storage
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                          Advanced spending analytics
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                          Household sharing & collaboration
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                          Priority support
+                        </li>
+                      </ul>
+                    </div>
                   )}
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-              {userData?.subscribed && (
-                <div className="rounded-lg bg-muted/50 p-4 space-y-2">
-                  <h4 className="font-medium text-sm">Premium Features</h4>
-                  <ul className="space-y-1 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      Unlimited receipt storage
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      Advanced spending analytics
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      Household sharing & collaboration
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      Priority support
-                    </li>
-                  </ul>
+          {/* Household Tab */}
+          <TabsContent value="household" className="space-y-6 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Default Household</CardTitle>
+                <CardDescription>
+                  Set a default household for automatic receipt uploads
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="default-household">Default Household</Label>
+                  <Select
+                    value={selectedHousehold}
+                    onValueChange={setSelectedHousehold}
+                    disabled={householdsLoading || households.length === 0}
+                  >
+                    <SelectTrigger id="default-household">
+                      <SelectValue placeholder="Select a household" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None (Personal receipts only)</SelectItem>
+                      {households.map((household: HouseholdWithMembers) => (
+                        <SelectItem key={household.id} value={household.id}>
+                          {household.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    When set, newly uploaded receipts will automatically be assigned to this household
+                  </p>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                <Button
+                  onClick={handleSaveDefaultHousehold}
+                  disabled={
+                    updateDefaultHousehold.isPending ||
+                    selectedHousehold === (userData?.defaultHouseholdId || 'none')
+                  }
+                >
+                  {updateDefaultHousehold.isPending ? 'Saving...' : 'Save Default Household'}
+                </Button>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-            <CardDescription>Your ReceiptWise account details</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium">Member Since</Label>
+            {households.length === 0 && (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                  <Home className="h-10 w-10 text-muted-foreground mb-3" />
+                  <h3 className="font-semibold mb-1">No Households Yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Create or join a household to share receipts with family members
+                  </p>
+                  <Button variant="outline" onClick={() => window.location.href = '/sharing'}>
+                    Go to Sharing
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Data Tab */}
+          <TabsContent value="data" className="space-y-6 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Data Export</CardTitle>
+                <CardDescription>Download your data for backup or tax purposes</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Last Export</span>
+                    <span className="text-sm text-muted-foreground">
+                      {userData?.lastExportedAt
+                        ? new Date(userData.lastExportedAt).toLocaleString()
+                        : 'Never'}
+                    </span>
+                  </div>
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  {userData?.createdAt
-                    ? new Date(userData.createdAt).toLocaleDateString()
-                    : 'Unknown'}
+                  Export all your receipts, subscriptions, and payment history in CSV or JSON format.
                 </p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Last Updated</Label>
-                <p className="text-sm text-muted-foreground">
-                  {userData?.updatedAt
-                    ? new Date(userData.updatedAt).toLocaleDateString()
-                    : 'Unknown'}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleExport('csv', 'all')}
+                    disabled={isExporting}
+                    className="justify-start"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {isExporting ? 'Exporting...' : 'All Data (CSV)'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleExport('json', 'all')}
+                    disabled={isExporting}
+                    className="justify-start"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {isExporting ? 'Exporting...' : 'All Data (JSON)'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleExport('csv', 'receipts')}
+                    disabled={isExporting}
+                    className="justify-start"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {isExporting ? 'Exporting...' : 'Receipts Only'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleExport('csv', 'subscriptions')}
+                    disabled={isExporting}
+                    className="justify-start"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {isExporting ? 'Exporting...' : 'Subscriptions Only'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Default Household</CardTitle>
-            <CardDescription>
-              Set a default household for automatic receipt uploads
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="default-household">Default Household</Label>
-              <Select
-                value={selectedHousehold}
-                onValueChange={setSelectedHousehold}
-                disabled={householdsLoading || households.length === 0}
-              >
-                <SelectTrigger id="default-household">
-                  <SelectValue placeholder="Select a household" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None (Personal receipts only)</SelectItem>
-                  {households.map((household: HouseholdWithMembers) => (
-                    <SelectItem key={household.id} value={household.id}>
-                      {household.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                When set, newly uploaded receipts will automatically be assigned to this household
-              </p>
-            </div>
-            <Button
-              onClick={handleSaveDefaultHousehold}
-              disabled={
-                updateDefaultHousehold.isPending ||
-                selectedHousehold === (userData?.defaultHouseholdId || 'none')
-              }
-            >
-              {updateDefaultHousehold.isPending ? 'Saving...' : 'Save Default Household'}
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Onboarding Tour</CardTitle>
-            <CardDescription>Learn how to use SmartSpend</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Take a guided tour of SmartSpend's features and learn how to get the most out of the app.
-            </p>
-            <Button
-              variant="outline"
-              onClick={startOnboarding}
-              className="gap-2"
-            >
-              <PlayCircle className="w-4 h-4" />
-              Start Tour
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Data Export</CardTitle>
-            <CardDescription>Download your data for backup or tax purposes</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-lg bg-muted/50 p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">Last Export</span>
-                <span className="text-sm text-muted-foreground">
-                  {userData?.lastExportedAt
-                    ? new Date(userData.lastExportedAt).toLocaleString()
-                    : 'Never'}
-                </span>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Export all your receipts, subscriptions, and payment history in CSV or JSON format.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                variant="outline"
-                onClick={() => handleExport('csv', 'all')}
-                disabled={isExporting}
-              >
-                {isExporting ? 'Exporting...' : 'Download CSV (All Data)'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleExport('json', 'all')}
-                disabled={isExporting}
-              >
-                {isExporting ? 'Exporting...' : 'Download JSON (All Data)'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleExport('csv', 'receipts')}
-                disabled={isExporting}
-              >
-                {isExporting ? 'Exporting...' : 'Download Receipts Only'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleExport('csv', 'subscriptions')}
-                disabled={isExporting}
-              >
-                {isExporting ? 'Exporting...' : 'Download Subscriptions Only'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Danger Zone</CardTitle>
-            <CardDescription>Irreversible actions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-              <p className="mb-4 text-sm text-muted-foreground">
-                Deleting your account will permanently remove all your data, including receipts, households, and settings. This action cannot be undone.
-              </p>
-              <Button variant="destructive" disabled>
-                Delete Account (Coming Soon)
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="border-destructive/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-5 w-5" />
+                  Danger Zone
+                </CardTitle>
+                <CardDescription>Irreversible actions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isDeletionScheduled ? (
+                  <div className="space-y-4">
+                    <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+                      <div className="flex items-start gap-3">
+                        <Clock className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                        <div className="space-y-2">
+                          <p className="font-medium text-amber-700 dark:text-amber-500">
+                            Account Scheduled for Deletion
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Your account is scheduled to be permanently deleted on{' '}
+                            <strong className="text-foreground">
+                              {deletionDate?.toLocaleString(undefined, {
+                                dateStyle: 'full',
+                                timeStyle: 'short',
+                              })}
+                            </strong>
+                          </p>
+                          <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+                            <Mail className="h-4 w-4" />
+                            <span>
+                              Changed your mind? Contact{' '}
+                              <a
+                                href="mailto:support@receiptwise.io?subject=Cancel Account Deletion"
+                                className="text-primary underline underline-offset-2 hover:text-primary/80"
+                              >
+                                support@receiptwise.io
+                              </a>
+                              {' '}or click the button below to cancel.
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => cancelDeletionMutation.mutate()}
+                      disabled={cancelDeletionMutation.isPending}
+                      className="w-full sm:w-auto"
+                    >
+                      {cancelDeletionMutation.isPending ? 'Cancelling...' : 'Cancel Account Deletion'}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+                    <p className="mb-4 text-sm text-muted-foreground">
+                      Deleting your account will permanently remove all your data, including receipts, households, and settings. This action cannot be undone.
+                    </p>
+                    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Account
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                            <AlertTriangle className="h-5 w-5" />
+                            Delete Your Account?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription asChild>
+                            <div className="space-y-4 text-sm text-muted-foreground">
+                              <p>
+                                Your account will be scheduled for deletion in <strong className="text-foreground">24 hours</strong>. During this time, you can cancel the deletion by contacting support.
+                              </p>
+                              <div className="rounded-lg bg-muted p-3 space-y-2">
+                                <p className="text-sm font-medium text-foreground">What will be deleted:</p>
+                                <ul className="text-sm list-disc list-inside space-y-1 text-muted-foreground">
+                                  <li>All your receipts and images</li>
+                                  <li>Subscription tracking data</li>
+                                  <li>Household memberships</li>
+                                  <li>Account settings and preferences</li>
+                                </ul>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <Mail className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">
+                                  To cancel after confirming, email{' '}
+                                  <a
+                                    href="mailto:support@receiptwise.io?subject=Cancel Account Deletion"
+                                    className="text-primary underline underline-offset-2"
+                                  >
+                                    support@receiptwise.io
+                                  </a>
+                                </span>
+                              </div>
+                              <div className="space-y-2 pt-2">
+                                <Label htmlFor="delete-confirmation" className="text-sm font-medium text-foreground">
+                                  Type <span className="font-mono bg-muted px-1 rounded">delete my account</span> to confirm:
+                                </Label>
+                                <Input
+                                  id="delete-confirmation"
+                                  placeholder="delete my account"
+                                  value={deleteConfirmation}
+                                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                                  className="font-mono"
+                                />
+                              </div>
+                            </div>
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel onClick={() => setDeleteConfirmation('')}>
+                            Cancel
+                          </AlertDialogCancel>
+                          <Button
+                            variant="destructive"
+                            onClick={handleDeleteAccount}
+                            disabled={
+                              deleteAccountMutation.isPending ||
+                              deleteConfirmation.toLowerCase() !== 'delete my account'
+                            }
+                          >
+                            {deleteAccountMutation.isPending ? 'Scheduling...' : 'Delete My Account'}
+                          </Button>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
     </>
   );

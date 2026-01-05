@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
+import { useCurrency } from '@/lib/hooks/use-currency';
 import { Loader2, TrendingUp, Calendar, DollarSign, AlertCircle, ArrowRight } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -11,6 +12,7 @@ import Link from 'next/link';
 
 export function SubscriptionInsights() {
   const { data: subscriptions, isLoading } = useSubscriptions(undefined, 'active', true);
+  const { format: formatCurrency } = useCurrency();
 
   if (isLoading) {
     return (
@@ -98,11 +100,11 @@ export function SubscriptionInsights() {
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Monthly Total</p>
-            <p className="text-2xl font-bold">€{totalMonthly.toFixed(2)}</p>
+            <p className="text-2xl font-bold">{formatCurrency(totalMonthly)}</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Yearly Total</p>
-            <p className="text-2xl font-bold">€{totalYearly.toFixed(2)}</p>
+            <p className="text-2xl font-bold">{formatCurrency(totalYearly)}</p>
           </div>
           {missingPaymentsCount > 0 && (
             <div className="space-y-1">
@@ -133,7 +135,7 @@ export function SubscriptionInsights() {
                     {category}
                   </Badge>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">€{amount.toFixed(2)}/mo</span>
+                    <span className="text-sm font-medium">{formatCurrency(amount)}/mo</span>
                     <span className="text-xs text-muted-foreground">
                       ({((amount / totalMonthly) * 100).toFixed(0)}%)
                     </span>
@@ -170,7 +172,7 @@ export function SubscriptionInsights() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold">€{parseFloat(sub.amount).toFixed(2)}</p>
+                    <p className="font-bold">{formatCurrency(parseFloat(sub.amount))}</p>
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(sub.nextBillingDate!), 'MMM dd')}
                     </p>

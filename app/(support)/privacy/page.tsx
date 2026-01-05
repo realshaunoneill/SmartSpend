@@ -193,7 +193,7 @@ export default function PrivacyPage() {
               <li>Close your account</li>
             </ul>
             <p>
-              To exercise these rights, please contact us at support@receiptwise.com or use the account
+              To exercise these rights, please contact us at support@receiptwise.io or use the account
               settings in the Service.
             </p>
           </CardContent>
@@ -260,7 +260,7 @@ export default function PrivacyPage() {
               If you have questions about this Privacy Policy or how we handle your data, please contact us at:
             </p>
             <p>
-              Email: <a href="mailto:support@receiptwise.com" className="text-primary hover:underline">support@receiptwise.com</a>
+              Email: <a href="mailto:support@receiptwise.io" className="text-primary hover:underline">support@receiptwise.io</a>
             </p>
           </CardContent>
         </Card>

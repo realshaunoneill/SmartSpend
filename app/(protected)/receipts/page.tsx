@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { Navigation } from '@/components/layout/navigation';
 import { ReceiptBatchUpload } from '@/components/receipts/receipt-batch-upload';
 import { ReceiptList } from '@/components/receipts/receipt-list';
@@ -11,17 +11,24 @@ import { HouseholdSelector } from '@/components/households/household-selector';
 import { Pagination } from '@/components/layout/pagination';
 import { ReceiptDetailModal } from '@/components/receipts/receipt-detail-modal';
 import { ReceiptSearchFilters, type ReceiptFilters } from '@/components/receipts/receipt-search-filters';
-import { SubscriptionGate } from '@/components/subscriptions/subscription-gate';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, Upload, Camera, Scan, FileText, Crown, Loader2, Sparkles } from 'lucide-react';
 import { useUser as useClerkUser } from '@clerk/nextjs';
+import { useUser } from '@/lib/hooks/use-user';
 import { useReceipts, useRecentReceipts } from '@/lib/hooks/use-receipts';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { ReceiptTimeline } from '@/components/receipts/receipt-timeline';
+import { toast } from 'sonner';
 import type { ReceiptWithItems } from '@/lib/types/api-responses';
 import type { Receipt } from '@/lib/db/schema';
 
+const trialDays = process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS ? parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) : 0;
+
 function ReceiptsPageContent() {
   const { user: clerkUser } = useClerkUser();
+  const { isSubscribed } = useUser();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>();
@@ -35,6 +42,30 @@ function ReceiptsPageContent() {
   const pageSize = 12;
 
   const { data: households = [] } = useHouseholds();
+
+  // Checkout mutation
+  const checkoutMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      if (!response.ok) throw new Error('Failed to create checkout session');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.url) {
+        if (trialDays > 0) {
+          toast.success(`Starting your ${trialDays}-day free trial...`);
+        }
+        window.location.href = data.url;
+      }
+    },
+    onError: () => {
+      toast.error('Failed to start checkout. Please try again.');
+    },
+  });
 
   // Get recent receipts for the top section
   const { receipts: recentReceipts, isLoading: recentLoading, refetch: refetchRecent } = useRecentReceipts(selectedHouseholdId, 5);
@@ -179,14 +210,72 @@ function ReceiptsPageContent() {
         {/* Upload and Recent Receipts Section */}
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-4">
-            <SubscriptionGate feature="upload">
+            {isSubscribed ? (
               <ReceiptBatchUpload
-                clerkId={clerkUser.id}
                 userEmail={clerkUser.emailAddresses[0]?.emailAddress || ''}
                 householdId={selectedHouseholdId}
                 onUploadComplete={handleUploadComplete}
               />
-            </SubscriptionGate>
+            ) : (
+              <Card className="border-2 border-primary/20 bg-linear-to-br from-primary/5 via-transparent to-primary/5">
+                <CardHeader className="text-center pb-4">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                    <Upload className="h-7 w-7 text-primary" />
+                  </div>
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <CardTitle className="text-xl text-foreground">Unlock Receipt Uploads</CardTitle>
+                    {trialDays > 0 && (
+                      <Badge variant="default" className="text-xs">
+                        {trialDays}-day trial
+                      </Badge>
+                    )}
+                  </div>
+                  <CardDescription className="text-sm">
+                    Upload receipts and let AI extract all the details automatically.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col items-center text-center p-3 rounded-lg bg-muted/50">
+                      <Camera className="h-5 w-5 text-primary mb-2" />
+                      <span className="text-xs text-muted-foreground">Photo upload</span>
+                    </div>
+                    <div className="flex flex-col items-center text-center p-3 rounded-lg bg-muted/50">
+                      <Scan className="h-5 w-5 text-primary mb-2" />
+                      <span className="text-xs text-muted-foreground">AI scanning</span>
+                    </div>
+                    <div className="flex flex-col items-center text-center p-3 rounded-lg bg-muted/50">
+                      <FileText className="h-5 w-5 text-primary mb-2" />
+                      <span className="text-xs text-muted-foreground">Auto extraction</span>
+                    </div>
+                    <div className="flex flex-col items-center text-center p-3 rounded-lg bg-muted/50">
+                      <Sparkles className="h-5 w-5 text-primary mb-2" />
+                      <span className="text-xs text-muted-foreground">Smart categorization</span>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => checkoutMutation.mutate()}
+                    disabled={checkoutMutation.isPending}
+                    className="w-full gap-2"
+                  >
+                    {checkoutMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Crown className="h-4 w-4" />
+                        {trialDays > 0 ? 'Start Free Trial' : 'Upgrade Now'}
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground">
+                    {trialDays > 0 ? 'Cancel anytime during trial' : 'Cancel anytime'}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </div>
           <div className="space-y-4">
             {recentLoading ? (
@@ -211,11 +300,20 @@ function ReceiptsPageContent() {
 
         {/* All Receipts Section */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">All Receipts</h2>
-              <p className="text-muted-foreground">
-                {pagination ? `${pagination.total} total receipts` : 'Loading...'}
+              <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                <Calendar className="h-6 w-6 text-muted-foreground" />
+                Receipt Timeline
+              </h2>
+              <p className="text-muted-foreground mt-1">
+                {pagination ? (
+                  <>
+                    <span className="font-medium">{pagination.total}</span> receipts organized by date
+                  </>
+                ) : (
+                  'Loading your receipts...'
+                )}
               </p>
             </div>
           </div>

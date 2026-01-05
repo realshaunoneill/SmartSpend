@@ -3,7 +3,7 @@
 import type React from 'react';
 
 import { useState } from 'react';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, Home, Users, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,13 +17,20 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createHousehold } from '@/lib/household-actions';
+import { toast } from 'sonner';
 
 interface CreateHouseholdDialogProps {
-  userId: string
   onHouseholdCreated: () => void
 }
 
-export function CreateHouseholdDialog({ userId, onHouseholdCreated }: CreateHouseholdDialogProps) {
+const HOUSEHOLD_SUGGESTIONS = [
+  'Family',
+  'Roommates',
+  'Partner',
+  'Home',
+];
+
+export function CreateHouseholdDialog({ onHouseholdCreated }: CreateHouseholdDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -34,12 +41,17 @@ export function CreateHouseholdDialog({ userId, onHouseholdCreated }: CreateHous
 
     setIsCreating(true);
     try {
-      await createHousehold({ name: name.trim(), userId });
+      await createHousehold({ name: name.trim() });
+      toast.success(`"${name.trim()}" household created!`, {
+        description: 'You can now invite members to share receipts.',
+      });
       onHouseholdCreated();
       setOpen(false);
       setName('');
     } catch (_error) {
-      alert('Failed to create household');
+      toast.error('Failed to create household', {
+        description: 'Please try again.',
+      });
     } finally {
       setIsCreating(false);
     }
@@ -53,22 +65,61 @@ export function CreateHouseholdDialog({ userId, onHouseholdCreated }: CreateHous
           Create Household
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Create Household</DialogTitle>
-            <DialogDescription>Create a shared space for tracking receipts with family or roommates</DialogDescription>
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Home className="h-6 w-6 text-primary" />
+            </div>
+            <DialogTitle className="text-center">Create Household</DialogTitle>
+            <DialogDescription className="text-center">
+              Create a shared space for tracking receipts with family or roommates
+            </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <Label htmlFor="name">Household Name</Label>
-            <Input
-              id="name"
-              placeholder="e.g., Family Budget, Apartment 4B"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="mt-2"
-              required
-            />
+          <div className="py-6 space-y-4">
+            <div>
+              <Label htmlFor="name">Household Name</Label>
+              <Input
+                id="name"
+                placeholder="Enter a name for your household"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="mt-2"
+                required
+                autoFocus
+              />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">Quick suggestions:</p>
+              <div className="flex flex-wrap gap-2">
+                {HOUSEHOLD_SUGGESTIONS.map((suggestion) => (
+                  <Button
+                    key={suggestion}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setName(suggestion)}
+                  >
+                    {suggestion}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+              <p className="text-xs font-medium flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                What you can do:
+              </p>
+              <ul className="text-xs text-muted-foreground space-y-1 ml-5">
+                <li className="flex items-center gap-1.5">
+                  <Users className="h-3 w-3" />
+                  Invite family or roommates
+                </li>
+                <li>Share receipts automatically</li>
+                <li>Track shared expenses together</li>
+              </ul>
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
@@ -81,7 +132,7 @@ export function CreateHouseholdDialog({ userId, onHouseholdCreated }: CreateHous
                   Creating...
                 </>
               ) : (
-                'Create'
+                'Create Household'
               )}
             </Button>
           </DialogFooter>

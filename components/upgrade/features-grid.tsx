@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Check,
   Upload,
@@ -9,6 +10,7 @@ import {
   Clock,
   Download,
   CreditCard,
+  X,
 } from 'lucide-react';
 
 const features = [
@@ -72,29 +74,38 @@ const features = [
 
 export function FeaturesGrid() {
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-center mb-8">What's Included</h2>
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="space-y-8">
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground">What's Included</h2>
+        <p className="text-muted-foreground">Everything you need to manage your finances</p>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {features.map((feature, index) => (
-          <Card key={index} className="relative overflow-hidden">
-            <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-3">
+          <Card key={index} className="relative overflow-hidden hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-3">
                 {feature.icon}
               </div>
-              <CardTitle className="text-lg">{feature.title}</CardTitle>
-              <CardDescription className="text-sm">
+              <CardTitle className="text-base font-semibold text-foreground">{feature.title}</CardTitle>
+              <CardDescription className="text-sm line-clamp-2">
                 {feature.description}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <span className="font-medium">Free:</span>
-                  <span>{feature.free}</span>
+            <CardContent className="pt-0">
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  {feature.free === 'Not available' ? (
+                    <X className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+                  ) : (
+                    <span className="w-4 h-4 shrink-0" />
+                  )}
+                  <span className="text-muted-foreground">Free: {feature.free}</span>
                 </div>
-                <div className="flex items-start gap-2 text-sm">
-                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span className="font-medium text-primary">{feature.premium}</span>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-primary shrink-0" />
+                  <Badge variant="secondary" className="font-medium text-xs">
+                    {feature.premium}
+                  </Badge>
                 </div>
               </div>
             </CardContent>

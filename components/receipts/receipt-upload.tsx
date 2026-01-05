@@ -20,12 +20,10 @@ const ENV_PATH_PREFIX =
   process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
 
 export function ReceiptUpload({
-  clerkId: _clerkId,
   userEmail,
   householdId,
   onUploadComplete,
 }: {
-  clerkId: string;
   userEmail: string;
   householdId?: string;
   onUploadComplete?: () => void;

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { useSpendingTrends } from '@/lib/hooks/use-spending-trends';
+import { useCurrency } from '@/lib/hooks/use-currency';
 
 interface SpendingChartProps {
   period: 'week' | 'month' | 'year'
@@ -24,15 +25,16 @@ interface CustomTooltipProps {
   active?: boolean;
   payload?: TooltipPayload[];
   label?: string;
+  formatCurrency?: (amount: number) => string;
 }
 
-function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+function CustomTooltip({ active, payload, label, formatCurrency }: CustomTooltipProps) {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border border-border bg-popover p-3 shadow-lg">
         <p className="mb-1 font-semibold text-foreground">{label}</p>
         <p className="text-sm text-foreground">
-          <span className="font-medium">Amount:</span> ${payload[0].value?.toFixed(2)}
+          <span className="font-medium">Amount:</span> {formatCurrency ? formatCurrency(payload[0].value || 0) : payload[0].value?.toFixed(2)}
         </p>
       </div>
     );
@@ -42,6 +44,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 
 export function SpendingChart({ period, householdId, personalOnly = false }: SpendingChartProps) {
   const { data: trendsData, isLoading, error } = useSpendingTrends(householdId, period, personalOnly);
+  const { format: formatCurrency } = useCurrency();
   const [colors, setColors] = useState({
     primary: '#10b981',
     border: '#e5e7eb',
@@ -154,7 +157,7 @@ export function SpendingChart({ period, householdId, personalOnly = false }: Spe
               stroke={colors.border}
               tickLine={{ stroke: colors.border }}
             />
-            <Tooltip content={<CustomTooltip />} cursor={false} />
+            <Tooltip content={<CustomTooltip formatCurrency={formatCurrency} />} cursor={false} />
             <Bar
               dataKey="amount"
               fill={colors.primary}

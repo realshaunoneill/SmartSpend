@@ -3,6 +3,7 @@
 import { AlertCircle, TrendingUp, Calendar, DollarSign, Receipt } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/lib/hooks/use-currency';
 
 type SubscriptionStatsProps = {
   activeCount: number;
@@ -63,6 +64,8 @@ export function SubscriptionStats({
   missingPayments,
   onMissingPaymentsClick,
 }: SubscriptionStatsProps) {
+  const { format: formatCurrency } = useCurrency();
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
@@ -74,14 +77,14 @@ export function SubscriptionStats({
 
       <StatCard
         label="Monthly Cost"
-        value={`€${monthlyTotal.toFixed(2)}`}
+        value={formatCurrency(monthlyTotal)}
         icon={<Calendar className="w-5 h-5" />}
         iconColor="text-green-600 dark:text-green-400"
       />
 
       <StatCard
         label="Yearly Cost"
-        value={`€${yearlyTotal.toFixed(2)}`}
+        value={formatCurrency(yearlyTotal)}
         icon={<DollarSign className="w-5 h-5" />}
         iconColor="text-purple-600 dark:text-purple-400"
       />
