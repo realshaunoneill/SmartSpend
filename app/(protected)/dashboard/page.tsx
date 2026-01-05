@@ -7,12 +7,12 @@ import { SpendingSummary } from '@/components/insights/spending-summary';
 import { SpendingChart } from '@/components/insights/spending-chart';
 import { ReceiptList } from '@/components/receipts/receipt-list';
 import { HouseholdSelector } from '@/components/households/household-selector';
-import { SubscriptionGate } from '@/components/subscriptions/subscription-gate';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useDashboardStats } from '@/lib/hooks/use-dashboard-stats';
 import { useHouseholds } from '@/lib/hooks/use-households';
-import { Upload, Receipt, BarChart3, ArrowRight, Loader2, Sparkles, PieChart } from 'lucide-react';
+import { useUser } from '@/lib/hooks/use-user';
+import { Upload, Receipt, BarChart3, ArrowRight, Loader2, Sparkles, PieChart, Crown, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { UpcomingPayments } from '@/components/subscriptions/upcoming-payments';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
@@ -26,6 +26,7 @@ export default function DashboardPage() {
 
   const { data: households = [] } = useHouseholds();
   const { data: subscriptions = [] } = useSubscriptions(undefined, 'active', false);
+  const { isSubscribed } = useUser();
 
   // Determine view mode based on selection
   const isPersonalOnly = selectedHouseholdId === 'personal';
@@ -91,63 +92,66 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <SubscriptionGate feature="analytics">
-          <QuickStats stats={quickStats} />
+        {/* Quick Stats - show for subscribed users with receipts */}
+        {isSubscribed && stats && stats.totalReceipts > 0 && (
+          <>
+            <QuickStats stats={quickStats} />
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <SpendingSummary
-              period={period}
-              onPeriodChange={setPeriod}
-              householdId={actualHouseholdId}
-              personalOnly={isPersonalOnly}
-            />
-            <SpendingChart
-              period={period}
-              householdId={actualHouseholdId}
-              personalOnly={isPersonalOnly}
-            />
-          </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <SpendingSummary
+                period={period}
+                onPeriodChange={setPeriod}
+                householdId={actualHouseholdId}
+                personalOnly={isPersonalOnly}
+              />
+              <SpendingChart
+                period={period}
+                householdId={actualHouseholdId}
+                personalOnly={isPersonalOnly}
+              />
+            </div>
 
-          {/* Category Breakdown */}
-          {stats?.spendingByCategory && stats.spendingByCategory.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <PieChart className="h-5 w-5 text-muted-foreground" />
-                    <CardTitle className="text-lg">Spending by Category</CardTitle>
-                  </div>
-                  <Link href="/insights">
-                    <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
-                      <Sparkles className="h-4 w-4" />
-                      View AI Insights
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {stats.spendingByCategory.slice(0, 6).map((category) => (
-                    <div
-                      key={category.category}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="capitalize">
-                          {category.category}
-                        </Badge>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">{category.percentage}%</p>
-                      </div>
+            {/* Category Breakdown */}
+            {stats?.spendingByCategory && stats.spendingByCategory.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <PieChart className="h-5 w-5 text-muted-foreground" />
+                      <CardTitle className="text-lg">Spending by Category</CardTitle>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </SubscriptionGate>
+                    <Link href="/insights">
+                      <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
+                        <Sparkles className="h-4 w-4" />
+                        View AI Insights
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {stats.spendingByCategory.slice(0, 6).map((category) => (
+                      <div
+                        key={category.category}
+                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="capitalize">
+                            {category.category}
+                          </Badge>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold">{category.percentage}%</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
+        )}
 
         {subscriptions.length > 0 && (
           <UpcomingPayments subscriptions={subscriptions} daysAhead={7} />
@@ -166,7 +170,7 @@ export default function DashboardPage() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
                 <Receipt className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="text-2xl">Welcome to ReceiptWise!</CardTitle>
+              <CardTitle className="text-2xl text-foreground">Welcome to ReceiptWise!</CardTitle>
               <CardDescription className="text-base">
                 Start organizing your receipts and tracking your spending
               </CardDescription>
@@ -201,6 +205,44 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
+
+              {/* Premium Upsell for non-subscribed users */}
+              {!isSubscribed && (
+                <div className="rounded-lg border border-primary/20 bg-linear-to-br from-primary/5 via-transparent to-primary/5 p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <Crown className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-foreground">Upgrade to Premium</h3>
+                        <Badge variant="secondary" className="text-xs">Recommended</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Unlock the full power of ReceiptWise with AI-powered features
+                      </p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 pt-2 text-sm">
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          <Check className="h-4 w-4 text-primary" />
+                          Unlimited uploads
+                        </span>
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          <Check className="h-4 w-4 text-primary" />
+                          AI insights
+                        </span>
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          <Check className="h-4 w-4 text-primary" />
+                          Household sharing
+                        </span>
+                      </div>
+                    </div>
+                    <Button onClick={() => router.push('/upgrade')} className="shrink-0 gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      Learn More
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <div className="text-center pt-4 border-t">
                 <p className="text-sm text-muted-foreground mb-4">

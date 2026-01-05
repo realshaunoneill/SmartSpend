@@ -1,7 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation } from '@tanstack/react-query';
 
@@ -45,26 +46,35 @@ export function UpgradeCTA() {
   };
 
   return (
-    <div className="text-center space-y-4">
-      <h2 className="text-3xl font-bold">Ready to get started?</h2>
-      <p className="text-muted-foreground max-w-xl mx-auto">
-        Join thousands of users who are taking control of their finances with ReceiptWise Premium
-      </p>
-      <Button
-        onClick={handleUpgrade}
-        disabled={upgradeMutation.isPending}
-        size="lg"
-        className="text-lg h-12 px-8"
-      >
-        {upgradeMutation.isPending ? (
-          'Processing...'
-        ) : (
-          <>
-            {pricingDetails.trial > 0 ? 'Start Free Trial' : 'Upgrade Now'}
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </>
-        )}
-      </Button>
-    </div>
+    <Card className="border-primary/20 bg-linear-to-br from-primary/5 via-transparent to-primary/5">
+      <CardContent className="pt-8 pb-8">
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-2">
+            <Sparkles className="w-6 h-6 text-primary" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Ready to get started?</h2>
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            Join thousands of users who are taking control of their finances with ReceiptWise Premium
+          </p>
+          <div className="pt-2">
+            <Button
+              onClick={handleUpgrade}
+              disabled={upgradeMutation.isPending}
+              size="lg"
+              className="text-base sm:text-lg h-12 px-8"
+            >
+              {upgradeMutation.isPending ? (
+                'Processing...'
+              ) : (
+                <>
+                  {pricingDetails.trial > 0 ? 'Start Free Trial' : 'Upgrade Now'}
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, Check, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 
 type BillingInterval = 'monthly' | 'annual';
@@ -87,7 +87,7 @@ export function PricingCard() {
 
   if (isLoading) {
     return (
-      <Card className="max-w-md mx-auto border-2 border-primary shadow-lg">
+      <Card className="max-w-md mx-auto border-2 border-primary/50 shadow-lg">
         <CardHeader className="text-center pb-4">
           <Skeleton className="h-8 w-48 mx-auto" />
           <Skeleton className="h-4 w-64 mx-auto mt-2" />
@@ -101,20 +101,24 @@ export function PricingCard() {
   }
 
   return (
-    <Card className="max-w-md mx-auto border-2 border-primary shadow-lg">
-      <CardHeader className="text-center pb-4">
-        <CardTitle className="text-3xl">Premium Plan</CardTitle>
-        <CardDescription>Everything you need to manage your expenses</CardDescription>
+    <Card className="max-w-md mx-auto border-2 border-primary/50 shadow-lg relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+      <CardHeader className="text-center pb-4 relative">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto mb-3">
+          <Crown className="w-6 h-6 text-primary" />
+        </div>
+        <CardTitle className="text-2xl sm:text-3xl font-bold text-foreground">Premium Plan</CardTitle>
+        <CardDescription className="text-base">Everything you need to manage your expenses</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 relative">
         {/* Billing Toggle */}
         {pricing?.annual && (
-          <div className="flex items-center justify-center gap-2 p-1 bg-muted rounded-lg">
+          <div className="flex items-center justify-center gap-1 p-1 bg-muted rounded-lg">
             <button
               onClick={() => setSelectedInterval('monthly')}
-              className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`flex-1 px-4 py-2.5 rounded-md text-sm font-medium transition-all ${
                 selectedInterval === 'monthly'
-                  ? 'bg-background shadow-sm'
+                  ? 'bg-background shadow-sm text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -122,9 +126,9 @@ export function PricingCard() {
             </button>
             <button
               onClick={() => setSelectedInterval('annual')}
-              className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all relative ${
+              className={`flex-1 px-4 py-2.5 rounded-md text-sm font-medium transition-all relative ${
                 selectedInterval === 'annual'
-                  ? 'bg-background shadow-sm'
+                  ? 'bg-background shadow-sm text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -137,9 +141,9 @@ export function PricingCard() {
         )}
 
         {/* Pricing Display */}
-        <div className="text-center">
+        <div className="text-center py-2">
           <div className="flex items-baseline justify-center gap-2">
-            <span className="text-5xl font-bold">
+            <span className="text-4xl sm:text-5xl font-bold text-foreground">
               {selectedInterval === 'annual' && annualMonthlyEquivalent
                 ? annualMonthlyEquivalent
                 : monthlyPrice}

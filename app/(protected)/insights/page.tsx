@@ -6,20 +6,48 @@ import { SpendingSummaryCard } from '@/components/insights/spending-summary-card
 import { TopItemsList } from '@/components/insights/top-items-list';
 import { ItemSearchAnalysis } from '@/components/insights/item-search-analysis';
 import { SubscriptionInsights } from '@/components/insights/subscription-insights';
-import { SubscriptionUpsell } from '@/components/subscriptions/subscription-upsell';
 import { HouseholdSelector } from '@/components/households/household-selector';
 import { useUser } from '@/lib/hooks/use-user';
 import { useHouseholds } from '@/lib/hooks/use-households';
-import { Loader2, Sparkles, TrendingUp, Search, CreditCard } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Sparkles, TrendingUp, Search, CreditCard, Crown, Check, BarChart3, PieChart, Brain, ArrowRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
+const trialDays = process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS ? parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) : 0;
 
 export default function InsightsPage() {
-  const { user, isLoading } = useUser();
+  const { user, isLoading, isSubscribed } = useUser();
   const { data: households = [] } = useHouseholds();
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>();
   const [activeTab, setActiveTab] = useState('overview');
 
-  const isSubscribed = user?.subscribed === true;
+  // Checkout mutation
+  const checkoutMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      if (!response.ok) throw new Error('Failed to create checkout session');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.url) {
+        if (trialDays > 0) {
+          toast.success(`Starting your ${trialDays}-day free trial...`);
+        }
+        window.location.href = data.url;
+      }
+    },
+    onError: () => {
+      toast.error('Failed to start checkout. Please try again.');
+    },
+  });
 
   // Determine view mode based on selection
   const isPersonalOnly = selectedHouseholdId === 'personal';
@@ -57,17 +85,113 @@ export default function InsightsPage() {
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : !isSubscribed ? (
-          <SubscriptionUpsell
-            title="Premium Insights Locked"
-            description="Upgrade to Premium to unlock powerful spending insights:"
-            features={[
-              'AI-powered spending summaries',
-              'Top items and purchase trends',
-              'Advanced item search and analysis',
-              'Subscription cost overview',
-              'Household expense filtering',
-            ]}
-          />
+          <Card className="border-2 border-primary/20 bg-linear-to-br from-primary/5 via-transparent to-primary/5">
+            <CardHeader className="text-center pb-4">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <Sparkles className="h-8 w-8 text-primary" />
+              </div>
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <CardTitle className="text-2xl text-foreground">Unlock AI-Powered Insights</CardTitle>
+                {trialDays > 0 && (
+                  <Badge variant="default" className="text-xs">
+                    {trialDays}-day free trial
+                  </Badge>
+                )}
+              </div>
+              <CardDescription className="text-base max-w-lg mx-auto">
+                Discover hidden patterns in your spending with intelligent analytics and personalized recommendations.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              {/* Features Grid */}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
+                    <Brain className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mb-1 text-foreground">AI Summaries</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Smart spending analysis
+                  </p>
+                </div>
+                <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mb-1 text-foreground">Trend Analysis</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Track spending over time
+                  </p>
+                </div>
+                <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
+                    <PieChart className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mb-1 text-foreground">Category Breakdown</h3>
+                  <p className="text-sm text-muted-foreground">
+                    See where money goes
+                  </p>
+                </div>
+                <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
+                    <Search className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mb-1 text-foreground">Item Search</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Find any purchase fast
+                  </p>
+                </div>
+              </div>
+
+              {/* Benefits List */}
+              <div className="rounded-lg border bg-card p-6">
+                <h3 className="font-semibold mb-4 text-foreground">What you'll discover:</h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    'AI-powered spending summaries',
+                    'Top items and purchase trends',
+                    'Advanced item search and analysis',
+                    'Subscription cost overview',
+                    'Category spending breakdown',
+                    'Household expense filtering',
+                  ].map((feature, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-primary shrink-0" />
+                      <span className="text-sm text-foreground">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CTA */}
+              <div className="text-center space-y-4 pt-4 border-t">
+                <Button
+                  onClick={() => checkoutMutation.mutate()}
+                  disabled={checkoutMutation.isPending}
+                  size="lg"
+                  className="gap-2 text-base h-12 px-8"
+                >
+                  {checkoutMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-5 w-5" />
+                      {trialDays > 0 ? `Start ${trialDays}-Day Free Trial` : 'Upgrade to Premium'}
+                      <ArrowRight className="h-5 w-5" />
+                    </>
+                  )}
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  {trialDays > 0
+                    ? `Try free for ${trialDays} days. Cancel anytime, no questions asked.`
+                    : 'Cancel anytime. No long-term contracts.'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
