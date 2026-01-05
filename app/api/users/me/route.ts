@@ -8,7 +8,7 @@ import {
 } from '@/lib/errors';
 import { getAuthenticatedUser } from '@/lib/auth-helpers';
 import { randomUUID } from 'crypto';
-import { type CorrelationId } from '@/lib/logging';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 
 /**
  * GET /api/users/me
@@ -171,6 +171,15 @@ export async function DELETE(request: NextRequest) {
       userId: user.id,
       context: { deletionScheduledAt: deletionDate.toISOString() },
     });
+
+    // Send alert for account deletion request
+    submitLogEvent(
+      'user',
+      `Account deletion requested by user ${user.email}`,
+      correlationId,
+      { userId: user.id, email: user.email, deletionScheduledAt: deletionDate.toISOString() },
+      true,
+    );
 
     return NextResponse.json({
       success: true,
