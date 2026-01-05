@@ -21,7 +21,6 @@ import {
   Sparkles,
   Zap,
   Shield,
-  Download,
   ChevronLeft,
   Gift,
   Check,
@@ -71,7 +70,7 @@ const onboardingSteps: OnboardingStep[] = [
   {
     id: 1,
     title: 'Welcome to ReceiptWise! 🎉',
-    description: 'The expense tracker built for sharing. Perfect for families, roommates, and couples.',
+    description: 'The smart expense tracker built for sharing. Start your free trial to unlock all premium features.',
     icon: Sparkles,
     color: 'text-primary',
     bgColor: 'bg-primary/10',
@@ -79,7 +78,7 @@ const onboardingSteps: OnboardingStep[] = [
       { icon: Users, text: 'Share expenses with family & roommates' },
       { icon: Zap, text: 'AI-powered receipt scanning' },
       { icon: Shield, text: 'Secure & encrypted data' },
-      { icon: BarChart3, text: 'Powerful spending insights' },
+      { icon: Gift, text: 'Free trial - no credit card required upfront' },
     ],
   },
   {
@@ -93,8 +92,8 @@ const onboardingSteps: OnboardingStep[] = [
   },
   {
     id: 3,
-    title: 'Household Sharing',
-    description: 'Create households for your family, roommates, or partner. Everyone can upload and view receipts together.',
+    title: 'Household Sharing ✨',
+    description: 'Create households for your family, roommates, or partner. This premium feature lets everyone upload and view receipts together.',
     icon: Users,
     color: 'text-orange-500',
     bgColor: 'bg-orange-500/10',
@@ -102,13 +101,13 @@ const onboardingSteps: OnboardingStep[] = [
       { icon: Users, text: 'Unlimited household members' },
       { icon: Upload, text: 'Everyone can upload receipts' },
       { icon: BarChart3, text: 'See combined spending' },
-      { icon: Shield, text: 'Perfect for shared expenses' },
+      { icon: Gift, text: 'Included in free trial' },
     ],
   },
   {
     id: 4,
-    title: 'Upload & Scan Receipts',
-    description: 'Easily capture and organize all your receipts with intelligent AI extraction.',
+    title: 'Upload & Scan Receipts ✨',
+    description: 'Our AI-powered scanner extracts all receipt details automatically. Available with your free trial.',
     icon: Upload,
     color: 'text-blue-500',
     bgColor: 'bg-blue-500/10',
@@ -116,13 +115,13 @@ const onboardingSteps: OnboardingStep[] = [
       { icon: Upload, text: 'Take photos or upload images' },
       { icon: Sparkles, text: 'AI extracts items & prices automatically' },
       { icon: Zap, text: 'Batch upload multiple receipts' },
-      { icon: Download, text: 'All household members can access' },
+      { icon: Gift, text: 'Unlimited uploads with trial' },
     ],
   },
   {
     id: 5,
-    title: 'Track Subscriptions',
-    description: 'Never miss a payment or forget about a shared subscription again.',
+    title: 'Track Subscriptions ✨',
+    description: 'Never miss a payment or forget about a shared subscription. Start your free trial to access this feature.',
     icon: CreditCard,
     color: 'text-green-500',
     bgColor: 'bg-green-500/10',
@@ -130,27 +129,27 @@ const onboardingSteps: OnboardingStep[] = [
       { icon: CreditCard, text: 'Track all recurring subscriptions' },
       { icon: Users, text: 'Share subscription costs with household' },
       { icon: CheckCircle2, text: 'Link receipts to payments' },
-      { icon: BarChart3, text: 'See total monthly costs' },
+      { icon: Gift, text: 'Full access with trial' },
     ],
   },
   {
     id: 6,
-    title: 'Insights & Analytics',
-    description: 'Understand your household spending patterns with powerful analytics and visualizations.',
+    title: 'Insights & Analytics ✨',
+    description: 'AI-powered spending insights and analytics. Unlock with your free trial to see where your money goes.',
     icon: BarChart3,
     color: 'text-purple-500',
     bgColor: 'bg-purple-500/10',
     features: [
       { icon: BarChart3, text: 'View spending trends over time' },
       { icon: Users, text: 'See who spent what in your household' },
-      { icon: CreditCard, text: 'Analyze by category' },
       { icon: Sparkles, text: 'AI-powered spending insights' },
+      { icon: Gift, text: 'Available in free trial' },
     ],
   },
   {
     id: 7,
-    title: 'Get Started with Premium',
-    description: 'Unlock unlimited receipts, households, and advanced features. Perfect for families sharing expenses.',
+    title: 'Start Your Free Trial 🎁',
+    description: 'You\'ve seen what ReceiptWise can do. Start your free trial now to unlock all premium features - cancel anytime!',
     icon: Gift,
     color: 'text-primary',
     bgColor: 'bg-primary/10',
@@ -398,13 +397,24 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
                 {/* Pricing Section */}
                 {step.pricing && (
                   <div className="space-y-4 py-4">
+                    {trialDays > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center p-3 rounded-lg bg-green-500/10 border border-green-500/20"
+                      >
+                        <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                          🎉 Start your {trialDays}-day free trial today - no payment required until trial ends!
+                        </p>
+                      </motion.div>
+                    )}
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       className="relative p-6 rounded-lg border-2 border-primary bg-linear-to-br from-primary/5 to-primary/10"
                     >
                       <Badge className="absolute -top-2 left-1/2 -translate-x-1/2">
-                        Premium Plan
+                        {trialDays > 0 ? 'Try Free' : 'Premium Plan'}
                       </Badge>
 
                       <div className="text-center space-y-4 mt-2">
@@ -449,21 +459,16 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
                               <div className="text-xs text-muted-foreground mt-1">€19.99 billed annually</div>
                             </>
                           )}
-                          {trialDays > 0 && (
-                            <Badge variant="default" className="mt-2">
-                              {trialDays}-day free trial
-                            </Badge>
-                          )}
                         </div>
 
                         <div className="space-y-2 text-left">
                           {[
-                            'Perfect for families & roommates',
-                            'Unlimited receipt uploads',
+                            'Unlimited receipt uploads & AI scanning',
                             'Unlimited household sharing',
-                            'Advanced analytics & insights',
-                            'Track shared subscriptions',
-                            'Export data anytime',
+                            'Advanced analytics & AI insights',
+                            'Subscription tracking & reminders',
+                            'Export all your data anytime',
+                            'Priority support',
                           ].map((feature, index) => (
                             <div key={index} className="flex items-center gap-2">
                               <Check className="w-4 h-4 text-primary shrink-0" />
@@ -472,7 +477,7 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
                           ))}
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-2 pt-2">
                           <Button
                             onClick={handleStartTrial}
                             disabled={isProcessing}
@@ -487,7 +492,7 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
                             ) : trialDays > 0 ? (
                               <>
                                 <Gift className="w-4 h-4 mr-2" />
-                                Start {trialDays}-Day Free Trial
+                                Start My Free {trialDays}-Day Trial
                               </>
                             ) : (
                               <>
@@ -501,16 +506,16 @@ export function OnboardingTour({ open, onComplete, onSkip }: OnboardingTourProps
                             onClick={() => handleSkip()}
                             disabled={isProcessing}
                             variant="ghost"
-                            size="lg"
-                            className="w-full"
+                            size="sm"
+                            className="w-full text-muted-foreground"
                           >
-                            Continue without Premium
+                            Maybe later
                           </Button>
                         </div>
 
                         <p className="text-xs text-muted-foreground text-center">
                           {trialDays > 0
-                            ? `Try Premium free for ${trialDays} days. Cancel anytime.`
+                            ? `✓ ${trialDays} days free · ✓ Cancel anytime · ✓ Full access to all features`
                             : 'Cancel anytime. No long-term contracts.'}
                         </p>
                       </div>
