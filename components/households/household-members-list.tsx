@@ -177,10 +177,6 @@ export function HouseholdMembersList({
           {members.map((member) => {
             const isCurrentUser = member.user_id === currentUserId;
             const canManage = isCurrentUserAdmin && !isCurrentUser && isSubscribed;
-            const joinedDate = new Date(member.joined_at).toLocaleDateString('en-US', {
-              month: 'short',
-              year: 'numeric',
-            });
 
             return (
               <div

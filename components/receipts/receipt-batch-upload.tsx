@@ -354,10 +354,10 @@ export function ReceiptBatchUpload({
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           className={cn(
-            "relative flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 transition-all duration-200",
+            'relative flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 transition-all duration-200',
             isDragging
-              ? "border-primary bg-primary/10 scale-[1.02] shadow-lg"
-              : "border-muted-foreground/25 bg-gradient-to-b from-muted/30 to-muted/50 hover:border-primary/50 hover:bg-muted/80"
+              ? 'border-primary bg-primary/10 scale-[1.02] shadow-lg'
+              : 'border-muted-foreground/25 bg-gradient-to-b from-muted/30 to-muted/50 hover:border-primary/50 hover:bg-muted/80',
           )}
         >
           {/* Animated background elements when dragging */}
@@ -486,10 +486,10 @@ export function ReceiptBatchUpload({
                 <div
                   key={item.id}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg border p-3 transition-all duration-200",
-                    item.status === 'failed' && "bg-destructive/5 border-destructive/20",
-                    item.status === 'completed' && "bg-green-500/5 border-green-500/20",
-                    item.status === 'uploading' || item.status === 'processing' ? "bg-primary/5 border-primary/20" : "bg-card"
+                    'flex items-center gap-3 rounded-lg border p-3 transition-all duration-200',
+                    item.status === 'failed' && 'bg-destructive/5 border-destructive/20',
+                    item.status === 'completed' && 'bg-green-500/5 border-green-500/20',
+                    item.status === 'uploading' || item.status === 'processing' ? 'bg-primary/5 border-primary/20' : 'bg-card',
                   )}
                 >
                   {/* Preview Image */}
@@ -498,8 +498,8 @@ export function ReceiptBatchUpload({
                       src={item.previewUrl}
                       alt="Receipt preview"
                       className={cn(
-                        "h-full w-full object-cover transition-all",
-                        item.status === 'failed' && "opacity-50 grayscale"
+                        'h-full w-full object-cover transition-all',
+                        item.status === 'failed' && 'opacity-50 grayscale',
                       )}
                     />
                     {item.status === 'completed' && (

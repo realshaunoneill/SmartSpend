@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, Store, MapPin, Clock, CreditCard, Users, ChevronRight, Receipt as ReceiptIcon, TrendingUp } from 'lucide-react';
+import { Calendar, MapPin, Clock, CreditCard, Users, ChevronRight, Receipt as ReceiptIcon, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatCategory } from '@/lib/utils/format-category';
@@ -129,7 +129,7 @@ export function ReceiptTimeline({ receipts, onReceiptClick }: ReceiptTimelinePro
 
   return (
     <div className="space-y-6">
-      {groupedReceipts.map((group, groupIndex) => (
+      {groupedReceipts.map((group) => (
         <div key={group.date.toISOString()} className="relative">
           {/* Date header */}
           <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b mb-4">
@@ -163,7 +163,7 @@ export function ReceiptTimeline({ receipts, onReceiptClick }: ReceiptTimelinePro
               const categoryKey = receipt.category?.toLowerCase() || 'other';
               const categoryClass = categoryColors[categoryKey] || categoryColors.other;
               const categoryIcon = categoryIcons[categoryKey] || categoryIcons.other;
-              
+
               const isProcessing = receipt.processingStatus === 'pending' || receipt.processingStatus === 'processing';
               const isFailed = receipt.processingStatus === 'failed';
 
@@ -174,7 +174,7 @@ export function ReceiptTimeline({ receipts, onReceiptClick }: ReceiptTimelinePro
                   className={cn(
                     'group cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 overflow-hidden',
                     isFailed && 'border-red-500/50 bg-red-500/5',
-                    isProcessing && 'border-yellow-500/50 bg-yellow-500/5'
+                    isProcessing && 'border-yellow-500/50 bg-yellow-500/5',
                   )}
                 >
                   <CardContent className="p-0">

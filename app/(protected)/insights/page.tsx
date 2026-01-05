@@ -12,7 +12,7 @@ import { useHouseholds } from '@/lib/hooks/use-households';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, TrendingUp, Search, CreditCard, Crown, Check, BarChart3, PieChart, Brain, ArrowRight } from 'lucide-react';
+import { Loader2, Sparkles, TrendingUp, Search, CreditCard, Crown, Check, PieChart, Brain, ArrowRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 const trialDays = process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS ? parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) : 0;
 
 export default function InsightsPage() {
-  const { user, isLoading, isSubscribed } = useUser();
+  const { isLoading, isSubscribed } = useUser();
   const { data: households = [] } = useHouseholds();
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>();
   const [activeTab, setActiveTab] = useState('overview');

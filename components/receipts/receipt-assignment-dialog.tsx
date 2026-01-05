@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Check, Users, User, Share2, Lock, Home, Loader2, X } from 'lucide-react';
+import { Check, Users, Share2, Lock, Home, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -65,7 +65,7 @@ export function ReceiptAssignmentDialog({
     onSuccess: (_data, householdId) => {
       queryClient.invalidateQueries({ queryKey: ['receipts'] });
       queryClient.invalidateQueries({ queryKey: ['receipt', receiptId] });
-      
+
       if (householdId === null) {
         toast.success('Receipt is now private', {
           description: 'This receipt is only visible to you.',

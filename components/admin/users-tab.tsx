@@ -53,7 +53,7 @@ export function UsersTab({
       const query = searchQuery.toLowerCase();
       result = result.filter(user =>
         user.email.toLowerCase().includes(query) ||
-        user.id.toLowerCase().includes(query)
+        user.id.toLowerCase().includes(query),
       );
     }
 

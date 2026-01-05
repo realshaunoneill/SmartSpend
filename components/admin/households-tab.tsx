@@ -57,7 +57,7 @@ export function HouseholdsTab({
       result = result.filter(household =>
         household.name.toLowerCase().includes(query) ||
         household.ownerEmail.toLowerCase().includes(query) ||
-        household.id.toLowerCase().includes(query)
+        household.id.toLowerCase().includes(query),
       );
     }
 

@@ -55,7 +55,7 @@ export function AdminStats({ users, households, receipts }: AdminStatsProps) {
       const date = new Date(u.createdAt);
       return date >= lastMonth && date < thisMonth;
     }).length;
-    const userGrowth = newUsersLastMonth > 0 
+    const userGrowth = newUsersLastMonth > 0
       ? Math.round(((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth) * 100)
       : newUsersThisMonth > 0 ? 100 : 0;
 
@@ -73,13 +73,13 @@ export function AdminStats({ users, households, receipts }: AdminStatsProps) {
 
     // Calculate success rate
     const processedReceipts = completedReceipts + failedReceipts;
-    const successRate = processedReceipts > 0 
+    const successRate = processedReceipts > 0
       ? Math.round((completedReceipts / processedReceipts) * 100)
       : 100;
 
     // Household stats
     const totalMembers = households.reduce((sum, h) => sum + h.memberCount, 0);
-    const avgMembersPerHousehold = households.length > 0 
+    const avgMembersPerHousehold = households.length > 0
       ? (totalMembers / households.length).toFixed(1)
       : '0';
 

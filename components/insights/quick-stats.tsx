@@ -65,7 +65,7 @@ export function QuickStats({ stats }: QuickStatsProps) {
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-      {statConfig.map((stat, index) => {
+      {statConfig.map((stat) => {
         const Icon = stat.icon;
         return (
           <Card
@@ -74,8 +74,8 @@ export function QuickStats({ stats }: QuickStatsProps) {
           >
             {/* Subtle gradient background */}
             <div className={cn(
-              "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-              stat.bgColor
+              'absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300',
+              stat.bgColor,
             )} />
 
             <CardContent className="relative p-6">
@@ -85,8 +85,8 @@ export function QuickStats({ stats }: QuickStatsProps) {
                     {stat.label}
                   </p>
                   <p className={cn(
-                    "text-2xl font-bold tracking-tight text-foreground",
-                    stat.isCapitalized && "capitalize"
+                    'text-2xl font-bold tracking-tight text-foreground',
+                    stat.isCapitalized && 'capitalize',
                   )}>
                     {getValue(stat.key, stat.isCurrency, stat.isCapitalized)}
                   </p>
@@ -95,10 +95,10 @@ export function QuickStats({ stats }: QuickStatsProps) {
                   </p>
                 </div>
                 <div className={cn(
-                  "rounded-xl p-3 transition-transform duration-300 group-hover:scale-110",
-                  stat.bgColor
+                  'rounded-xl p-3 transition-transform duration-300 group-hover:scale-110',
+                  stat.bgColor,
                 )}>
-                  <Icon className={cn("h-5 w-5", stat.color)} />
+                  <Icon className={cn('h-5 w-5', stat.color)} />
                 </div>
               </div>
             </CardContent>

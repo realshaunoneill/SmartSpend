@@ -45,7 +45,7 @@ export function ReceiptsTab({ receipts, onOpenReceipt }: ReceiptsTabProps) {
         (receipt.merchantName || '').toLowerCase().includes(query) ||
         receipt.userEmail.toLowerCase().includes(query) ||
         (receipt.householdName || '').toLowerCase().includes(query) ||
-        receipt.id.toLowerCase().includes(query)
+        receipt.id.toLowerCase().includes(query),
       );
     }
 

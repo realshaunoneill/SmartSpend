@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import { useRecentReceipts } from './use-receipts';
 import type { ReceiptWithItems } from '@/lib/types/api-responses';
 import { useMemo } from 'react';
