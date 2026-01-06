@@ -323,6 +323,9 @@ function ReceiptsPageContent() {
             filters={filters}
             onFiltersChange={handleFiltersChange}
             onClearFilters={handleClearFilters}
+            totalResults={filters.search ? pagination?.total : undefined}
+            isSearching={allLoading && !!filters.search}
+            hasHouseholdFilter={!!selectedHouseholdId && households.length > 0}
           />
 
           {allLoading ? (
@@ -351,6 +354,35 @@ function ReceiptsPageContent() {
                 </div>
               )}
             </>
+          ) : filters.search ? (
+            <div className="text-center p-12 border rounded-lg bg-muted/20">
+              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                🔍
+              </div>
+              <h3 className="text-lg font-semibold mb-2">No matching receipts</h3>
+              <p className="text-muted-foreground mb-4">
+                No receipts found matching "<span className="font-medium">{filters.search}</span>"
+                {selectedHouseholdId && !filters.searchAllHouseholds && (
+                  <span className="block mt-1 text-sm">Try searching across all households</span>
+                )}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Button
+                  variant="outline"
+                  onClick={() => handleFiltersChange({ ...filters, search: undefined })}
+                >
+                  Clear search
+                </Button>
+                {selectedHouseholdId && !filters.searchAllHouseholds && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => handleFiltersChange({ ...filters, searchAllHouseholds: true })}
+                  >
+                    Search all households
+                  </Button>
+                )}
+              </div>
+            </div>
           ) : (
             <div className="text-center p-12">
               <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-muted flex items-center justify-center">

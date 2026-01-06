@@ -24,6 +24,7 @@ export interface GetReceiptsOptions {
   sortBy?: string;
   sortOrder?: string;
   isBusinessExpense?: string;
+  searchAllHouseholds?: boolean; // When true, search across all user's receipts regardless of householdId
 }
 
 export interface PaginatedReceipts {
@@ -59,6 +60,7 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
     sortBy = 'date',
     sortOrder = 'desc',
     isBusinessExpense,
+    searchAllHouseholds = false,
   } = options;
 
   const offset = (page - 1) * limit;
@@ -153,7 +155,10 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
   let userReceipts;
   let totalCount;
 
-  if (householdId) {
+  // When searchAllHouseholds is true and there's a search query, ignore household filter
+  const shouldSearchAllHouseholds = searchAllHouseholds && search;
+
+  if (householdId && !shouldSearchAllHouseholds) {
     // Get receipts for specific household
     const conditions = and(
       eq(receipts.householdId, householdId),
@@ -174,7 +179,7 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
       .from(receipts)
       .where(conditions);
     totalCount = countResult.count;
-  } else if (personalOnly) {
+  } else if (personalOnly && !shouldSearchAllHouseholds) {
     // Get only personal receipts (not assigned to any household)
     const conditions = and(
       eq(receipts.userId, userId),

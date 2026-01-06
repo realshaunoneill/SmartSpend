@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'date';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const isBusinessExpense = searchParams.get('isBusinessExpense') || undefined;
+    const searchAllHouseholds = searchParams.get('searchAllHouseholds') === 'true';
 
     // Use the helper function to get receipts
     const result = await getReceipts({
@@ -49,6 +50,7 @@ export async function GET(req: NextRequest) {
       sortBy,
       sortOrder,
       isBusinessExpense,
+      searchAllHouseholds,
     });
 
     // Filter receipts based on subscription status

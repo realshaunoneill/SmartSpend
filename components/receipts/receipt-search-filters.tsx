@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Search, Filter, X, Calendar, DollarSign, Store, Tag, Briefcase } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, Filter, X, Calendar, DollarSign, Store, Tag, Briefcase, Command, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,23 +33,45 @@ export interface ReceiptFilters {
   sortBy?: string
   sortOrder?: string
   isBusinessExpense?: string
+  searchAllHouseholds?: boolean
 }
 
 interface ReceiptSearchFiltersProps {
   filters: ReceiptFilters
   onFiltersChange: (filters: ReceiptFilters) => void
   onClearFilters: () => void
+  totalResults?: number
+  isSearching?: boolean
+  hasHouseholdFilter?: boolean
 }
 
 export function ReceiptSearchFilters({
   filters,
   onFiltersChange,
   onClearFilters,
+  totalResults,
+  isSearching = false,
+  hasHouseholdFilter = false,
 }: ReceiptSearchFiltersProps) {
   const [localFilters, setLocalFilters] = useState<ReceiptFilters>(filters);
   const [searchValue, setSearchValue] = useState(filters.search || '');
   const [isOpen, setIsOpen] = useState(false);
+  const [showSearchTips, setShowSearchTips] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Keyboard shortcut to focus search (Cmd/Ctrl + K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Debounce search input
   useEffect(() => {
@@ -73,7 +95,7 @@ export function ReceiptSearchFilters({
   }, [searchValue]); // Only run when searchValue changes
 
   const activeFilterCount = Object.entries(filters).filter(
-    ([key, value]) => value && key !== 'sortBy' && key !== 'sortOrder' && key !== 'search',
+    ([key, value]) => value && key !== 'sortBy' && key !== 'sortOrder' && key !== 'search' && key !== 'searchAllHouseholds',
   ).length;
 
   const handleApplyFilters = () => {
@@ -95,6 +117,29 @@ export function ReceiptSearchFilters({
     setSearchValue(value);
   };
 
+  const handleSearchAllToggle = useCallback(() => {
+    const newFilters = { 
+      ...filters, 
+      searchAllHouseholds: !filters.searchAllHouseholds 
+    };
+    onFiltersChange(newFilters);
+  }, [filters, onFiltersChange]);
+
+  const handleQuickSearch = (term: string) => {
+    setSearchValue(term);
+    setShowSearchTips(false);
+  };
+
+  // Quick search suggestions
+  const quickSearchSuggestions = [
+    { label: 'Groceries', icon: '🛒' },
+    { label: 'Restaurant', icon: '🍽️' },
+    { label: 'Gas', icon: '⛽' },
+    { label: 'Coffee', icon: '☕' },
+    { label: 'Amazon', icon: '📦' },
+    { label: 'Walmart', icon: '🏪' },
+  ];
+
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -102,12 +147,59 @@ export function ReceiptSearchFilters({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            ref={searchInputRef}
             placeholder="Search receipts, merchants, or items..."
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-9"
+            onFocus={() => setShowSearchTips(true)}
+            onBlur={() => setTimeout(() => setShowSearchTips(false), 200)}
+            className="pl-9 pr-20"
           />
+          {/* Keyboard shortcut hint */}
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
+            <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+              <Command className="h-3 w-3" />K
+            </kbd>
+          </div>
+          
+          {/* Search suggestions dropdown */}
+          {showSearchTips && !searchValue && (
+            <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-md border bg-popover p-2 shadow-md">
+              <p className="text-xs text-muted-foreground mb-2 px-2">Quick searches</p>
+              <div className="flex flex-wrap gap-1">
+                {quickSearchSuggestions.map((suggestion) => (
+                  <button
+                    key={suggestion.label}
+                    type="button"
+                    className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs hover:bg-secondary/80 transition-colors"
+                    onMouseDown={() => handleQuickSearch(suggestion.label)}
+                  >
+                    <span>{suggestion.icon}</span>
+                    {suggestion.label}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-2 pt-2 border-t px-2">
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  Tip: Search by merchant name, category, or specific items
+                </p>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Search All Households Toggle */}
+        {hasHouseholdFilter && searchValue && (
+          <Button
+            variant={filters.searchAllHouseholds ? "secondary" : "outline"}
+            size="sm"
+            onClick={handleSearchAllToggle}
+            className="whitespace-nowrap"
+          >
+            {filters.searchAllHouseholds ? '✓ Searching all' : 'Search all households'}
+          </Button>
+        )}
 
         {/* Advanced Filters */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -357,7 +449,51 @@ export function ReceiptSearchFilters({
             <SelectItem value="merchant">Sort by Merchant</SelectItem>
           </SelectContent>
         </Select>
-      </div>      {/* Search Tips */}
+      </div>
+
+      {/* Search Results Info */}
+      {filters.search && (
+        <div className="rounded-lg border border-border bg-muted/50 px-4 py-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {isSearching ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <span className="text-sm text-muted-foreground">Searching...</span>
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    {totalResults !== undefined ? (
+                      <>
+                        Found <span className="font-semibold">{totalResults}</span> receipt{totalResults !== 1 ? 's' : ''} matching "<span className="font-medium">{filters.search}</span>"
+                        {filters.searchAllHouseholds && <span className="text-muted-foreground"> across all households</span>}
+                      </>
+                    ) : (
+                      <>Searching for "<span className="font-medium">{filters.search}</span>"</>
+                    )}
+                  </span>
+                </>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchValue('');
+                onFiltersChange({ ...filters, search: undefined, searchAllHouseholds: undefined });
+              }}
+              className="h-7 px-2 text-xs"
+            >
+              <X className="h-3 w-3 mr-1" />
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Search Tips - only show when not searching */}
       {!filters.search && (
         <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5">
           <div className="flex items-start gap-3">

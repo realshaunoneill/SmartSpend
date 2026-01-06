@@ -23,6 +23,7 @@ interface ReceiptFilters {
   endDate?: string
   sortBy?: string
   sortOrder?: string
+  searchAllHouseholds?: boolean
 }
 
 export function useReceipts(
@@ -77,6 +78,10 @@ export function useReceipts(
       }
       if (filters?.sortOrder) {
         params.append('sortOrder', filters.sortOrder);
+      }
+      
+      if (filters?.searchAllHouseholds) {
+        params.append('searchAllHouseholds', 'true');
       }
 
       const response = await fetch(`/api/receipts?${params}`);
