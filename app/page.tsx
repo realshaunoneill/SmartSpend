@@ -285,14 +285,14 @@ export default function LandingPage() {
                 <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card/50 shadow-2xl backdrop-blur-sm">
                   {/* Light mode screenshot */}
                   <img
-                    src="/dashboard-full-light.png"
-                    alt="ReceiptWise Dashboard"
+                    src="/sharing-light.png"
+                    alt="ReceiptWise Household Sharing"
                     className="w-full dark:hidden"
                   />
                   {/* Dark mode screenshot */}
                   <img
-                    src="/dashboard-full-dark.png"
-                    alt="ReceiptWise Dashboard"
+                    src="/sharing-dark.png"
+                    alt="ReceiptWise Household Sharing"
                     className="hidden w-full dark:block"
                   />
                 </div>
