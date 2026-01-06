@@ -246,7 +246,17 @@ export default function AdminPage() {
         <ReceiptDetailModal
           receipt={selectedReceipt}
           open={isReceiptModalOpen}
-          onOpenChange={setIsReceiptModalOpen}
+          onOpenChange={(open) => {
+            setIsReceiptModalOpen(open);
+            if (!open) {
+              // Refetch receipts when modal closes (in case of deletion/update)
+              fetch('/api/admin/receipts')
+                .then(res => res.ok ? res.json() : [])
+                .then(data => setReceipts(data))
+                .catch(console.error);
+              setSelectedReceipt(null);
+            }
+          }}
         />
       )}
     </>

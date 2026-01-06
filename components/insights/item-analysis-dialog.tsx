@@ -414,7 +414,12 @@ export function ItemAnalysisDialog({
     <ReceiptDetailModal
       receipt={selectedReceipt}
       open={isReceiptModalOpen}
-      onOpenChange={setIsReceiptModalOpen}
+      onOpenChange={(open) => {
+        setIsReceiptModalOpen(open);
+        if (!open) {
+          setSelectedReceipt(null);
+        }
+      }}
     />
   </>
   );

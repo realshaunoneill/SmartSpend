@@ -244,7 +244,12 @@ export function ReceiptList({ receipts, onReceiptClick, onRetry }: ReceiptListPr
         <ReceiptDetailModal
           receipt={selectedReceipt}
           open={modalOpen}
-          onOpenChange={setModalOpen}
+          onOpenChange={(open) => {
+            setModalOpen(open);
+            if (!open) {
+              setSelectedReceipt(null);
+            }
+          }}
         />
       )}
     </>
