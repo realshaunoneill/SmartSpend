@@ -49,11 +49,10 @@ export async function GET(req: NextRequest) {
       .where(and(...conditions))
       .orderBy(desc(subscriptions.nextBillingDate));
 
-    // Generate expected payments only for this user's active subscriptions
-    // This is more efficient than generating for all subscriptions in the system
+    // Generate expected payments for all active subscriptions in batch (optimized)
     const activeUserSubscriptions = userSubscriptions.filter(sub => sub.status === 'active');
-    for (const subscription of activeUserSubscriptions) {
-      await SubscriptionService.generateExpectedPayments(subscription.id, 12);
+    if (activeUserSubscriptions.length > 0) {
+      await SubscriptionService.generateExpectedPaymentsBatch(activeUserSubscriptions);
     }
 
     // Update missed payments for this user's subscriptions

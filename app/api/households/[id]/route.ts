@@ -30,9 +30,8 @@ export async function GET(
 
     const { id: householdId } = await params;
 
-    // Get all households for the user to verify access
-    const userHouseholds = await HouseholdService.getHouseholdsByUser(user.id);
-    const household = userHouseholds.find((h) => h.id === householdId);
+    // Get the specific household with membership check (optimized - single query instead of fetching all)
+    const household = await HouseholdService.getHouseholdById(householdId, user.id);
 
     if (!household) {
       Logger.warn('User attempted to access household without permission', {

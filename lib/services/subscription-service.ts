@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { subscriptions, subscriptionPayments, type Subscription } from '@/lib/db/schema';
-import { eq, and, lte, or } from 'drizzle-orm';
+import { eq, and, lte, or, inArray } from 'drizzle-orm';
 
 export class SubscriptionService {
   /**
@@ -198,6 +198,139 @@ export class SubscriptionService {
   }
 
   /**
+   * Generate expected payments for multiple subscriptions in batch
+   * More efficient than calling generateExpectedPayments for each subscription
+   * Reduces N+1 queries to 2 batch queries
+   */
+  static async generateExpectedPaymentsBatch(
+    subscriptionList: Subscription[],
+  ): Promise<number> {
+    const activeSubscriptions = subscriptionList.filter(sub => sub.status === 'active');
+
+    if (activeSubscriptions.length === 0) {
+      return 0;
+    }
+
+    const subscriptionIds = activeSubscriptions.map(s => s.id);
+
+    // Batch fetch all existing pending/missed payments for all subscriptions
+    const allExistingPayments = await db
+      .select()
+      .from(subscriptionPayments)
+      .where(
+        and(
+          inArray(subscriptionPayments.subscriptionId, subscriptionIds),
+          or(
+            eq(subscriptionPayments.status, 'pending'),
+            eq(subscriptionPayments.status, 'missed'),
+          ),
+        ),
+      );
+
+    // Group existing payments by subscription ID
+    const existingPaymentsBySubscription = new Map<string, typeof allExistingPayments>();
+    allExistingPayments.forEach(payment => {
+      const existing = existingPaymentsBySubscription.get(payment.subscriptionId) || [];
+      existing.push(payment);
+      existingPaymentsBySubscription.set(payment.subscriptionId, existing);
+    });
+
+    const now = new Date();
+    const allPaymentsToCreate: Array<{
+      subscriptionId: string;
+      expectedDate: Date;
+      expectedAmount: string;
+      status: string;
+    }> = [];
+
+    // Process each subscription
+    for (const subscription of activeSubscriptions) {
+      const existingPayments = existingPaymentsBySubscription.get(subscription.id) || [];
+      const startDate = new Date(subscription.startDate);
+
+      // Special case: if subscription has started and there are no payments,
+      // create the first expected payment
+      if (existingPayments.length === 0 && startDate <= now) {
+        const firstBillingDate = this.calculateNextBillingDate(
+          startDate,
+          subscription.billingFrequency as 'monthly' | 'quarterly' | 'yearly' | 'custom',
+          subscription.customFrequencyDays || undefined,
+        );
+
+        allPaymentsToCreate.push({
+          subscriptionId: subscription.id,
+          expectedDate: new Date(firstBillingDate),
+          expectedAmount: subscription.amount,
+          status: 'pending',
+        });
+      }
+
+      // Determine the starting point for payment generation
+      let startingDate: Date;
+
+      if (existingPayments.length === 0) {
+        startingDate = this.calculateNextBillingDate(
+          startDate,
+          subscription.billingFrequency as 'monthly' | 'quarterly' | 'yearly' | 'custom',
+          subscription.customFrequencyDays || undefined,
+        );
+      } else {
+        const sortedPayments = existingPayments.sort(
+          (a, b) => new Date(b.expectedDate).getTime() - new Date(a.expectedDate).getTime(),
+        );
+        startingDate = sortedPayments[0].expectedDate;
+      }
+
+      let currentDate = new Date(startingDate);
+      let safetyCounter = 0;
+      const MAX_ITERATIONS = 100; // Reduced for batch processing
+
+      while (safetyCounter < MAX_ITERATIONS) {
+        const previousDate = new Date(currentDate);
+        const nextDate = this.calculateNextBillingDate(
+          currentDate,
+          subscription.billingFrequency as 'monthly' | 'quarterly' | 'yearly' | 'custom',
+          subscription.customFrequencyDays || undefined,
+        );
+
+        if (nextDate <= previousDate) break;
+        safetyCounter++;
+
+        if (nextDate > now) break;
+
+        const existingPayment = existingPayments.find((p) => {
+          const diff = Math.abs(new Date(p.expectedDate).getTime() - nextDate.getTime());
+          return diff < 24 * 60 * 60 * 1000;
+        });
+
+        const alreadyCreated = allPaymentsToCreate.find((p) => {
+          if (p.subscriptionId !== subscription.id) return false;
+          const diff = Math.abs(p.expectedDate.getTime() - nextDate.getTime());
+          return diff < 24 * 60 * 60 * 1000;
+        });
+
+        if (!existingPayment && !alreadyCreated) {
+          allPaymentsToCreate.push({
+            subscriptionId: subscription.id,
+            expectedDate: new Date(nextDate),
+            expectedAmount: subscription.amount,
+            status: 'pending',
+          });
+        }
+
+        currentDate = nextDate;
+      }
+    }
+
+    // Bulk insert all payments at once
+    if (allPaymentsToCreate.length > 0) {
+      await db.insert(subscriptionPayments).values(allPaymentsToCreate);
+    }
+
+    return allPaymentsToCreate.length;
+  }
+
+  /**
    * Generate expected payments for all active subscriptions
    * This should be run periodically (e.g., daily cron job)
    */
@@ -211,12 +344,8 @@ export class SubscriptionService {
       .from(subscriptions)
       .where(eq(subscriptions.status, 'active'));
 
-    let totalCreated = 0;
-
-    for (const subscription of activeSubscriptions) {
-      const created = await this.generateExpectedPayments(subscription.id, monthsAhead);
-      totalCreated += created;
-    }
+    // Use batch method instead of individual calls
+    const totalCreated = await this.generateExpectedPaymentsBatch(activeSubscriptions);
 
     return {
       processed: activeSubscriptions.length,

@@ -5,6 +5,50 @@ import { randomBytes } from 'crypto';
 
 export class HouseholdService {
   /**
+   * Get a single household by ID with member count and user's role
+   * More efficient than getHouseholdsByUser when you only need one household
+   */
+  static async getHouseholdById(householdId: string, userId: string): Promise<(Household & { memberCount: number; isAdmin: boolean }) | null> {
+    // Get the household with user's role in a single query
+    const [result] = await db
+      .select({
+        id: households.id,
+        name: households.name,
+        createdAt: households.createdAt,
+        updatedAt: households.updatedAt,
+        userRole: householdUsers.role,
+      })
+      .from(households)
+      .innerJoin(householdUsers, eq(households.id, householdUsers.householdId))
+      .where(
+        and(
+          eq(households.id, householdId),
+          eq(householdUsers.userId, userId),
+        ),
+      )
+      .limit(1);
+
+    if (!result) {
+      return null;
+    }
+
+    // Get member count
+    const [memberCount] = await db
+      .select({ count: count() })
+      .from(householdUsers)
+      .where(eq(householdUsers.householdId, householdId));
+
+    return {
+      id: result.id,
+      name: result.name,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+      memberCount: memberCount?.count || 1,
+      isAdmin: result.userRole === 'owner',
+    };
+  }
+
+  /**
    * Create a new household and assign the creator as owner
    * Validates: Requirements 3.1, 3.2
    */

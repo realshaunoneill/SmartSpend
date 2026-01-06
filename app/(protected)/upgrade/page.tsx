@@ -8,12 +8,13 @@ import { PricingCard } from '@/components/upgrade/pricing-card';
 import { FeaturesGrid } from '@/components/upgrade/features-grid';
 import { ComparisonTable } from '@/components/upgrade/comparison-table';
 import { UpgradeCTA } from '@/components/upgrade/upgrade-cta';
-import { useCurrency } from '@/lib/hooks/use-currency';
+import { useUser } from '@/lib/hooks/use-user';
 import { Loader2 } from 'lucide-react';
 
 export default function UpgradePage() {
   const router = useRouter();
-  const { isSubscribed, isLoading } = useCurrency();
+  const { user, isLoading } = useUser();
+  const isSubscribed = user?.subscribed ?? false;
 
   useEffect(() => {
     if (!isLoading && isSubscribed) {
