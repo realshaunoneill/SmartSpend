@@ -1,27 +1,28 @@
 'use client';
 
+import Image from 'next/image';
 import { Star, Quote } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const testimonials = [
   {
-    name: 'Sarah M.',
+    name: 'Megan K.',
     role: 'Working Mom',
-    avatar: 'SM',
+    avatar: '/reviews/users/megan.png',
     content: 'ReceiptWise has been a game-changer for our family. We finally know where our money goes each month!',
     rating: 5,
   },
   {
-    name: 'James K.',
+    name: 'Pete K.',
     role: 'Roommate Group',
-    avatar: 'JK',
+    avatar: '/reviews/users/pete.png',
     content: 'Splitting expenses with 3 roommates used to be a nightmare. Now it takes seconds to track who owes what.',
     rating: 5,
   },
   {
-    name: 'Emily & Tom',
+    name: 'Alana',
     role: 'Couple',
-    avatar: 'ET',
+    avatar: '/reviews/users/alana.png',
     content: 'We love the AI scanning feature. Just snap a photo and it extracts everything automatically!',
     rating: 5,
   },
@@ -75,8 +76,13 @@ export function Testimonials() {
               <CardContent className="p-6">
                 <Quote className="absolute right-4 top-4 h-8 w-8 text-primary/10" />
                 <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                    {testimonial.avatar}
+                  <div className="relative h-12 w-12 overflow-hidden rounded-full bg-primary/10">
+                    <Image
+                      src={testimonial.avatar}
+                      alt={testimonial.name}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                   <div>
                     <p className="font-semibold text-foreground">{testimonial.name}</p>
@@ -110,16 +116,28 @@ export function Testimonials() {
 }
 
 export function SocialProofBanner() {
+  const avatars = [
+    '/reviews/users/megan.png',
+    '/reviews/users/pete.png',
+    '/reviews/users/alana.png',
+    '/reviews/users/eddie.png',
+  ];
+
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 py-4 text-sm text-muted-foreground">
       <div className="flex items-center gap-2">
         <div className="flex -space-x-2">
-          {['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500'].map((color, i) => (
+          {avatars.map((avatar, i) => (
             <div
               key={i}
-              className={`h-8 w-8 rounded-full ${color} ring-2 ring-background flex items-center justify-center text-xs font-semibold text-white`}
+              className="relative h-8 w-8 overflow-hidden rounded-full ring-2 ring-background"
             >
-              {['JD', 'SM', 'AK', 'LM'][i]}
+              <Image
+                src={avatar}
+                alt="User avatar"
+                fill
+                className="object-cover"
+              />
             </div>
           ))}
         </div>
