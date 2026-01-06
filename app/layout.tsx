@@ -6,6 +6,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { ThemeProvider } from '@/components/layout/theme-provider';
 import { Footer } from '@/components/layout/footer';
+import { StagingBanner } from '@/components/layout/staging-banner';
 import { QueryProvider } from '@/lib/providers/query-provider';
 import { PostHogProvider } from '@/lib/providers/posthog-provider';
 import { Toaster } from 'sonner';
@@ -84,6 +85,7 @@ export default function RootLayout({
             <QueryProvider>
               <PostHogProvider>
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+                  <StagingBanner />
                   <div className="flex min-h-screen flex-col">
                     <div className="flex-1">{children}</div>
                     <Footer />
