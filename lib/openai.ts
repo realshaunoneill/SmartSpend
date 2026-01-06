@@ -101,26 +101,28 @@ export async function analyzeReceiptWithGPT4o(
 
   // Use GPT-4o for receipt analysis - best accuracy for OCR tasks
   // especially important for faded, crumpled, or hard-to-read receipts
-  const result = await generateObject({
-    model: openai('gpt-4o'),
-    schema: receiptDataSchema,
-    experimental_telemetry: {
-      isEnabled: true,
-      functionId: 'analyzeReceiptWithGPT4o',
-      metadata: {
-        userId,
-        userEmail,
-        correlationId,
-        purpose: 'receipt_processing',
+  let result;
+  try {
+    result = await generateObject({
+      model: openai('gpt-4o'),
+      schema: receiptDataSchema,
+      experimental_telemetry: {
+        isEnabled: true,
+        functionId: 'analyzeReceiptWithGPT4o',
+        metadata: {
+          userId,
+          userEmail,
+          correlationId,
+          purpose: 'receipt_processing',
+        },
       },
-    },
-    messages: [
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'text',
-            text: `Analyze this receipt image and extract the following information:
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `Analyze this receipt image and extract the following information:
 
 REQUIRED FIELDS:
 - merchant: merchant/store name
@@ -196,6 +198,43 @@ Extract all numeric values as numbers (not strings).`,
       },
     ],
   });
+  } catch (error) {
+    // Log detailed debug info for schema validation failures
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDetails: Record<string, unknown> = {
+      userId,
+      userEmail,
+      imageUrl,
+      mimeType,
+      imageSize: buffer.length,
+      errorMessage,
+    };
+
+    // Check if this is a NoObjectGeneratedError from the AI SDK
+    if (error && typeof error === 'object' && 'text' in error) {
+      // The raw text response that failed to parse
+      errorDetails.rawResponse = (error as { text?: string }).text;
+    }
+    
+    // Include the cause if present (often contains validation details)
+    if (error instanceof Error && error.cause) {
+      errorDetails.errorCause = error.cause;
+    }
+
+    // Include the full error object for debugging
+    if (error && typeof error === 'object') {
+      errorDetails.errorName = (error as Error).name;
+      errorDetails.errorStack = (error as Error).stack;
+      // Check for Zod validation errors
+      if ('issues' in error) {
+        errorDetails.zodIssues = (error as { issues: unknown }).issues;
+      }
+    }
+
+    submitLogEvent('receipt-error', `OpenAI schema validation failed: ${errorMessage}`, correlationId, errorDetails, true);
+    
+    throw error;
+  }
 
   submitLogEvent('receipt-process', 'OpenAI API usage', correlationId, {
     promptTokens: result.usage.promptTokens,

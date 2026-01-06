@@ -100,6 +100,28 @@ export async function POST(req: NextRequest) {
       ocrData = result.data;
       usage = result.usage;
     } catch (error) {
+      // Build detailed error info for debugging
+      const errorDetails: Record<string, unknown> = {
+        receiptId,
+        userId: user.id,
+        imageUrl,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : undefined,
+      };
+
+      // Check for AI SDK specific error properties
+      if (error && typeof error === 'object') {
+        if ('text' in error) {
+          errorDetails.rawAIResponse = (error as { text?: string }).text;
+        }
+        if ('cause' in error) {
+          errorDetails.errorCause = (error as { cause?: unknown }).cause;
+        }
+        if ('issues' in error) {
+          errorDetails.validationIssues = (error as { issues?: unknown }).issues;
+        }
+      }
+
       // Update receipt status to failed
       await db
         .update(receipts)
@@ -110,10 +132,7 @@ export async function POST(req: NextRequest) {
         })
         .where(eq(receipts.id, receiptId));
 
-      submitLogEvent('receipt-error', `Receipt processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {
-        receiptId,
-        error: error instanceof Error ? error.stack : undefined,
-      }, true);
+      submitLogEvent('receipt-error', `Receipt processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, errorDetails, true);
 
       return NextResponse.json(
         {
