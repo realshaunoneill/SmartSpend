@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { households, householdUsers, householdInvitations, users, type Household, type HouseholdInvitation, type HouseholdMember, type NewHousehold, type NewHouseholdUser } from '@/lib/db/schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, count } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 
 export class HouseholdService {
@@ -62,7 +62,7 @@ export class HouseholdService {
     const memberCounts = await db
       .select({
         householdId: householdUsers.householdId,
-        count: db.$count(householdUsers.householdId),
+        count: count(),
       })
       .from(householdUsers)
       .where(inArray(householdUsers.householdId, householdIds))
