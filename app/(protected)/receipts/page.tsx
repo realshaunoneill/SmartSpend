@@ -1,8 +1,8 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { Navigation } from '@/components/layout/navigation';
 import { ReceiptBatchUpload } from '@/components/receipts/receipt-batch-upload';
 import { ReceiptList } from '@/components/receipts/receipt-list';
@@ -14,13 +14,12 @@ import { ReceiptSearchFilters, type ReceiptFilters } from '@/components/receipts
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Upload, Camera, Scan, FileText, Crown, Loader2, Sparkles } from 'lucide-react';
+import { Calendar, Upload, Camera, Scan, FileText, Crown, Sparkles } from 'lucide-react';
 import { useUser as useClerkUser } from '@clerk/nextjs';
 import { useUser } from '@/lib/hooks/use-user';
 import { useReceipts, useRecentReceipts } from '@/lib/hooks/use-receipts';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { ReceiptTimeline } from '@/components/receipts/receipt-timeline';
-import { toast } from 'sonner';
 import type { ReceiptWithItems } from '@/lib/types/api-responses';
 import type { Receipt } from '@/lib/db/schema';
 
@@ -43,29 +42,11 @@ function ReceiptsPageContent() {
 
   const { data: households = [] } = useHouseholds();
 
-  // Checkout mutation
-  const checkoutMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      });
-      if (!response.ok) throw new Error('Failed to create checkout session');
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (data.url) {
-        if (trialDays > 0) {
-          toast.success(`Starting your ${trialDays}-day free trial...`);
-        }
-        window.location.href = data.url;
-      }
-    },
-    onError: () => {
-      toast.error('Failed to start checkout. Please try again.');
-    },
-  });
+  const router = useRouter();
+
+  const handleUpgradeClick = () => {
+    router.push('/upgrade');
+  };
 
   // Get recent receipts for the top section
   const { receipts: recentReceipts, isLoading: recentLoading, refetch: refetchRecent } = useRecentReceipts(selectedHouseholdId, 5);
@@ -256,21 +237,11 @@ function ReceiptsPageContent() {
                     </div>
                   </div>
                   <Button
-                    onClick={() => checkoutMutation.mutate()}
-                    disabled={checkoutMutation.isPending}
+                    onClick={handleUpgradeClick}
                     className="w-full gap-2"
                   >
-                    {checkoutMutation.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Crown className="h-4 w-4" />
-                        {trialDays > 0 ? 'Start Free Trial' : 'Upgrade Now'}
-                      </>
-                    )}
+                    <Crown className="h-4 w-4" />
+                    {trialDays > 0 ? 'Start Free Trial' : 'Upgrade Now'}
                   </Button>
                   <p className="text-xs text-center text-muted-foreground">
                     {trialDays > 0 ? 'Cancel anytime during trial' : 'Cancel anytime'}
