@@ -24,7 +24,7 @@ interface ReceiptHeaderProps {
   canModifyReceipt: boolean
   isReceiptOwner: boolean
   onDeleted: () => void
-  onRetrySuccess?: () => void
+  onRetrySuccess?: () => void | Promise<void>
 }
 
 export function ReceiptHeader({
@@ -47,14 +47,15 @@ export function ReceiptHeader({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to retry processing');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Failed to retry processing');
       }
 
-      toast.success('Receipt processing completed successfully');
+      toast.success('Receipt processed successfully! The details have been updated.');
 
       // Call the callback to refresh the receipt data
       if (onRetrySuccess) {
-        onRetrySuccess();
+        await onRetrySuccess();
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to retry processing');

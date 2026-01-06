@@ -48,10 +48,11 @@ export function ReceiptList({ receipts, onReceiptClick, onRetry }: ReceiptListPr
       });
 
       if (!response.ok) {
-        throw new Error('Failed to retry processing');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Failed to retry processing');
       }
 
-      toast.success('Receipt processing completed successfully');
+      toast.success('Receipt processed successfully!');
 
       // Call the onRetry callback to refresh the list
       if (onRetry) {

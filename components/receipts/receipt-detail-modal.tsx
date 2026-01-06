@@ -27,13 +27,30 @@ interface ReceiptDetailModalProps {
 }
 
 export function ReceiptDetailModal({
-  receipt,
+  receipt: initialReceipt,
   open,
   onOpenChange,
 }: ReceiptDetailModalProps) {
   const [selectedItemForAnalysis, setSelectedItemForAnalysis] = useState<string | null>(null);
   const [showItemAnalysis, setShowItemAnalysis] = useState(false);
   const queryClient = useQueryClient();
+
+  // Fetch the latest receipt data - this allows us to refresh after retry
+  const { data: fetchedReceipt, refetch: refetchReceipt } = useQuery({
+    queryKey: ['receipt', initialReceipt?.id],
+    queryFn: async () => {
+      if (!initialReceipt?.id) return null;
+      const response = await fetch(`/api/receipts/${initialReceipt.id}`);
+      if (!response.ok) return null;
+      return response.json() as Promise<ReceiptWithItems>;
+    },
+    enabled: !!initialReceipt?.id && open,
+    initialData: initialReceipt,
+    staleTime: 0, // Always refetch when needed
+  });
+
+  // Use fetched receipt if available, otherwise fall back to initial
+  const receipt = fetchedReceipt || initialReceipt;
 
   // Fetch household name and user's role if receipt is assigned to one
   const { data: household } = useQuery({
@@ -70,15 +87,13 @@ export function ReceiptDetailModal({
   // Check if we're still loading permissions
   const isLoadingPermissions = isLoadingUser || (!!receipt?.householdId && !household && open);
 
-  const handleRetrySuccess = () => {
-    // Invalidate queries to refresh receipt data
-    if (receipt) {
-      queryClient.invalidateQueries({ queryKey: ['receipts'] });
-      queryClient.invalidateQueries({ queryKey: ['receipt', receipt.id] });
-      queryClient.invalidateQueries({ queryKey: ['recentReceipts'] });
-    }
-    // Close the modal to show the updated receipt list
-    onOpenChange(false);
+  const handleRetrySuccess = async () => {
+    // Refetch the receipt to get updated data
+    await refetchReceipt();
+
+    // Also invalidate list queries so they show updated data when modal closes
+    queryClient.invalidateQueries({ queryKey: ['receipts'] });
+    queryClient.invalidateQueries({ queryKey: ['recentReceipts'] });
   };
 
   if (!receipt) return null;
@@ -128,7 +143,15 @@ export function ReceiptDetailModal({
                   isLoadingPermissions={isLoadingPermissions}
                   canModifyReceipt={canModifyReceipt}
                   isReceiptOwner={isReceiptOwner}
-                  onDeleted={() => onOpenChange(false)}
+                  onDeleted={() => {
+                    // Invalidate queries to ensure lists refresh after deletion
+                    queryClient.invalidateQueries({ queryKey: ['receipts'] });
+                    queryClient.invalidateQueries({ queryKey: ['spending-summary'] });
+                    queryClient.invalidateQueries({ queryKey: ['top-items'] });
+                    queryClient.invalidateQueries({ queryKey: ['spending-trends'] });
+                    // Close the modal
+                    onOpenChange(false);
+                  }}
                   onRetrySuccess={handleRetrySuccess}
                 />
               </div>

@@ -171,9 +171,11 @@ function ReceiptsPageContent() {
     setIsModalOpen(true);
   };
 
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedReceipt(null);
+  const handleModalClose = (open: boolean) => {
+    if (!open) {
+      setIsModalOpen(false);
+      setSelectedReceipt(null);
+    }
   };
 
   // Clerk middleware ensures user is authenticated

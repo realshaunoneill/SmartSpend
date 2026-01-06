@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { upload } from '@vercel/blob/client';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface UploadItem {
   id: string
@@ -162,6 +163,7 @@ export function ReceiptBatchUpload({
         prev.map(i => (i.id === id ? { ...i, status: 'completed' as const, progress: 100 } : i)),
       );
 
+      toast.success('Receipt processed successfully!');
       onUploadComplete?.();
     } catch (error) {
       setUploadItems(prev =>
@@ -175,6 +177,7 @@ export function ReceiptBatchUpload({
             : i,
         ),
       );
+      toast.error(error instanceof Error ? error.message : 'Failed to process receipt');
     }
   }, [uploadItems, householdId, onUploadComplete]);
 
@@ -238,6 +241,8 @@ export function ReceiptBatchUpload({
             prev.map(i => (i.id === item.id ? { ...i, status: 'completed' as const, progress: 100 } : i)),
           );
 
+          toast.success('Receipt processed successfully!');
+
           // Notify parent to refresh
           onUploadComplete?.();
         })
@@ -253,6 +258,7 @@ export function ReceiptBatchUpload({
                 : i,
             ),
           );
+          toast.error(error instanceof Error ? error.message : 'Failed to process receipt');
         });
 
       // Mark as uploaded (processing happens async)

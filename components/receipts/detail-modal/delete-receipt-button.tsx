@@ -38,11 +38,13 @@ export function DeleteReceiptButton({ receiptId, onDeleted }: DeleteReceiptButto
         throw new Error(error.error || 'Failed to delete receipt');
       }
 
-      // Invalidate queries to refresh the list
+      // Invalidate all receipt-related queries to refresh lists
       queryClient.invalidateQueries({ queryKey: ['receipts'] });
+      queryClient.invalidateQueries({ queryKey: ['receipt', receiptId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['recent-receipts'] });
       queryClient.invalidateQueries({ queryKey: ['spending-trends'] });
+      queryClient.invalidateQueries({ queryKey: ['spending-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['top-items'] });
 
       toast.success('Receipt deleted successfully');
       onDeleted();
