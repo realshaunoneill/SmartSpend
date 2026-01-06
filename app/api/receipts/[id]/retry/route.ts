@@ -8,6 +8,7 @@ import { eq, and, isNull } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
 import type { OCRItem } from '@/lib/types/api-responses';
+import { DEFAULT_CURRENCY } from '@/lib/utils/currency';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -137,7 +138,7 @@ export async function POST(
       .set({
         merchantName: ocrData.merchant || 'Unknown Merchant',
         totalAmount: ocrData.total?.toString() || '0',
-        currency: ocrData.currency || 'USD',
+        currency: ocrData.currency || user.currency || DEFAULT_CURRENCY,
         transactionDate: ocrData.date || new Date().toISOString().split('T')[0],
         location: ocrData.location,
         tax: ocrData.tax?.toString(),

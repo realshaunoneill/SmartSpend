@@ -9,6 +9,7 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useUser } from '@/lib/hooks/use-user';
+import { useCurrency } from '@/lib/hooks/use-currency';
 import { ReceiptHeader } from './detail-modal/receipt-header';
 import { ReceiptBusinessDetails } from './detail-modal/receipt-business-details';
 import { ReceiptBusinessExpenseInfo } from './detail-modal/receipt-business-expense-info';
@@ -34,6 +35,7 @@ export function ReceiptDetailModal({
   const [selectedItemForAnalysis, setSelectedItemForAnalysis] = useState<string | null>(null);
   const [showItemAnalysis, setShowItemAnalysis] = useState(false);
   const queryClient = useQueryClient();
+  const { currency: userCurrency } = useCurrency();
 
   // Fetch the latest receipt data - this allows us to refresh after retry
   const { data: fetchedReceipt, refetch: refetchReceipt } = useQuery({
@@ -191,7 +193,7 @@ export function ReceiptDetailModal({
 
                     <ReceiptItemsList
                       items={receipt.items ?? []}
-                      currency={receipt.currency ?? 'USD'}
+                      currency={receipt.currency ?? userCurrency}
                       onAnalyzeItem={(itemName) => {
                         setSelectedItemForAnalysis(itemName);
                         setShowItemAnalysis(true);

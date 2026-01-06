@@ -8,6 +8,7 @@ import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { randomUUID } from 'crypto';
 import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
 import { eq, and, isNull } from 'drizzle-orm';
+import { DEFAULT_CURRENCY } from '@/lib/utils/currency';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -167,7 +168,7 @@ export async function POST(req: NextRequest) {
       .set({
         merchantName: ocrData.merchant || 'Unknown Merchant',
         totalAmount: ocrData.total?.toString() || '0',
-        currency: ocrData.currency || 'USD',
+        currency: ocrData.currency || user.currency || DEFAULT_CURRENCY,
         transactionDate: ocrData.date || new Date().toISOString().split('T')[0],
         location: ocrData.location,
         tax: ocrData.tax?.toString(),

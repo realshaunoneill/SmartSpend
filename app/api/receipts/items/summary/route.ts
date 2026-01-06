@@ -6,6 +6,7 @@ import { eq, and, gte, desc, sql } from 'drizzle-orm';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { generateSpendingSummary } from '@/lib/openai';
 import { randomUUID } from 'crypto';
+import { DEFAULT_CURRENCY } from '@/lib/utils/currency';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -163,7 +164,7 @@ export async function GET(request: NextRequest) {
       period: `${months} months`,
       totalItems: items.length,
       totalSpent: totalSpent.toFixed(2),
-      currency: items[0]?.currency || 'USD',
+      currency: items[0]?.currency || user.currency || DEFAULT_CURRENCY,
       topItems: topItems.slice(0, 10),
       topCategories: topCategories.slice(0, 5),
       topMerchants: topMerchants.slice(0, 5),
@@ -188,7 +189,7 @@ export async function GET(request: NextRequest) {
         statistics: {
           totalItems: items.length,
           totalSpent: parseFloat(totalSpent.toFixed(2)),
-          currency: items[0]?.currency || 'USD',
+          currency: items[0]?.currency || user.currency || DEFAULT_CURRENCY,
           averagePerItem: parseFloat((totalSpent / items.length).toFixed(2)),
         },
         topItems,

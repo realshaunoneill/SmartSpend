@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { DEFAULT_CURRENCY } from '@/lib/utils/currency';
 
 interface TopItem {
   name: string;
@@ -7,6 +8,10 @@ interface TopItem {
   totalQuantity: number;
   averagePrice: number;
   merchants: string[];
+  currency?: string;
+  lastPurchased?: string;
+  category?: string | null;
+  merchantCount?: number;
 }
 
 export interface ItemAnalysis {
@@ -57,6 +62,7 @@ interface UseItemAnalysisOptions {
   householdId?: string;
   months?: number;
   enabled?: boolean;
+  userCurrency?: string;
 }
 
 async function analyzeItem(
@@ -64,6 +70,7 @@ async function analyzeItem(
   options?: {
     householdId?: string;
     months?: number;
+    userCurrency?: string;
   },
 ): Promise<ItemAnalysis> {
       // Use the top items endpoint to get all items
@@ -77,10 +84,22 @@ async function analyzeItem(
       const response = await fetch(`/api/receipts/items/top?${params}`);
 
       if (!response.ok) {
-        throw new Error('Failed to analyze item');
+        const errorText = await response.text().catch(() => 'Unknown error');
+        console.error('[ItemAnalysis] API error:', response.status, errorText);
+        throw new Error(`Failed to analyze item (${response.status})`);
       }
 
       const data = await response.json();
+
+      // Validate response structure
+      if (!data || !Array.isArray(data.topItems)) {
+        console.error('[ItemAnalysis] Invalid API response structure:', data);
+        throw new Error('Invalid response from server');
+      }
+
+      if (data.topItems.length === 0) {
+        throw new Error('No purchase data found for analysis');
+      }
 
       // Find all related items (case-insensitive, partial match)
       const normalizedSearchName = itemName.toLowerCase().trim();
@@ -139,7 +158,9 @@ async function analyzeItem(
       itemVariants.sort((a, b) => b.count - a.count);
 
       const averagePrice = totalSpent / totalPurchases;
-      const currency = matchedItems[0].currency;
+      const currency = matchedItems[0]?.currency || options?.userCurrency || DEFAULT_CURRENCY;
+      const lastPurchased = matchedItems[0]?.lastPurchased || new Date().toISOString().split('T')[0];
+      const firstMerchant = matchedItems[0]?.merchants?.[0] || 'Unknown';
 
       // Transform the data to match the expected ItemAnalysis format
       const transformedData: ItemAnalysis = {
@@ -163,8 +184,8 @@ async function analyzeItem(
         })),
         monthlyTrend: [],
         recentPurchases: [{
-          date: matchedItems[0].lastPurchased,
-          merchant: matchedItems[0].merchants[0] || 'Unknown',
+          date: lastPurchased,
+          merchant: firstMerchant,
           quantity: totalQuantity.toString(),
           price: totalSpent.toString(),
           receiptId: '',
@@ -176,11 +197,11 @@ async function analyzeItem(
 }
 
 export function useItemAnalysis(options: UseItemAnalysisOptions) {
-  const { itemName, enabled = true, ...fetchOptions } = options;
+  const { itemName, enabled = true, userCurrency, ...fetchOptions } = options;
 
   return useQuery({
     queryKey: ['itemAnalysis', itemName, fetchOptions],
-    queryFn: () => analyzeItem(itemName, fetchOptions),
+    queryFn: () => analyzeItem(itemName, { ...fetchOptions, userCurrency }),
     enabled: enabled && !!itemName,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes

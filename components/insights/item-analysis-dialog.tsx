@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useItemAnalysis } from '@/hooks/use-item-analysis';
+import { useCurrency } from '@/lib/hooks/use-currency';
 import { Loader2, TrendingUp, ShoppingCart, Calendar, Store, ShoppingBag, AlertCircle, RefreshCcw, ExternalLink, Receipt } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
@@ -33,6 +34,7 @@ export function ItemAnalysisDialog({
 }: ItemAnalysisDialogProps) {
   const [months] = useState(12);
   const router = useRouter();
+  const { currency: userCurrency } = useCurrency();
   const [selectedReceipt, setSelectedReceipt] = useState<ReceiptWithItems | null>(null);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const [isLoadingReceipt, setIsLoadingReceipt] = useState(false);
@@ -42,6 +44,7 @@ export function ItemAnalysisDialog({
     householdId,
     months,
     enabled: open && !!itemName,
+    userCurrency,
   });
 
   const handleRefresh = () => {

@@ -5,6 +5,7 @@ import { getAuthenticatedUser, requireSubscription, requireHouseholdMembership }
 import { eq, and, gte, sql, desc } from 'drizzle-orm';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { randomUUID } from 'crypto';
+import { DEFAULT_CURRENCY } from '@/lib/utils/currency';
 
 export const runtime = 'nodejs';
 
@@ -136,7 +137,7 @@ export async function GET(request: NextRequest) {
           category: item.category,
           merchants: new Set(),
           lastPurchased: item.transactionDate || new Date().toISOString().split('T')[0],
-          currency: item.currency || 'USD',
+          currency: item.currency || user.currency || DEFAULT_CURRENCY,
         });
       }
 
@@ -194,7 +195,7 @@ export async function GET(request: NextRequest) {
         totalUniqueItems,
         totalPurchases,
         totalSpent: parseFloat(totalSpent.toFixed(2)),
-        currency: topItems[0]?.currency || 'USD',
+        currency: topItems[0]?.currency || user.currency || DEFAULT_CURRENCY,
         period: {
           startDate: startDate.toISOString().split('T')[0],
           endDate: new Date().toISOString().split('T')[0],
