@@ -245,14 +245,29 @@ export default function DashboardPage() {
               )}
 
               <div className="text-center pt-4 border-t">
-                <p className="text-sm text-muted-foreground mb-4">
-                  Ready to get started? Upload your first receipt now
-                </p>
-                <Button onClick={() => router.push('/receipts')} size="lg" className="gap-2">
-                  <Upload className="h-5 w-5" />
-                  Upload Your First Receipt
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
+                {isSubscribed ? (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Ready to get started? Upload your first receipt now
+                    </p>
+                    <Button onClick={() => router.push('/receipts')} size="lg" className="gap-2">
+                      <Upload className="h-5 w-5" />
+                      Upload Your First Receipt
+                      <ArrowRight className="h-5 w-5" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Upgrade to Premium to start uploading and tracking your receipts
+                    </p>
+                    <Button onClick={() => router.push('/upgrade')} size="lg" className="gap-2">
+                      <Crown className="h-5 w-5" />
+                      Upgrade to Premium
+                      <ArrowRight className="h-5 w-5" />
+                    </Button>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
