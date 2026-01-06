@@ -142,6 +142,9 @@ export async function createCheckoutSession(
       : undefined;
 
     // Create checkout session with the customer
+    // Use the APP_URL with fallback to production domain to prevent localhost URLs in production
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.receiptwise.io';
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
@@ -161,8 +164,8 @@ export async function createCheckoutSession(
           },
         },
       }),
-      success_url: successUrl || `${process.env.NEXT_PUBLIC_APP_URL}/payment/successful?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL}/payment/failed`,
+      success_url: successUrl || `${appUrl}/payment/successful?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancelUrl || `${appUrl}/payment/failed`,
       client_reference_id: userId,
       metadata: {
         userId: userId,

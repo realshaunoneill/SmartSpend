@@ -23,7 +23,8 @@ export async function POST(_request: NextRequest) {
       );
     }
 
-    const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.receiptwise.io';
+    const returnUrl = `${appUrl}/payment/successful`;
     const portalUrl = await createBillingPortalSession(
       user.stripeCustomerId,
       returnUrl,
