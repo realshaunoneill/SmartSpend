@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Navigation } from '@/components/layout/navigation';
 import { UpgradeHero } from '@/components/upgrade/upgrade-hero';
 import { PricingCard } from '@/components/upgrade/pricing-card';
 import { FeaturesGrid } from '@/components/upgrade/features-grid';
@@ -25,30 +24,22 @@ export default function UpgradePage() {
   // Show loading state while checking subscription
   if (isLoading) {
     return (
-      <>
-        <Navigation />
-        <div className="container mx-auto px-4 py-8 max-w-7xl flex items-center justify-center min-h-[50vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      </>
+      <div className="container mx-auto px-4 py-8 max-w-7xl flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
     );
-  }
-
-  // If subscribed, show nothing while redirecting
+  }  // If subscribed, show nothing while redirecting
   if (isSubscribed) {
     return null;
   }
 
   return (
-    <>
-      <Navigation />
-      <div className="container mx-auto px-4 py-8 max-w-7xl space-y-20">
+    <div className="container mx-auto px-4 py-8 max-w-7xl space-y-20">
         <UpgradeHero />
         <PricingCard />
         <FeaturesGrid />
         <ComparisonTable />
-        <UpgradeCTA />
-      </div>
-    </>
+      <UpgradeCTA />
+    </div>
   );
 }

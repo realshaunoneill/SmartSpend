@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { Navigation } from '@/components/layout/navigation';
 import { ReceiptBatchUpload } from '@/components/receipts/receipt-batch-upload';
 import { ReceiptList } from '@/components/receipts/receipt-list';
 import { ReceiptListSkeleton } from '@/components/receipts/receipt-list-skeleton';
@@ -163,9 +162,7 @@ function ReceiptsPageContent() {
   if (!clerkUser) return null;
 
   return (
-    <>
-      <Navigation />
-      <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+    <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -368,15 +365,14 @@ function ReceiptsPageContent() {
             </div>
           )}
         </div>
-      </main>
 
-      {/* Receipt Detail Modal */}
-      <ReceiptDetailModal
-        receipt={selectedReceipt}
-        open={isModalOpen}
-        onOpenChange={handleModalClose}
-      />
-    </>
+        {/* Receipt Detail Modal */}
+        <ReceiptDetailModal
+          receipt={selectedReceipt}
+          open={isModalOpen}
+          onOpenChange={handleModalClose}
+        />
+      </main>
   );
 }
 

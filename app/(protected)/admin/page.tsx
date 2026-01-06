@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Navigation } from '@/components/layout/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ReceiptDetailModal } from '@/components/receipts/receipt-detail-modal';
 import { AdminStats } from '@/components/admin/admin-stats';
@@ -197,9 +196,7 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <>
-        <Navigation />
-        <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+      <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
           <div className="flex min-h-[400px] items-center justify-center">
             <div className="text-center">
               <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
@@ -207,7 +204,6 @@ export default function AdminPage() {
             </div>
           </div>
         </main>
-      </>
     );
   }
 
@@ -216,9 +212,7 @@ export default function AdminPage() {
   }
 
   return (
-    <>
-      <Navigation />
-      <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+    <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
         <div className="flex items-center gap-3">
           <ShieldCheck className="h-8 w-8 text-primary" />
           <div>
@@ -271,21 +265,21 @@ export default function AdminPage() {
             />
           </TabsContent>
         </Tabs>
+
+        {selectedReceipt && (
+          <ReceiptDetailModal
+            receipt={selectedReceipt}
+            open={isReceiptModalOpen}
+            onOpenChange={(open) => {
+              setIsReceiptModalOpen(open);
+              if (!open) {
+                // Refetch receipts when modal closes (in case of deletion/update)
+                refetchReceipts();
+                setSelectedReceipt(null);
+              }
+            }}
+          />
+        )}
       </main>
-      {selectedReceipt && (
-        <ReceiptDetailModal
-          receipt={selectedReceipt}
-          open={isReceiptModalOpen}
-          onOpenChange={(open) => {
-            setIsReceiptModalOpen(open);
-            if (!open) {
-              // Refetch receipts when modal closes (in case of deletion/update)
-              refetchReceipts();
-              setSelectedReceipt(null);
-            }
-          }}
-        />
-      )}
-    </>
   );
 }

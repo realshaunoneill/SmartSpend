@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useUser } from '@/lib/hooks/use-user';
-import { Navigation } from '@/components/layout/navigation';
 import { CreateHouseholdDialog } from '@/components/households/create-household-dialog';
 import { HouseholdList } from '@/components/households/household-list';
 import { HouseholdSelector } from '@/components/households/household-selector';
@@ -93,23 +92,18 @@ export default function SharingPage() {
   // Show loading state
   if (userLoading) {
     return (
-      <>
-        <Navigation />
-        <main className="container mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
+      <main className="container mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
           <div className="flex h-[400px] items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         </main>
-      </>
     );
   }
 
   // Show paywall for non-subscribed users
   if (!isSubscribed) {
     return (
-      <>
-        <Navigation />
-        <main className="container mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
+      <main className="container mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Sharing</h1>
@@ -227,14 +221,11 @@ export default function SharingPage() {
             </CardContent>
           </Card>
         </main>
-      </>
     );
   }
 
   return (
-    <>
-      <Navigation />
-      <main className="container mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
+    <main className="container mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Sharing</h1>
@@ -363,6 +354,5 @@ export default function SharingPage() {
           </div>
         )}
       </main>
-    </>
   );
 }

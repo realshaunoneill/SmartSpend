@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { CheckCircle, ArrowRight, Receipt, TrendingUp, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Navigation } from '@/components/layout/navigation';
 
 interface SuccessContentProps {
   sessionId?: string;
@@ -18,9 +17,7 @@ export default function SuccessContent({
   userName,
 }: SuccessContentProps) {
   return (
-    <>
-      <Navigation />
-      <main className="container mx-auto max-w-4xl space-y-6 px-4 py-6 sm:p-6">
+    <main className="container mx-auto max-w-4xl space-y-6 px-4 py-6 sm:p-6">
         <div className="flex flex-col items-center justify-center min-h-[50vh] sm:min-h-[60vh] space-y-6 sm:space-y-8">
           {/* Success Animation */}
           <div className="relative w-20 h-20 sm:w-24 sm:h-24">
@@ -106,6 +103,5 @@ export default function SuccessContent({
           )}
         </div>
       </main>
-    </>
   );
 }

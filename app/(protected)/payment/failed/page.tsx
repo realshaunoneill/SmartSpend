@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { AlertTriangle, ArrowLeft, Mail, RefreshCw, CreditCard, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Navigation } from '@/components/layout/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export default function PaymentFailedPage() {
@@ -38,9 +37,7 @@ export default function PaymentFailedPage() {
   ];
 
   return (
-    <>
-      <Navigation />
-      <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+    <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
         <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
           {/* Error Icon */}
           <div className="relative w-24 h-24">
@@ -146,6 +143,5 @@ export default function PaymentFailedPage() {
           </Card>
         </div>
       </main>
-    </>
   );
 }

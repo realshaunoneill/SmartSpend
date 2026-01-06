@@ -2,7 +2,6 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Navigation } from '@/components/layout/navigation';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
 import { useUser } from '@/lib/hooks/use-user';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -112,23 +111,18 @@ function SubscriptionsPageContent() {
   // Show loading state
   if (userLoading) {
     return (
-      <>
-        <Navigation />
-        <div className="container mx-auto p-6 max-w-7xl">
+      <div className="container mx-auto p-6 max-w-7xl">
           <div className="flex h-[400px] items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         </div>
-      </>
     );
   }
 
   // Show paywall for non-subscribed users
   if (!isSubscribed) {
     return (
-      <>
-        <Navigation />
-        <div className="container mx-auto p-6 max-w-7xl">
+      <div className="container mx-auto p-6 max-w-7xl">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
             <div>
@@ -246,14 +240,11 @@ function SubscriptionsPageContent() {
             </CardContent>
           </Card>
         </div>
-      </>
     );
   }
 
   return (
-    <>
-      <Navigation />
-      <div className="container mx-auto p-6 max-w-7xl">
+    <div className="container mx-auto p-6 max-w-7xl">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
@@ -374,7 +365,6 @@ function SubscriptionsPageContent() {
           onOpenChange={(open) => !open && setSelectedSubscriptionId(null)}
         />
       </div>
-    </>
   );
 }
 

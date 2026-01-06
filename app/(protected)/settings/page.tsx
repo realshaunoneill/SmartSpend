@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useQueryState, parseAsStringLiteral } from 'nuqs';
-import { Navigation } from '@/components/layout/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -262,9 +261,7 @@ export default function SettingsPage() {
 
   if (!isLoaded || userDataLoading) {
     return (
-      <>
-        <Navigation />
-        <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+      <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
           <div className="flex min-h-[400px] items-center justify-center">
             <div className="text-center">
               <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -272,7 +269,6 @@ export default function SettingsPage() {
             </div>
           </div>
         </main>
-      </>
     );
   }
 
@@ -281,9 +277,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <>
-      <Navigation />
-      <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+    <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl flex items-center gap-2">
@@ -781,6 +775,5 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </main>
-    </>
   );
 }

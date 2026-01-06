@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Navigation } from '@/components/layout/navigation';
 import { SpendingSummaryCard } from '@/components/insights/spending-summary-card';
 import { TopItemsList } from '@/components/insights/top-items-list';
 import { ItemSearchAnalysis } from '@/components/insights/item-search-analysis';
@@ -54,9 +53,7 @@ export default function InsightsPage() {
   const actualHouseholdId = isPersonalOnly ? undefined : selectedHouseholdId;
 
   return (
-    <>
-      <Navigation />
-      <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+    <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -237,6 +234,5 @@ export default function InsightsPage() {
           </Tabs>
         )}
       </main>
-    </>
   );
 }

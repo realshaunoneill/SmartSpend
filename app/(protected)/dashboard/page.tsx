@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Navigation } from '@/components/layout/navigation';
 import { QuickStats } from '@/components/insights/quick-stats';
 import { SpendingSummary } from '@/components/insights/spending-summary';
 import { SpendingChart } from '@/components/insights/spending-chart';
@@ -37,9 +36,7 @@ export default function DashboardPage() {
   // Show loading state while stats are loading
   if (statsLoading) {
     return (
-      <>
-        <Navigation />
-        <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+      <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Dashboard</h1>
@@ -53,7 +50,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </main>
-      </>
     );
   }
 
@@ -70,9 +66,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <>
-      <Navigation />
-      <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+    <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Dashboard</h1>
@@ -273,6 +267,5 @@ export default function DashboardPage() {
           </Card>
         )}
       </main>
-    </>
   );
 }

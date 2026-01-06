@@ -6,6 +6,7 @@ import { useUser as useUserData } from '@/lib/hooks/use-user';
 import { OnboardingProvider } from '@/components/onboarding/onboarding-provider';
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour';
 import { useOnboarding } from '@/components/onboarding/onboarding-provider';
+import { Navigation } from '@/components/layout/navigation';
 import { Loader2, ShieldX, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useClerk } from '@clerk/nextjs';
@@ -53,6 +54,7 @@ function ProtectedContent({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <Navigation />
       {children}
       <OnboardingTour
         open={showOnboarding}
