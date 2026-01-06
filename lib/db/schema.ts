@@ -7,6 +7,9 @@ export const users = pgTable('users', {
   email: text('email').notNull().unique(),
   subscribed: boolean('subscribed').notNull().default(false),
   isAdmin: boolean('is_admin').notNull().default(false),
+  isBlocked: boolean('is_blocked').notNull().default(false), // Admin can block users from using the app
+  blockedAt: timestamp('blocked_at'), // When the user was blocked
+  blockedReason: text('blocked_reason'), // Reason for blocking
   stripeCustomerId: text('stripe_customer_id').unique(),
   defaultHouseholdId: uuid('default_household_id').references(() => households.id, { onDelete: 'set null' }),
   currency: text('currency').notNull().default('EUR'),

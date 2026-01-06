@@ -1,8 +1,23 @@
 'use client';
 
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Receipt, Home, Calendar, Mail, Eye, AlertCircle, Briefcase, Tag } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Receipt, Home, Calendar, Mail, Eye, AlertCircle, Briefcase, Tag, Trash2, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ReceiptCardProps {
   receipt: {
@@ -20,10 +35,37 @@ interface ReceiptCardProps {
     createdAt: string
   }
   onOpenReceipt: (receiptId: string) => void
+  onDeleted?: () => void
 }
 
-export function ReceiptCard({ receipt, onOpenReceipt }: ReceiptCardProps) {
+export function ReceiptCard({ receipt, onOpenReceipt, onDeleted }: ReceiptCardProps) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteBlob, setDeleteBlob] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const url = `/api/admin/receipts/${receipt.id}${deleteBlob ? '?deleteBlob=true' : ''}`;
+      const response = await fetch(url, { method: 'DELETE' });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete receipt');
+      }
+
+      toast.success('Receipt deleted successfully');
+      setShowDeleteDialog(false);
+      onDeleted?.();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete receipt');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
+    <>
     <div
       className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors"
       onClick={() => onOpenReceipt(receipt.id)}
@@ -95,8 +137,56 @@ export function ReceiptCard({ receipt, onOpenReceipt }: ReceiptCardProps) {
             Uploaded {new Date(receipt.createdAt).toLocaleDateString()}
           </div>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowDeleteDialog(true);
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
         <Eye className="h-5 w-5 text-muted-foreground shrink-0" />
       </div>
     </div>
+
+    {/* Delete Dialog */}
+    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Receipt</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete this receipt from {receipt.userEmail}?
+            This action will soft-delete the receipt from the database.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="py-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="delete-blob"
+              checked={deleteBlob}
+              onCheckedChange={(checked) => setDeleteBlob(checked === true)}
+            />
+            <Label htmlFor="delete-blob" className="text-sm">
+              Also delete the image from storage (permanent)
+            </Label>
+          </div>
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Delete Receipt
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

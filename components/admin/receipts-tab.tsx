@@ -24,12 +24,13 @@ interface AdminReceipt {
 interface ReceiptsTabProps {
   receipts: AdminReceipt[]
   onOpenReceipt: (receiptId: string) => void
+  onRefresh?: () => void
 }
 
 type SortField = 'createdAt' | 'transactionDate' | 'totalAmount' | 'merchantName';
 type StatusFilter = 'all' | 'completed' | 'failed' | 'pending' | 'processing';
 
-export function ReceiptsTab({ receipts, onOpenReceipt }: ReceiptsTabProps) {
+export function ReceiptsTab({ receipts, onOpenReceipt, onRefresh }: ReceiptsTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortField, setSortField] = useState<SortField>('createdAt');
@@ -190,6 +191,7 @@ export function ReceiptsTab({ receipts, onOpenReceipt }: ReceiptsTabProps) {
                 key={receipt.id}
                 receipt={receipt}
                 onOpenReceipt={onOpenReceipt}
+                onDeleted={onRefresh}
               />
             ))
           ) : (

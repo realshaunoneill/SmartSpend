@@ -27,6 +27,9 @@ export async function GET(req: NextRequest) {
         email: users.email,
         subscribed: users.subscribed,
         isAdmin: users.isAdmin,
+        isBlocked: users.isBlocked,
+        blockedAt: users.blockedAt,
+        blockedReason: users.blockedReason,
         createdAt: users.createdAt,
         stripeCustomerId: users.stripeCustomerId,
         receiptCount: sql<number>`(

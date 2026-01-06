@@ -16,6 +16,9 @@ interface AdminUser {
   email: string;
   subscribed: boolean;
   isAdmin: boolean;
+  isBlocked?: boolean;
+  blockedAt?: string | null;
+  blockedReason?: string | null;
   createdAt: string;
   stripeCustomerId: string | null;
   receiptCount: number;
@@ -31,7 +34,7 @@ interface UsersTabProps {
 }
 
 type SortField = 'email' | 'createdAt' | 'receiptCount' | 'householdCount';
-type FilterType = 'all' | 'subscribed' | 'free' | 'admin' | 'with-stripe';
+type FilterType = 'all' | 'subscribed' | 'free' | 'admin' | 'with-stripe' | 'blocked';
 
 export function UsersTab({
   users,
@@ -70,6 +73,9 @@ export function UsersTab({
         break;
       case 'with-stripe':
         result = result.filter(u => u.stripeCustomerId);
+        break;
+      case 'blocked':
+        result = result.filter(u => u.isBlocked);
         break;
     }
 
@@ -122,6 +128,12 @@ export function UsersTab({
               <span className="text-muted-foreground">●</span>
               {users.filter(u => !u.subscribed).length} free
             </Badge>
+            {users.filter(u => u.isBlocked).length > 0 && (
+              <Badge variant="outline" className="gap-1 border-destructive text-destructive">
+                <span className="text-destructive">●</span>
+                {users.filter(u => u.isBlocked).length} blocked
+              </Badge>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -149,6 +161,7 @@ export function UsersTab({
                 <SelectItem value="free">Free Tier</SelectItem>
                 <SelectItem value="admin">Admins</SelectItem>
                 <SelectItem value="with-stripe">Has Stripe</SelectItem>
+                <SelectItem value="blocked">Blocked</SelectItem>
               </SelectContent>
             </Select>
             <Select value={sortField} onValueChange={(v) => setSortField(v as SortField)}>

@@ -101,4 +101,61 @@ export class UserService {
     const user = await this.getUserProfile(userId);
     return user?.isAdmin || false;
   }
+
+  /**
+   * Block a user from using the app
+   */
+  static async blockUser(userId: string, reason?: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        isBlocked: true,
+        blockedAt: new Date(),
+        blockedReason: reason || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  /**
+   * Unblock a user
+   */
+  static async unblockUser(userId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        isBlocked: false,
+        blockedAt: null,
+        blockedReason: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  /**
+   * Check if a user is blocked
+   */
+  static async isBlocked(userId: string): Promise<boolean> {
+    const user = await this.getUserProfile(userId);
+    return user?.isBlocked || false;
+  }
+
+  /**
+   * Update block reason for a blocked user
+   */
+  static async updateBlockReason(userId: string, reason: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        blockedReason: reason,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
 }

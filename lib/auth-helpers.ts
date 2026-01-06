@@ -42,6 +42,19 @@ export async function getAuthenticatedUser(correlationId?: CorrelationId) {
 
   try {
     const user = await UserService.getOrCreateUser(clerkId, email);
+
+    // Check if user is blocked
+    if (user.isBlocked) {
+      submitLogEvent('auth', `Blocked user attempted to access: ${user.email}`, cid, { userId: user.id, blockedReason: user.blockedReason });
+      return NextResponse.json(
+        {
+          error: 'Your account has been suspended. Please contact support.',
+          blockedReason: user.blockedReason || undefined,
+        },
+        { status: 403 },
+      );
+    }
+
     return { user, clerkId, email, correlationId: cid };
   } catch (error) {
     submitLogEvent('auth', `Error getting/creating user: ${error instanceof Error ? error.message : 'Unknown error'}`, cid, { clerkId }, true);

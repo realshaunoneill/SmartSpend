@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Navigation } from '@/components/layout/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ReceiptDetailModal } from '@/components/receipts/receipt-detail-modal';
@@ -17,6 +18,9 @@ interface AdminUser {
   email: string
   subscribed: boolean
   isAdmin: boolean
+  isBlocked?: boolean
+  blockedAt?: string | null
+  blockedReason?: string | null
   createdAt: string
   stripeCustomerId: string | null
   receiptCount: number
@@ -44,13 +48,29 @@ interface ReceiptDetail {
   createdAt: string
 }
 
+// Fetcher functions for React Query
+const fetchUsers = async (): Promise<AdminUser[]> => {
+  const res = await fetch('/api/admin/users');
+  if (!res.ok) throw new Error('Failed to fetch users');
+  return res.json();
+};
+
+const fetchHouseholds = async (): Promise<Household[]> => {
+  const res = await fetch('/api/admin/households');
+  if (!res.ok) throw new Error('Failed to fetch households');
+  return res.json();
+};
+
+const fetchReceipts = async (): Promise<ReceiptDetail[]> => {
+  const res = await fetch('/api/admin/receipts');
+  if (!res.ok) throw new Error('Failed to fetch receipts');
+  return res.json();
+};
+
 export default function AdminPage() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [households, setHouseholds] = useState<Household[]>([]);
-  const [receipts, setReceipts] = useState<ReceiptDetail[]>([]);
   const [selectedReceipt, setSelectedReceipt] = useState<ReceiptWithItems | null>(null);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
@@ -59,8 +79,27 @@ export default function AdminPage() {
   const [householdDetails, setHouseholdDetails] = useState<Record<string, HouseholdWithMembers>>({});
   const [householdReceipts, setHouseholdReceipts] = useState<Record<string, ReceiptWithItems[]>>({});
 
+  // React Query for data fetching
+  const { data: users = [] } = useQuery({
+    queryKey: ['admin', 'users'],
+    queryFn: fetchUsers,
+    enabled: isAdmin,
+  });
+
+  const { data: households = [] } = useQuery({
+    queryKey: ['admin', 'households'],
+    queryFn: fetchHouseholds,
+    enabled: isAdmin,
+  });
+
+  const { data: receipts = [], refetch: refetchReceipts } = useQuery({
+    queryKey: ['admin', 'receipts'],
+    queryFn: fetchReceipts,
+    enabled: isAdmin,
+  });
+
   useEffect(() => {
-    async function checkAdminAndFetchData() {
+    async function checkAdmin() {
       try {
         const response = await fetch('/api/admin/check');
         if (!response.ok) {
@@ -75,25 +114,15 @@ export default function AdminPage() {
         }
 
         setIsAdmin(true);
-
-        // Fetch all admin data
-        const [usersRes, householdsRes, receiptsRes] = await Promise.all([
-          fetch('/api/admin/users'),
-          fetch('/api/admin/households'),
-          fetch('/api/admin/receipts'),
-        ]);
-
-        if (usersRes.ok) setUsers(await usersRes.json());
-        if (householdsRes.ok) setHouseholds(await householdsRes.json());
-        if (receiptsRes.ok) setReceipts(await receiptsRes.json());
       } catch (error) {
-        console.error('Error fetching admin data:', error);
+        console.error('Error checking admin status:', error);
+        router.push('/dashboard');
       } finally {
         setLoading(false);
       }
     }
 
-    checkAdminAndFetchData();
+    checkAdmin();
   }, [router]);
 
   const handleOpenReceipt = async (receiptId: string) => {
@@ -238,6 +267,7 @@ export default function AdminPage() {
             <ReceiptsTab
               receipts={receipts}
               onOpenReceipt={handleOpenReceipt}
+              onRefresh={() => refetchReceipts()}
             />
           </TabsContent>
         </Tabs>
@@ -250,10 +280,7 @@ export default function AdminPage() {
             setIsReceiptModalOpen(open);
             if (!open) {
               // Refetch receipts when modal closes (in case of deletion/update)
-              fetch('/api/admin/receipts')
-                .then(res => res.ok ? res.json() : [])
-                .then(data => setReceipts(data))
-                .catch(console.error);
+              refetchReceipts();
               setSelectedReceipt(null);
             }
           }}

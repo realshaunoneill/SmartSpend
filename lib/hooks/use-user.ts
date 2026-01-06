@@ -6,13 +6,29 @@ import type { User } from '@/lib/db/schema';
 
 type UserResponse = User
 
+interface BlockedUserError {
+  isBlocked: true;
+  message: string;
+  reason?: string;
+}
+
 /**
  * Fetch current user from API
  */
 async function fetchUser(): Promise<UserResponse> {
   const response = await fetch('/api/users/me');
   if (!response.ok) {
-    throw new Error('Failed to fetch user');
+    const data = await response.json().catch(() => ({}));
+
+    // Check if user is blocked (403 status)
+    if (response.status === 403 && data.error?.includes('suspended')) {
+      const error = new Error(data.error) as Error & { isBlocked?: boolean; blockedReason?: string };
+      error.isBlocked = true;
+      error.blockedReason = data.blockedReason;
+      throw error;
+    }
+
+    throw new Error(data.error || 'Failed to fetch user');
   }
   return response.json();
 }
@@ -47,8 +63,19 @@ export function useUser() {
     queryKey: ['user', clerkUser?.id],
     queryFn: fetchUser,
     enabled: isClerkLoaded && isSignedIn && !!clerkUser,
-    retry: 1,
+    retry: (failureCount, error) => {
+      // Don't retry if user is blocked
+      if ((error as Error & { isBlocked?: boolean })?.isBlocked) {
+        return false;
+      }
+      return failureCount < 1;
+    },
   });
+
+  // Check if user is blocked
+  const typedError = error as (Error & { isBlocked?: boolean; blockedReason?: string }) | null;
+  const isBlocked = typedError?.isBlocked === true;
+  const blockedReason = typedError?.blockedReason;
 
   return {
     user,
@@ -57,6 +84,8 @@ export function useUser() {
     error,
     refetch,
     isSubscribed: user?.subscribed ?? false,
+    isBlocked,
+    blockedReason,
   };
 }
 

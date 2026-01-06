@@ -3,8 +3,9 @@ import Stripe from 'stripe';
 import { type NextRequest, NextResponse } from 'next/server';
 import { waitUntil } from '@vercel/functions';
 import { syncStripeDataToDatabase } from '@/lib/stripe';
-import { type CorrelationId } from '@/lib/logging';
+import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { randomUUID } from 'crypto';
+import { UserService } from '@/lib/services/user-service';
 
 // Route configuration - Webhooks need to respond quickly
 export const runtime = 'nodejs';
@@ -87,6 +88,43 @@ async function processEvent(event: Stripe.Event, correlationId: CorrelationId) {
       throw new Error(
         `[STRIPE HOOK][CANCER] ID isn't string.\nEvent type: ${event.type}`,
       );
+    }
+
+    // Try to find user by Stripe customer ID first
+    let user = await UserService.getUserByStripeCustomerId(customerId);
+
+    // If not found, try to re-associate by email
+    if (!user) {
+      submitLogEvent('stripe', `User not found by customerId ${customerId}, attempting email re-association`, correlationId, { customerId });
+
+      try {
+        // Fetch customer from Stripe to get email
+        const customer = await stripe.customers.retrieve(customerId);
+
+        if (!customer.deleted && customer.email) {
+          // Try to find user by email
+          user = await UserService.getUserByEmail(customer.email);
+
+          if (user) {
+            // Re-associate the Stripe customer ID with this user
+            await UserService.updateStripeCustomerId(user.id, customerId);
+            submitLogEvent('stripe', `Re-associated Stripe customer ${customerId} with user ${user.id} via email ${customer.email}`, correlationId, {
+              userId: user.id,
+              customerId,
+              email: customer.email,
+            });
+          } else {
+            submitLogEvent('stripe', `No user found with email ${customer.email} for customer ${customerId}`, correlationId, { customerId, email: customer.email }, true);
+            return;
+          }
+        } else {
+          submitLogEvent('stripe', `Customer ${customerId} has no email or is deleted`, correlationId, { customerId }, true);
+          return;
+        }
+      } catch (error) {
+        submitLogEvent('stripe', `Failed to re-associate customer ${customerId}: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { customerId }, true);
+        return;
+      }
     }
 
     const kvData = await syncStripeDataToDatabase(customerId, correlationId);
