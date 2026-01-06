@@ -1,0 +1,34 @@
+name: Sync Staging with Master
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  sync-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'github-actions@github.com'
+
+      - name: Update staging branch
+        run: |
+          # Fetch all branches
+          git fetch origin
+          
+          # Create staging branch if it doesn't exist, or switch to it if it does
+          git checkout staging 2>/dev/null || git checkout -b staging
+          
+          # Reset staging to match master
+          git reset --hard origin/master
+          
+          # Force push to staging
+          git push -f origin staging 
