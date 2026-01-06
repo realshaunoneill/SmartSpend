@@ -224,30 +224,48 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
     totalCount = countResult.count;
   }
 
-  // Get items and user info for each receipt
-  const receiptsWithDetails = await Promise.all(
-    userReceipts.map(async (receipt) => {
-      const items = await db
+  // Get items and user info for all receipts in batch (avoid N+1 queries)
+  const receiptIds = userReceipts.map(r => r.id);
+  const userIds = [...new Set(userReceipts.map(r => r.userId))];
+
+  // Batch fetch all items for all receipts
+  const allItems = receiptIds.length > 0 
+    ? await db
         .select()
         .from(receiptItems)
-        .where(eq(receiptItems.receiptId, receipt.id));
+        .where(inArray(receiptItems.receiptId, receiptIds))
+    : [];
 
-      // Get user who created the receipt
-      const [receiptUser] = await db
+  // Batch fetch all users
+  const allUsers = userIds.length > 0
+    ? await db
         .select({
+          id: users.id,
           email: users.email,
         })
         .from(users)
-        .where(eq(users.id, receipt.userId))
-        .limit(1);
+        .where(inArray(users.id, userIds))
+    : [];
 
-      return {
-        ...receipt,
-        items,
-        submittedBy: receiptUser?.email || 'Unknown',
-      };
-    }),
-  );
+  // Create lookup maps for O(1) access
+  const itemsByReceiptId = new Map<string, typeof allItems>();
+  allItems.forEach(item => {
+    const existing = itemsByReceiptId.get(item.receiptId) || [];
+    existing.push(item);
+    itemsByReceiptId.set(item.receiptId, existing);
+  });
+
+  const userEmailById = new Map<string, string>();
+  allUsers.forEach(user => {
+    userEmailById.set(user.id, user.email);
+  });
+
+  // Build receipts with details using lookup maps (no additional queries)
+  const receiptsWithDetails = userReceipts.map((receipt) => ({
+    ...receipt,
+    items: itemsByReceiptId.get(receipt.id) || [],
+    submittedBy: userEmailById.get(receipt.userId) || 'Unknown',
+  }));
 
   return {
     receipts: receiptsWithDetails,
@@ -287,42 +305,39 @@ export async function getHouseholdReceipts(householdId: string) {
 }
 
 /**
- * Get a single receipt by ID
+ * Get a single receipt by ID with items and user info
+ * Optimized to use batch queries instead of sequential queries
  */
 export async function getReceiptById(receiptId: string, includeDeleted = false): Promise<ReceiptWithItems | null> {
   const conditions = includeDeleted
     ? eq(receipts.id, receiptId)
     : and(eq(receipts.id, receiptId), isNull(receipts.deletedAt));
 
-  const [receipt] = await db
-    .select()
+  // Fetch receipt with user email in a single query using join
+  const [receiptWithUser] = await db
+    .select({
+      receipt: receipts,
+      userEmail: users.email,
+    })
     .from(receipts)
+    .leftJoin(users, eq(receipts.userId, users.id))
     .where(conditions)
     .limit(1);
 
-  if (!receipt) {
+  if (!receiptWithUser) {
     return null;
   }
 
-  // Get items for this receipt
+  // Fetch items (this is a separate query but unavoidable for 1-to-many)
   const items = await db
     .select()
     .from(receiptItems)
-    .where(eq(receiptItems.receiptId, receipt.id));
-
-  // Get user who created the receipt
-  const [receiptUser] = await db
-    .select({
-      email: users.email,
-    })
-    .from(users)
-    .where(eq(users.id, receipt.userId))
-    .limit(1);
+    .where(eq(receiptItems.receiptId, receiptId));
 
   return {
-    ...receipt,
+    ...receiptWithUser.receipt,
     items,
-    submittedBy: receiptUser?.email || 'Unknown',
+    submittedBy: receiptWithUser.userEmail || 'Unknown',
   };
 }
 

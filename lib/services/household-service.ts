@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { households, householdUsers, householdInvitations, users, type Household, type HouseholdInvitation, type HouseholdMember, type NewHousehold, type NewHouseholdUser } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 
 export class HouseholdService {
@@ -58,16 +58,15 @@ export class HouseholdService {
       return [];
     }
 
-    // Count members for each household
-    const memberCounts = await Promise.all(
-      householdIds.map(async (householdId) => {
-        const members = await db
-          .select({ count: householdUsers.householdId })
-          .from(householdUsers)
-          .where(eq(householdUsers.householdId, householdId));
-        return { householdId, count: members.length };
-      }),
-    );
+    // Count members for all households in a single query using GROUP BY
+    const memberCounts = await db
+      .select({
+        householdId: householdUsers.householdId,
+        count: db.$count(householdUsers.householdId),
+      })
+      .from(householdUsers)
+      .where(inArray(householdUsers.householdId, householdIds))
+      .groupBy(householdUsers.householdId);
 
     const countMap = new Map(memberCounts.map(mc => [mc.householdId, mc.count]));
 
