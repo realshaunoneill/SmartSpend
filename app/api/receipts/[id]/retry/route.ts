@@ -51,10 +51,16 @@ export async function POST(
       return NextResponse.json({ error: 'Receipt is currently being processed' }, { status: 400 });
     }
 
-    submitLogEvent('receipt', 'Retrying receipt processing', correlationId, {
+    // Alert when user initiates a retry - helps track re-analysis requests
+    submitLogEvent('receipt-retry', 'User initiated receipt re-analysis', correlationId, {
       receiptId: receipt.id,
       userId: user.id,
-    });
+      userEmail: email,
+      previousStatus: receipt.processingStatus,
+      merchantName: receipt.merchantName,
+      totalAmount: receipt.totalAmount,
+      timestamp: new Date().toISOString(),
+    }, true); // Alert = true
 
     submitLogEvent('receipt-process-start', 'Starting receipt retry processing', correlationId, {
       receiptId: receipt.id,

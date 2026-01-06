@@ -32,6 +32,7 @@ export type EventType =
   | 'receipt-status-processing'
   | 'receipt-analysis-result'
   | 'receipt-error'
+  | 'receipt-retry'
   | 'database'
   | 'auth'
   | 'household'
