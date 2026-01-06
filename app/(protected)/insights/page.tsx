@@ -13,40 +13,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Sparkles, TrendingUp, Search, CreditCard, Crown, Check, PieChart, Brain, ArrowRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 const trialDays = process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS ? parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) : 0;
 
 export default function InsightsPage() {
+  const router = useRouter();
   const { isLoading, isSubscribed } = useUser();
   const { data: households = [] } = useHouseholds();
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>();
   const [activeTab, setActiveTab] = useState('overview');
-
-  // Checkout mutation
-  const checkoutMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      });
-      if (!response.ok) throw new Error('Failed to create checkout session');
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (data.url) {
-        if (trialDays > 0) {
-          toast.success(`Starting your ${trialDays}-day free trial...`);
-        }
-        window.location.href = data.url;
-      }
-    },
-    onError: () => {
-      toast.error('Failed to start checkout. Please try again.');
-    },
-  });
 
   // Determine view mode based on selection
   const isPersonalOnly = selectedHouseholdId === 'personal';
@@ -163,23 +139,13 @@ export default function InsightsPage() {
               {/* CTA */}
               <div className="text-center space-y-4 pt-4 border-t">
                 <Button
-                  onClick={() => checkoutMutation.mutate()}
-                  disabled={checkoutMutation.isPending}
+                  onClick={() => router.push('/upgrade')}
                   size="lg"
                   className="gap-2 text-base h-12 px-8"
                 >
-                  {checkoutMutation.isPending ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Crown className="h-5 w-5" />
-                      {trialDays > 0 ? `Start ${trialDays}-Day Free Trial` : 'Upgrade to Premium'}
-                      <ArrowRight className="h-5 w-5" />
-                    </>
-                  )}
+                  <Crown className="h-5 w-5" />
+                  {trialDays > 0 ? `Start ${trialDays}-Day Free Trial` : 'Upgrade to Premium'}
+                  <ArrowRight className="h-5 w-5" />
                 </Button>
                 <p className="text-sm text-muted-foreground">
                   {trialDays > 0

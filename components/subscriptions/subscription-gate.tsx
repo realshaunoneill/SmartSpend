@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Crown, Sparkles, ArrowRight, Upload, Users, BarChart3, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/lib/hooks/use-user';
-import { toast } from 'sonner';
 
 interface SubscriptionGateProps {
   feature: 'upload' | 'sharing' | 'analytics';
@@ -59,8 +59,8 @@ export function SubscriptionGate({
   children,
   variant = 'full',
 }: SubscriptionGateProps) {
+  const router = useRouter();
   const { user, isSubscribed, isLoading } = useUser();
-  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   // If user is subscribed, render children normally
   if (isSubscribed) {
@@ -90,39 +90,15 @@ export function SubscriptionGate({
     ? parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS)
     : 0;
 
-  const handleSubscribe = async () => {
-    setIsCheckoutLoading(true);
-    try {
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create checkout session');
-      }
-
-      const { url } = await response.json();
-
-      if (url) {
-        if (trialDays > 0) {
-          toast.success(`Starting your ${trialDays}-day free trial...`);
-        }
-        window.location.href = url;
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      toast.error('Failed to start checkout. Please try again.');
-      setIsCheckoutLoading(false);
-    }
+  const handleSubscribe = () => {
+    router.push('/upgrade');
   };
 
   // Inline variant - compact upgrade button
   if (variant === 'inline') {
     return (
-      <Button onClick={handleSubscribe} disabled={isCheckoutLoading} className="gap-2" variant="default">
-        {isCheckoutLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
+      <Button onClick={handleSubscribe} className="gap-2" variant="default">
+        <Crown className="h-4 w-4" />
         Upgrade to Create
       </Button>
     );
@@ -160,12 +136,8 @@ export function SubscriptionGate({
           </div>
 
           <div className="flex flex-col items-center gap-2 pt-2">
-            <Button onClick={handleSubscribe} disabled={isCheckoutLoading} className="w-full sm:w-auto gap-2">
-              {isCheckoutLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4" />
-              )}
+            <Button onClick={handleSubscribe} className="w-full sm:w-auto gap-2">
+              <Sparkles className="h-4 w-4" />
               {trialDays > 0 ? 'Start Free Trial' : 'Upgrade to Premium'}
               <ArrowRight className="h-4 w-4" />
             </Button>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQueryState, parseAsStringLiteral } from 'nuqs';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,10 +33,10 @@ import { SUPPORTED_CURRENCIES } from '@/lib/utils/currency';
 const VALID_TABS = ['profile', 'preferences', 'subscription', 'household', 'data'] as const;
 
 export default function SettingsPage() {
+  const router = useRouter();
   const { user: clerkUser, isLoaded } = useUser();
   const { user: userData, isLoading: userDataLoading, refetch: refetchUser } = useUserData();
   const { startOnboarding } = useOnboarding();
-  const [isUpdating, setIsUpdating] = useState(false);
   const [selectedHousehold, setSelectedHousehold] = useState<string>('none');
   const [selectedCurrency, setSelectedCurrency] = useState<string>('EUR');
   const [isExporting, setIsExporting] = useState(false);
@@ -117,35 +118,8 @@ export default function SettingsPage() {
     updateCurrency.mutate(selectedCurrency);
   };
 
-  const handleUpgrade = async () => {
-    setIsUpdating(true);
-    try {
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create checkout session');
-      }
-
-      const { url } = await response.json();
-
-      if (url) {
-        // Redirect to Stripe checkout
-        if (process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0) {
-          toast.success(`Starting your ${process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS}-day free trial...`);
-        }
-        window.location.href = url;
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      toast.error('Failed to start checkout. Please try again.');
-      setIsUpdating(false);
-    }
+  const handleUpgrade = () => {
+    router.push('/upgrade');
   };
 
   // Billing portal mutation
@@ -471,11 +445,8 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex gap-2">
                       {!userData?.subscribed ? (
-                        <Button
-                          onClick={handleUpgrade}
-                          disabled={isUpdating}
-                        >
-                          {isUpdating ? 'Processing...' : 'Upgrade to Premium'}
+                        <Button onClick={handleUpgrade}>
+                          Upgrade to Premium
                         </Button>
                       ) : (
                         <Button
