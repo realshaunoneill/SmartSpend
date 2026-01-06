@@ -19,6 +19,7 @@ import { ReceiptItemsList } from './detail-modal/receipt-items-list';
 import { ReceiptFinancialBreakdown } from './detail-modal/receipt-financial-breakdown';
 import { ReceiptImage } from './detail-modal/receipt-image';
 import { LinkedSubscription } from './detail-modal/linked-subscription';
+import { ReportIssueButton } from './detail-modal/report-issue-button';
 import type { ReceiptWithItems, OCRData, MemberWithUser } from '@/lib/types/api-responses';
 
 interface ReceiptDetailModalProps {
@@ -206,6 +207,14 @@ export function ReceiptDetailModal({
               {/* Financial Breakdown - Footer, scrolls on mobile, fixed on desktop */}
               <div className="shrink-0 border-t mb-4 md:mb-0">
                 <ReceiptFinancialBreakdown receipt={receipt} />
+
+                {/* Report Issue Button */}
+                <div className="px-4 pb-4 flex justify-center">
+                  <ReportIssueButton
+                    receiptId={receipt.id}
+                    onRetrySuccess={handleRetrySuccess}
+                  />
+                </div>
               </div>
             </div>
           </div>
