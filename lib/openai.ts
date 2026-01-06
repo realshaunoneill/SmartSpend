@@ -12,45 +12,45 @@ const itemModifierSchema = z.object({
 
 const receiptItemSchema = z.object({
   name: z.string(),
-  quantity: z.number().optional(),
+  quantity: z.number().nullable().optional(),
   price: z.number(),
-  category: z.string().optional(),
-  description: z.string().optional(),
-  modifiers: z.array(itemModifierSchema).optional(),
+  category: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  modifiers: z.array(itemModifierSchema).nullable().optional(),
 });
 
 const receiptDataSchema = z.object({
-  merchant: z.string().optional(),
-  total: z.number().optional(),
-  currency: z.string().optional(),
-  date: z.string().optional(),
-  category: z.string().optional(),
-  items: z.array(receiptItemSchema).optional(),
+  merchant: z.string().nullable().optional(),
+  total: z.number().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  date: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  items: z.array(receiptItemSchema).nullable().optional(),
   rawItems: z.array(z.object({
     name: z.string(),
     price: z.number(),
-  })).optional(),
-  location: z.string().optional(),
-  subtotal: z.number().optional(),
-  tax: z.number().optional(),
-  serviceCharge: z.number().optional(),
-  paymentMethod: z.string().optional(),
-  receiptNumber: z.string().optional(),
-  merchantType: z.string().optional(),
-  tips: z.number().optional(),
-  discount: z.number().optional(),
-  loyaltyNumber: z.string().optional(),
-  tableNumber: z.string().optional(),
-  serverName: z.string().optional(),
-  orderNumber: z.string().optional(),
-  phoneNumber: z.string().optional(),
-  website: z.string().optional(),
-  vatNumber: z.string().optional(),
-  timeOfDay: z.string().optional(),
-  customerCount: z.number().optional(),
-  specialOffers: z.string().optional(),
-  deliveryFee: z.number().optional(),
-  packagingFee: z.number().optional(),
+  })).nullable().optional(),
+  location: z.string().nullable().optional(),
+  subtotal: z.number().nullable().optional(),
+  tax: z.number().nullable().optional(),
+  serviceCharge: z.number().nullable().optional(),
+  paymentMethod: z.string().nullable().optional(),
+  receiptNumber: z.string().nullable().optional(),
+  merchantType: z.string().nullable().optional(),
+  tips: z.number().nullable().optional(),
+  discount: z.number().nullable().optional(),
+  loyaltyNumber: z.string().nullable().optional(),
+  tableNumber: z.string().nullable().optional(),
+  serverName: z.string().nullable().optional(),
+  orderNumber: z.string().nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
+  vatNumber: z.string().nullable().optional(),
+  timeOfDay: z.string().nullable().optional(),
+  customerCount: z.number().nullable().optional(),
+  specialOffers: z.string().nullable().optional(),
+  deliveryFee: z.number().nullable().optional(),
+  packagingFee: z.number().nullable().optional(),
 });
 
 export type ItemModifier = z.infer<typeof itemModifierSchema>;
@@ -99,6 +99,9 @@ export async function analyzeReceiptWithGPT4o(
 
   submitLogEvent('receipt-process', 'Calling OpenAI Vision API with GPT-4o', correlationId, { userId, userEmail });
 
+  // Get current date for context
+  const currentDate = new Date().toISOString().split('T')[0];
+
   // Use GPT-4o for receipt analysis - best accuracy for OCR tasks
   // especially important for faded, crumpled, or hard-to-read receipts
   let result;
@@ -122,13 +125,13 @@ export async function analyzeReceiptWithGPT4o(
           content: [
             {
               type: 'text',
-              text: `Analyze this receipt image and extract the following information:
+              text: `Today's date is ${currentDate}. Analyze this receipt/invoice image and extract the following information:
 
 REQUIRED FIELDS:
 - merchant: merchant/store name
 - total: total amount (number)
 - currency: currency code (e.g., "GBP", "USD", "EUR")
-- date: transaction date (format as YYYY-MM-DD, use current date if not visible)
+- date: transaction date or invoice date (format as YYYY-MM-DD). Look for: "Date", "Due date", "Invoice date", "Transaction date", or any visible date on the document. If no date is visible, use today's date: ${currentDate}
 - category: spending category based on merchant and items (choose from: "groceries", "dining", "transportation", "shopping", "entertainment", "healthcare", "utilities", "travel", "gas", "coffee", "pharmacy", "clothing", "electronics", "home", "other")
 
 DETAILED EXTRACTION:
@@ -215,7 +218,7 @@ Extract all numeric values as numbers (not strings).`,
       // The raw text response that failed to parse
       errorDetails.rawResponse = (error as { text?: string }).text;
     }
-    
+
     // Include the cause if present (often contains validation details)
     if (error instanceof Error && error.cause) {
       errorDetails.errorCause = error.cause;
@@ -232,7 +235,7 @@ Extract all numeric values as numbers (not strings).`,
     }
 
     submitLogEvent('receipt-error', `OpenAI schema validation failed: ${errorMessage}`, correlationId, errorDetails, true);
-    
+
     throw error;
   }
 
@@ -240,9 +243,18 @@ Extract all numeric values as numbers (not strings).`,
     promptTokens: result.usage.promptTokens,
     completionTokens: result.usage.completionTokens,
     totalTokens: result.usage.totalTokens,
-    model: 'gpt-4o-mini',
+    model: 'gpt-4o',
     userEmail,
     userId,
+  });
+
+  // Log the full extracted receipt data for debugging
+  submitLogEvent('receipt-analysis-result', 'Full receipt analysis data extracted', correlationId, {
+    userId,
+    userEmail,
+    extractedData: result.object,
+    itemCount: result.object.items?.length || 0,
+    rawItemCount: result.object.rawItems?.length || 0,
   });
 
   return {
@@ -329,6 +341,7 @@ Keep the response under 300 words and format it in a friendly, easy-to-read way.
     model: 'gpt-4o-mini',
     userEmail,
     userId,
+    summaryText: result.text.trim(),
   });
 
   return {

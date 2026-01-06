@@ -289,7 +289,7 @@ export async function getHouseholdReceipts(householdId: string) {
 /**
  * Get a single receipt by ID
  */
-export async function getReceiptById(receiptId: string, includeDeleted = false): Promise<Receipt | null> {
+export async function getReceiptById(receiptId: string, includeDeleted = false): Promise<ReceiptWithItems | null> {
   const conditions = includeDeleted
     ? eq(receipts.id, receiptId)
     : and(eq(receipts.id, receiptId), isNull(receipts.deletedAt));
@@ -300,7 +300,30 @@ export async function getReceiptById(receiptId: string, includeDeleted = false):
     .where(conditions)
     .limit(1);
 
-  return receipt || null;
+  if (!receipt) {
+    return null;
+  }
+
+  // Get items for this receipt
+  const items = await db
+    .select()
+    .from(receiptItems)
+    .where(eq(receiptItems.receiptId, receipt.id));
+
+  // Get user who created the receipt
+  const [receiptUser] = await db
+    .select({
+      email: users.email,
+    })
+    .from(users)
+    .where(eq(users.id, receipt.userId))
+    .limit(1);
+
+  return {
+    ...receipt,
+    items,
+    submittedBy: receiptUser?.email || 'Unknown',
+  };
 }
 
 /**

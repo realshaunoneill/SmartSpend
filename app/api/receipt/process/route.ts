@@ -149,6 +149,7 @@ export async function POST(req: NextRequest) {
       merchant: ocrData.merchant,
       total: ocrData.total,
       currency: ocrData.currency,
+      date: ocrData.date,
       category: ocrData.category,
       merchantType: ocrData.merchantType,
       paymentMethod: ocrData.paymentMethod,

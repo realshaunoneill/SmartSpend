@@ -46,8 +46,9 @@ export async function POST(
       return NextResponse.json({ error: 'Receipt not found' }, { status: 404 });
     }
 
-    if (receipt.processingStatus === 'completed') {
-      return NextResponse.json({ error: 'Receipt already processed' }, { status: 400 });
+    // Allow retry for failed, pending, or completed receipts (re-analyze)
+    if (receipt.processingStatus === 'processing') {
+      return NextResponse.json({ error: 'Receipt is currently being processed' }, { status: 400 });
     }
 
     submitLogEvent('receipt', 'Retrying receipt processing', correlationId, {

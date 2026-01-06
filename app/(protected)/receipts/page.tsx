@@ -142,8 +142,8 @@ function ReceiptsPageContent() {
   }, [recentReceipts, allReceipts, queryClient]);
 
   const handleUploadComplete = () => {
-    refetchRecent();
-    refetchAll();
+    // Invalidate all receipt-related queries to ensure fresh data
+    queryClient.invalidateQueries({ queryKey: ['receipts'] });
   };
 
   const handleRetry = () => {

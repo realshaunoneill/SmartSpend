@@ -159,7 +159,7 @@ export function ReceiptDetailModal({
               </div>
 
               {/* Scrollable Content Section - All details and items */}
-              <div className="flex-1 md:overflow-y-auto px-4 py-3 space-y-3 sm:px-6 sm:py-4 sm:space-y-4\">
+              <div className="flex-1 md:overflow-y-auto px-4 py-3 space-y-3 sm:px-6 sm:py-4 sm:space-y-4">
                 <LinkedSubscription subscription={receipt.linkedSubscription} />
 
                 <ReceiptBusinessExpenseInfo receipt={receipt} />

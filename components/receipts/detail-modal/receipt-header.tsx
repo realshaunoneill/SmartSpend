@@ -1,6 +1,6 @@
 'use client';
 
-import { Store, MapPin, Info, Calendar, Clock, CreditCard, Hash, Receipt as ReceiptIcon, Tag, Building2, AlertCircle, RefreshCw, CheckCircle, Share2, Lock, Home } from 'lucide-react';
+import { Store, MapPin, Info, Calendar, Clock, CreditCard, Hash, Receipt as ReceiptIcon, Tag, Building2, AlertCircle, RefreshCw, CheckCircle, Share2, Lock, Home, Upload, RotateCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ReceiptAssignmentDialog } from '@/components/receipts/receipt-assignment-dialog';
@@ -10,6 +10,15 @@ import { formatCategory, capitalizeText } from '@/lib/utils/format-category';
 import type { ReceiptWithItems, OCRData } from '@/lib/types/api-responses';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface HouseholdInfo {
   id: string;
@@ -37,6 +46,8 @@ export function ReceiptHeader({
   onRetrySuccess,
 }: ReceiptHeaderProps) {
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isReanalyzing, setIsReanalyzing] = useState(false);
+  const [showReanalyzeDialog, setShowReanalyzeDialog] = useState(false);
 
   const handleRetry = async () => {
     setIsRetrying(true);
@@ -61,6 +72,33 @@ export function ReceiptHeader({
       toast.error(error instanceof Error ? error.message : 'Failed to retry processing');
     } finally {
       setIsRetrying(false);
+    }
+  };
+
+  const handleReanalyze = async () => {
+    setIsReanalyzing(true);
+    setShowReanalyzeDialog(false);
+
+    try {
+      const response = await fetch(`/api/receipts/${receipt.id}/retry`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Failed to re-analyze receipt');
+      }
+
+      toast.success('Receipt re-analyzed successfully! The details have been updated.');
+
+      // Call the callback to refresh the receipt data
+      if (onRetrySuccess) {
+        await onRetrySuccess();
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to re-analyze receipt');
+    } finally {
+      setIsReanalyzing(false);
     }
   };
 
@@ -253,10 +291,17 @@ export function ReceiptHeader({
 
       {/* Meta Info */}
       <div className="flex flex-wrap gap-3 mt-4">
+        {/* Receipt/Transaction Date */}
         <Badge variant="secondary" className="flex items-center gap-1">
           <Calendar className="h-3 w-3" />
-          {receipt.transactionDate ||
-            new Date(receipt.createdAt).toLocaleDateString()}
+          {receipt.transactionDate
+            ? `Receipt: ${receipt.transactionDate}`
+            : `Receipt: ${new Date(receipt.createdAt).toLocaleDateString()}`}
+        </Badge>
+        {/* Upload Date - only show if different from transaction date */}
+        <Badge variant="outline" className="flex items-center gap-1 text-muted-foreground">
+          <Upload className="h-3 w-3" />
+          Uploaded: {new Date(receipt.createdAt).toLocaleDateString()}
         </Badge>
         {(() => {
           const ocrData = receipt.ocrData as OCRData | null;
@@ -289,6 +334,76 @@ export function ReceiptHeader({
           );
         })()}
       </div>
+
+      {/* Incorrect Details Button - For completed receipts when owner notices issues */}
+      {receipt.processingStatus === 'completed' && isReceiptOwner && (
+        <div className="mt-4">
+          <Dialog open={showReanalyzeDialog} onOpenChange={setShowReanalyzeDialog}>
+            <DialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-muted-foreground hover:text-foreground"
+                disabled={isReanalyzing}
+              >
+                {isReanalyzing ? (
+                  <>
+                    <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
+                    Re-analyzing...
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    Incorrect details?
+                  </>
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Incorrect Receipt Details?</DialogTitle>
+                <DialogDescription className="space-y-3">
+                  <span className="block">
+                    If the extracted details don&apos;t match your receipt, you can try re-analyzing the image. This will re-scan and update all details including merchant name, date, items, and totals.
+                  </span>
+                  <span className="block text-muted-foreground">
+                    If re-analyzing doesn&apos;t fix the issue, please contact our support team for assistance.
+                  </span>
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex-col gap-2 sm:flex-row sm:gap-2">
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => {
+                    setShowReanalyzeDialog(false);
+                    window.open('/support', '_blank');
+                  }}
+                >
+                  Contact Support
+                </Button>
+                <Button
+                  onClick={handleReanalyze}
+                  disabled={isReanalyzing}
+                  className="w-full sm:w-auto"
+                >
+                  {isReanalyzing ? (
+                    <>
+                      <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
+                      Re-analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <RotateCcw className="h-4 w-4 mr-2" />
+                      Re-analyze Receipt
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
 
       {/* Business Expense Section - Only for receipt owner */}
       {isReceiptOwner && (

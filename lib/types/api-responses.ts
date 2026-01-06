@@ -43,17 +43,17 @@ export type MemberWithUser = {
 // OCR Item from OpenAI response
 export type OCRItem = {
   name: string;
-  quantity?: number | string;
-  unitPrice?: number | string;
-  totalPrice?: number | string;
-  price?: number | string;
-  category?: string;
-  description?: string;
+  quantity?: number | string | null;
+  unitPrice?: number | string | null;
+  totalPrice?: number | string | null;
+  price?: number | string | null;
+  category?: string | null;
+  description?: string | null;
   modifiers?: Array<{
     name: string;
     price: number | string;
     type?: string;
-  }>;
+  }> | null;
 };
 
 // OCR Data structure from OpenAI

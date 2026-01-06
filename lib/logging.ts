@@ -30,6 +30,7 @@ export type EventType =
   | 'receipt-upload-complete'
   | 'receipt-db-created'
   | 'receipt-status-processing'
+  | 'receipt-analysis-result'
   | 'receipt-error'
   | 'database'
   | 'auth'

@@ -96,7 +96,12 @@ export function useReceipts(
   });
 
   const refetch = () => {
-    queryClient.invalidateQueries({ queryKey: ['receipts', householdId] });
+    // Invalidate all receipt queries, regardless of filters/pagination
+    // This ensures fresh data after uploads, deletions, or updates
+    queryClient.invalidateQueries({ 
+      queryKey: ['receipts'],
+      refetchType: 'active',
+    });
   };
 
   return {
