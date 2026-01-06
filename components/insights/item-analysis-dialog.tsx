@@ -14,6 +14,7 @@ import { useItemAnalysis } from '@/hooks/use-item-analysis';
 import { useCurrency } from '@/lib/hooks/use-currency';
 import { Loader2, TrendingUp, ShoppingCart, Calendar, Store, ShoppingBag, AlertCircle, RefreshCcw, ExternalLink, Receipt } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ReceiptDetailModal } from '@/components/receipts/receipt-detail-modal';
@@ -94,8 +95,86 @@ export function ItemAnalysisDialog({
           </DialogHeader>
 
           {isLoading && (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="space-y-6 animate-in fade-in-50 duration-300">
+              {/* Loading message */}
+              <div className="flex items-center justify-center gap-3 py-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="text-sm">Analyzing your spending patterns...</span>
+              </div>
+
+              {/* Summary Cards Skeleton */}
+              <div className="grid gap-4 md:grid-cols-4">
+                {[...Array(4)].map((_, i) => (
+                  <Card key={i}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-4 w-4 rounded" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <Skeleton className="h-8 w-20 mb-2" />
+                      <Skeleton className="h-3 w-32" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Item Variants Skeleton */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <Skeleton className="h-5 w-28" />
+                  </div>
+                  <Skeleton className="h-4 w-40 mt-1" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {[...Array(2)].map((_, i) => (
+                      <div key={i} className="p-3 rounded-lg border space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-32" />
+                            <Skeleton className="h-3 w-20" />
+                          </div>
+                          <div className="text-right space-y-2">
+                            <Skeleton className="h-4 w-16 ml-auto" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Merchants Skeleton */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <Skeleton className="h-5 w-32" />
+                  </div>
+                  <Skeleton className="h-4 w-64 mt-1" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-8 w-8 rounded-full" />
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-28" />
+                            <Skeleton className="h-3 w-20" />
+                          </div>
+                        </div>
+                        <Skeleton className="h-5 w-16" />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
 
