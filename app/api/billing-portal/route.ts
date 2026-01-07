@@ -33,7 +33,7 @@ export async function POST(_request: NextRequest) {
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.receiptwise.io';
-    const returnUrl = `${appUrl}/payment/successful`;
+    const returnUrl = `${appUrl}/settings`;
     const portalUrl = await createBillingPortalSession(
       stripeCustomerId,
       returnUrl,
