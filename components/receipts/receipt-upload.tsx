@@ -2,7 +2,7 @@
 
 import type React from 'react';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Upload, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,11 +30,10 @@ export function ReceiptUpload({
 }) {
   const [uploadState, setUploadState] = useState<UploadState>({ status: 'idle' });
   const [previewUrl, setPreviewUrl] = useState<string>();
+  const [isDragActive, setIsDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file: File) => {
     // Validate file type
     if (!file.type.startsWith('image/')) {
       setUploadState({
@@ -157,6 +156,48 @@ export function ReceiptUpload({
     }
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processFile(file);
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+
+    if (uploadState.status !== 'idle') return;
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    await processFile(file);
+  };
+
+  const handleClick = () => {
+    if (uploadState.status === 'idle') {
+      fileInputRef.current?.click();
+    }
+  };
+
   const resetUpload = () => {
     setUploadState({ status: 'idle' });
     setPreviewUrl(undefined);
@@ -182,18 +223,45 @@ export function ReceiptUpload({
                 />
               </div>
             ) : (
-              <label className="flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 px-6 py-12 transition-colors hover:border-primary hover:bg-muted">
-                <Upload className="h-12 w-12 text-muted-foreground" />
-                <span className="mt-4 text-sm font-medium text-foreground">Click to upload or drag and drop</span>
+              <div
+                className={`flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-12 transition-colors ${
+                  isDragActive
+                    ? 'border-primary bg-primary/10'
+                    : 'border-muted-foreground/25 bg-muted/50 hover:border-primary hover:bg-muted'
+                }`}
+                onClick={handleClick}
+                onDragEnter={handleDragEnter}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <Upload className={`h-12 w-12 ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="mt-4 text-sm font-medium text-foreground">
+                  {isDragActive ? 'Drop your file here' : 'Click to upload or drag and drop'}
+                </span>
                 <span className="mt-1 text-xs text-muted-foreground">PNG, JPG or HEIC (max 10MB)</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                  disabled={uploadState.status !== 'idle'}
+                >
+                  Browse Files
+                </Button>
                 <input
+                  ref={fileInputRef}
                   type="file"
                   className="hidden"
                   accept="image/*"
                   onChange={handleFileChange}
                   disabled={uploadState.status !== 'idle'}
                 />
-              </label>
+              </div>
             )}
           </div>
 
