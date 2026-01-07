@@ -171,7 +171,7 @@ export function ReceiptSearchFilters({
                   <button
                     key={suggestion.label}
                     type="button"
-                    className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs hover:bg-secondary/80 transition-colors"
+                    className="inline-flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs text-accent-foreground hover:bg-accent/80 transition-colors"
                     onMouseDown={() => handleQuickSearch(suggestion.label)}
                   >
                     <span>{suggestion.icon}</span>
