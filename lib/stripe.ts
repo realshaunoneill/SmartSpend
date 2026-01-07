@@ -258,6 +258,44 @@ export async function syncStripeDataToDatabase(customerId: string, correlationId
 }
 
 /**
+ * Searches for a Stripe customer by email and re-associates it with the user if found
+ * Returns the Stripe customer ID if found and re-associated, or null if not found
+ */
+export async function findAndReassociateStripeCustomer(
+  userId: string,
+  email: string,
+  correlationId: CorrelationId,
+): Promise<string | null> {
+  try {
+    submitLogEvent('stripe', `Searching for Stripe customer by email: ${email}`, correlationId, { userId, email });
+
+    // Search for existing Stripe customer by email
+    const existingCustomer = await stripe.customers.search({
+      query: `email:'${email}'`,
+    });
+
+    if (existingCustomer.data.length > 0) {
+      const customerId = existingCustomer.data[0].id;
+      
+      submitLogEvent('stripe', `Found existing Stripe customer ${customerId} for ${email}`, correlationId, { userId, customerId, email });
+
+      // Update the user record with the found Stripe customer ID
+      await UserService.updateStripeCustomerId(userId, customerId);
+
+      submitLogEvent('stripe', `Re-associated Stripe customer ID ${customerId} with user ${userId}`, correlationId, { userId, customerId });
+
+      return customerId;
+    }
+
+    submitLogEvent('stripe', `No Stripe customer found for email ${email}`, correlationId, { userId, email });
+    return null;
+  } catch (error) {
+    submitLogEvent('stripe', `Error searching for Stripe customer: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { userId, email }, true);
+    return null;
+  }
+}
+
+/**
  * Creates a Stripe billing portal session for a customer to manage their subscription
  */
 export async function createBillingPortalSession(
