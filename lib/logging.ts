@@ -20,6 +20,7 @@ export type EventType =
   | 'purchases'
   | 'upload'
   | 'receipt'
+  | 'billing-portal'
   | 'receipt-process'
   | 'receipt-process-start'
   | 'receipt-process-complete'
