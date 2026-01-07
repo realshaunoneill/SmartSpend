@@ -34,7 +34,6 @@ export function ReceiptBatchUpload({
 }) {
   const [uploadItems, setUploadItems] = useState<UploadItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [showTips, setShowTips] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -326,31 +325,20 @@ export function ReceiptBatchUpload({
               Drag, drop, or snap a photo — we&apos;ll handle the rest
             </CardDescription>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowTips(!showTips)}
-            className="text-muted-foreground"
-          >
-            <Info className="h-4 w-4 mr-1" />
-            Tips
-          </Button>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
         {/* Tips Section */}
-        {showTips && (
-          <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 text-sm space-y-2">
-            <p className="font-medium text-primary">📸 Tips for best results:</p>
-            <ul className="space-y-1 text-muted-foreground ml-4 list-disc">
-              <li>Make sure the receipt is well-lit and flat</li>
-              <li>Include all text, especially the total and date</li>
-              <li>Crop out unnecessary background</li>
-              <li>Upload multiple receipts at once to save time</li>
-            </ul>
-          </div>
-        )}
+        <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 text-sm space-y-2">
+          <p className="font-medium text-primary">📸 Tips for best results:</p>
+          <ul className="space-y-1 text-muted-foreground ml-4 list-disc">
+            <li>Make sure the receipt is well-lit and flat</li>
+            <li>Include all text, especially the total and date</li>
+            <li>Crop out unnecessary background</li>
+            <li>Upload multiple receipts at once to save time</li>
+          </ul>
+        </div>
 
         {/* Upload Area - Drag & Drop Zone */}
         <div
