@@ -19,7 +19,7 @@ const API_BASE_URL = 'http://localhost:3000';
 // Initialize popup immediately (script is at end of body, DOM is ready)
 (async () => {
   const { apiKey } = await chrome.storage.sync.get('apiKey');
-  
+
   if (apiKey) {
     showMainView();
   } else {
@@ -49,7 +49,7 @@ function hideAllStatuses() {
 toggleVisibilityBtn?.addEventListener('click', () => {
   const eyeIcon = toggleVisibilityBtn.querySelector('.eye-icon');
   const eyeOffIcon = toggleVisibilityBtn.querySelector('.eye-off-icon');
-  
+
   if (apiKeyInput.type === 'password') {
     apiKeyInput.type = 'text';
     eyeIcon.classList.add('hidden');
@@ -64,12 +64,12 @@ toggleVisibilityBtn?.addEventListener('click', () => {
 // Save API Key
 saveKeyBtn.addEventListener('click', async () => {
   const apiKey = apiKeyInput.value.trim();
-  
+
   if (!apiKey) {
     showInputError('Please enter your API key');
     return;
   }
-  
+
   // Validate API key format (should start with rw_)
   if (!apiKey.startsWith('rw_')) {
     showInputError('Invalid format. API key should start with rw_');
@@ -87,7 +87,7 @@ saveKeyBtn.addEventListener('click', async () => {
   try {
     // Verify API key by making a test request
     const isValid = await verifyApiKey(apiKey);
-    
+
     if (isValid) {
       await chrome.storage.sync.set({ apiKey });
       showMainView();
@@ -144,20 +144,20 @@ async function verifyApiKey(apiKey) {
 // Capture Button Click
 captureBtn.addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  
+
   if (!tab?.id) return;
-  
+
   // Check if we can inject scripts (not on chrome:// or extension pages)
   if (tab.url?.startsWith('chrome://') || tab.url?.startsWith('chrome-extension://')) {
     alert('Cannot capture on Chrome system pages. Please navigate to a regular webpage.');
     return;
   }
-  
+
   // Send message to trigger capture (content script is already injected via manifest)
   chrome.tabs.sendMessage(tab.id, { action: 'startCapture' }).catch(() => {
     // Ignore errors - content script might not be ready yet on first page load
   });
-  
+
   // Close popup immediately to allow capture
   window.close();
 });
