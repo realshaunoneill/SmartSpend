@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
-import { receipts, subscriptions, subscriptionPayments, households, householdUsers, users } from '@/lib/db/schema';
+import { receipts, receiptItems, subscriptions, subscriptionPayments, households, householdUsers, users } from '@/lib/db/schema';
 import { eq, and, isNull, inArray } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
     const userReceipts = await db
       .select({
         id: receipts.id,
+        imageUrl: receipts.imageUrl,
         merchantName: receipts.merchantName,
         totalAmount: receipts.totalAmount,
         currency: receipts.currency,
@@ -39,6 +40,7 @@ export async function GET(req: NextRequest) {
         paymentMethod: receipts.paymentMethod,
         location: receipts.location,
         tax: receipts.tax,
+        serviceCharge: receipts.serviceCharge,
         subtotal: receipts.subtotal,
         receiptNumber: receipts.receiptNumber,
         isBusinessExpense: receipts.isBusinessExpense,
@@ -127,6 +129,35 @@ export async function GET(req: NextRequest) {
           createdAt: user.createdAt,
         },
       };
+
+      if (type === 'receipts-with-images') {
+        // Fetch receipt items for all receipts
+        const receiptIds = userReceipts.map(r => r.id);
+        const allItems = receiptIds.length > 0 ? await db
+          .select({
+            receiptId: receiptItems.receiptId,
+            name: receiptItems.name,
+            quantity: receiptItems.quantity,
+            price: receiptItems.price,
+            totalPrice: receiptItems.totalPrice,
+            category: receiptItems.category,
+          })
+          .from(receiptItems)
+          .where(inArray(receiptItems.receiptId, receiptIds))
+          : [];
+
+        // Combine receipts with their items
+        exportData.receipts = userReceipts.map(receipt => ({
+          ...receipt,
+          items: allItems.filter(item => item.receiptId === receipt.id),
+        }));
+
+        return NextResponse.json(exportData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      }
 
       if (type === 'receipts' || type === 'all') {
         exportData.receipts = userReceipts;

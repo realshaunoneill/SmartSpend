@@ -25,7 +25,7 @@ import { useUser as useUserData } from '@/lib/hooks/use-user';
 import { useOnboarding } from '@/components/onboarding/onboarding-provider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { PlayCircle, User, CreditCard, Home, Download, AlertTriangle, Settings2, Sparkles, Trash2, Clock, Mail } from 'lucide-react';
+import { PlayCircle, User, CreditCard, Home, Download, AlertTriangle, Settings2, Sparkles, Trash2, Clock, Mail, FileImage } from 'lucide-react';
 import type { HouseholdWithMembers } from '@/lib/types/api-responses';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { SUPPORTED_CURRENCIES } from '@/lib/utils/currency';
@@ -40,6 +40,7 @@ export default function SettingsPage() {
   const [selectedHousehold, setSelectedHousehold] = useState<string>('none');
   const [selectedCurrency, setSelectedCurrency] = useState<string>('EUR');
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingImages, setIsExportingImages] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const queryClient = useQueryClient();
@@ -173,6 +174,38 @@ export default function SettingsPage() {
       toast.error('Failed to export data');
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleExportWithImages = async () => {
+    setIsExportingImages(true);
+    try {
+      const response = await fetch('/api/users/export?format=json&type=receipts-with-images');
+      if (!response.ok) throw new Error('Export failed');
+
+      const data = await response.json();
+
+      // Dynamically import the HTML generator to keep the bundle smaller
+      const { generateReceiptExportHtml } = await import('@/lib/utils/receipt-export-html');
+      const html = generateReceiptExportHtml(data);
+
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `receiptwise-export-${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      toast.success('Receipts exported with images successfully');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export receipts');
+    } finally {
+      setIsExportingImages(false);
     }
   };
 
@@ -606,6 +639,20 @@ export default function SettingsPage() {
                   >
                     <Download className="h-4 w-4 mr-2" />
                     {isExporting ? 'Exporting...' : 'Subscriptions Only'}
+                  </Button>
+                </div>
+                <div className="border-t pt-4 mt-4">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Download all your receipts with images in a viewable HTML format.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={handleExportWithImages}
+                    disabled={isExportingImages}
+                    className="w-full justify-start"
+                  >
+                    <FileImage className="h-4 w-4 mr-2" />
+                    {isExportingImages ? 'Generating...' : 'Receipts with Images (HTML)'}
                   </Button>
                 </div>
               </CardContent>
