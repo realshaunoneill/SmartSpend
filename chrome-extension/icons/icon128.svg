@@ -1,6 +1,14 @@
 <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="128" height="128" rx="24" fill="#10b981"/>
-  <path d="M32 44C32 40.6863 34.6863 38 38 38H90C93.3137 38 96 40.6863 96 44C96 47.3137 93.3137 50 90 50H38C34.6863 50 32 47.3137 32 44Z" fill="white"/>
-  <path d="M32 64C32 60.6863 34.6863 58 38 58H80C83.3137 58 86 60.6863 86 64C86 67.3137 83.3137 70 80 70H38C34.6863 70 32 67.3137 32 64Z" fill="white"/>
-  <path d="M32 84C32 80.6863 34.6863 78 38 78H64C67.3137 78 70 80.6863 70 84C70 87.3137 67.3137 90 64 90H38C34.6863 90 32 87.3137 32 84Z" fill="white"/>
+  <defs>
+    <linearGradient id="grad128" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#grad128)"/>
+  <rect x="24" y="32" width="80" height="10" rx="5" fill="white" opacity="0.95"/>
+  <rect x="24" y="52" width="60" height="10" rx="5" fill="white" opacity="0.85"/>
+  <rect x="24" y="72" width="45" height="10" rx="5" fill="white" opacity="0.7"/>
+  <circle cx="100" cy="37" r="8" fill="white" opacity="0.9"/>
+  <path d="M24 94 L104 94 L104 100 L24 100 Z" fill="white" opacity="0.5" rx="3"/>
 </svg>

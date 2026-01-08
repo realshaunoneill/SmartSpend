@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'https://www.receiptwise.io';
+import { API_BASE_URL } from '../popup/popup';
 
 // Handle keyboard shortcut command
 chrome.commands.onCommand.addListener(async (command) => {
@@ -47,10 +47,10 @@ async function handleReceiptUpload(imageData, tabId) {
   try {
     // Notify popup that upload started
     notifyPopup('uploadStarted');
-    
+
     // Get API key from storage
     const { apiKey } = await chrome.storage.sync.get('apiKey');
-    
+
     if (!apiKey) {
       notifyPopup('uploadError', { error: 'Not connected. Please set your API key.' });
       showNotification('error', 'Not Connected', 'Please set your API key in the extension popup.');
@@ -86,13 +86,13 @@ async function handleReceiptUpload(imageData, tabId) {
     }
 
     const result = await response.json();
-    
+
     // Notify popup of success
     notifyPopup('uploadSuccess', { receiptId: result.receiptId });
-    
+
     // Show success notification
     showNotification('success', 'Receipt Uploaded!', 'Your receipt has been sent to ReceiptWise for processing.');
-    
+
   } catch (error) {
     console.error('Upload error:', error);
     notifyPopup('uploadError', { error: error.message });
@@ -117,7 +117,7 @@ function showNotification(type, title, message) {
     chrome.action.setBadgeText({ text: '!' });
     chrome.action.setBadgeBackgroundColor({ color: '#ef4444' });
   }
-  
+
   // Clear badge after 3 seconds
   setTimeout(() => {
     chrome.action.setBadgeText({ text: '' });

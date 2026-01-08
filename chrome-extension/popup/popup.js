@@ -10,9 +10,11 @@ const uploadSuccess = document.getElementById('upload-success');
 const uploadError = document.getElementById('upload-error');
 const errorMessage = document.getElementById('error-message');
 const retryBtn = document.getElementById('retry-btn');
+const toggleVisibilityBtn = document.getElementById('toggle-visibility');
 
 // API Configuration
-const API_BASE_URL = 'https://www.receiptwise.io';
+// export const API_BASE_URL = 'https://www.receiptwise.io';
+export const API_BASE_URL = 'http://localhost:3000';
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
@@ -43,16 +45,38 @@ function hideAllStatuses() {
   uploadError.classList.add('hidden');
 }
 
+// Toggle API key visibility
+toggleVisibilityBtn?.addEventListener('click', () => {
+  const eyeIcon = toggleVisibilityBtn.querySelector('.eye-icon');
+  const eyeOffIcon = toggleVisibilityBtn.querySelector('.eye-off-icon');
+  
+  if (apiKeyInput.type === 'password') {
+    apiKeyInput.type = 'text';
+    eyeIcon.classList.add('hidden');
+    eyeOffIcon.classList.remove('hidden');
+  } else {
+    apiKeyInput.type = 'password';
+    eyeIcon.classList.remove('hidden');
+    eyeOffIcon.classList.add('hidden');
+  }
+});
+
 // Save API Key
 saveKeyBtn.addEventListener('click', async () => {
   const apiKey = apiKeyInput.value.trim();
   
   if (!apiKey) {
     apiKeyInput.style.borderColor = '#ef4444';
+    apiKeyInput.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)';
     return;
   }
 
-  saveKeyBtn.textContent = 'Verifying...';
+  // Store original button content
+  const originalContent = saveKeyBtn.innerHTML;
+  saveKeyBtn.innerHTML = `
+    <div class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></div>
+    Verifying...
+  `;
   saveKeyBtn.disabled = true;
 
   try {
@@ -64,19 +88,34 @@ saveKeyBtn.addEventListener('click', async () => {
       showMainView();
     } else {
       apiKeyInput.style.borderColor = '#ef4444';
-      saveKeyBtn.textContent = 'Invalid API Key';
+      apiKeyInput.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)';
+      saveKeyBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+        Invalid API Key
+      `;
       setTimeout(() => {
-        saveKeyBtn.textContent = 'Connect Account';
+        saveKeyBtn.innerHTML = originalContent;
         saveKeyBtn.disabled = false;
-      }, 2000);
+      }, 2500);
     }
   } catch (error) {
     console.error('Error verifying API key:', error);
-    saveKeyBtn.textContent = 'Connection Failed';
+    saveKeyBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      Connection Failed
+    `;
     setTimeout(() => {
-      saveKeyBtn.textContent = 'Connect Account';
+      saveKeyBtn.innerHTML = originalContent;
       saveKeyBtn.disabled = false;
-    }, 2000);
+    }, 2500);
   }
 });
 
@@ -139,4 +178,5 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Input validation reset
 apiKeyInput.addEventListener('input', () => {
   apiKeyInput.style.borderColor = '';
+  apiKeyInput.style.boxShadow = '';
 });
