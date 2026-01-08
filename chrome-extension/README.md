@@ -5,43 +5,51 @@ A Chrome extension that allows users to quickly capture receipts from anywhere o
 ## Features
 
 - **Snipping Tool**: Click and drag to select any area of a webpage to capture as a receipt
-- **Keyboard Shortcut**: Use `Alt+Shift+R` to quickly start capturing
+- **Keyboard Shortcuts**: 
+  - Mac: `⌃ + ⇧ + R` (Control + Shift + R)
+  - Windows/Linux: `Alt + Shift + R`
 - **API Key Authentication**: Securely connect to your ReceiptWise account
 - **Automatic Processing**: Uploaded receipts are automatically processed with OCR
+- **Real-time Notifications**: Get desktop notifications when uploads complete
+- **Selection Size Display**: See the dimensions of your selection while capturing
 
 ## Installation
 
+### From Chrome Web Store
+*(Coming soon)*
+
 ### Development Setup
 
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable "Developer mode" in the top right
-3. Click "Load unpacked" and select the `chrome-extension` folder
-4. The extension icon should appear in your toolbar
+1. Clone/download this repository
+2. Open Chrome and navigate to `chrome://extensions/`
+3. Enable **"Developer mode"** in the top right corner
+4. Click **"Load unpacked"**
+5. Select the `chrome-extension` folder
+6. The ReceiptWise Clipper icon should appear in your toolbar
+7. (Optional) Pin the extension for easy access
 
-### Building Icons
+## Setup
 
-The extension requires PNG icons. To convert the SVG icons:
-
-```bash
-# Using ImageMagick (if installed)
-cd chrome-extension/icons
-convert icon16.svg icon16.png
-convert icon32.svg icon32.png
-convert icon48.svg icon48.png
-convert icon128.svg icon128.png
-
-# Or use an online SVG to PNG converter
-```
-
-Alternatively, you can manually create PNG icons with the ReceiptWise emerald color (#10b981) with a receipt-like design.
+1. Click the extension icon in your toolbar
+2. Get your API key from [ReceiptWise Settings](https://www.receiptwise.io/settings?tab=integrations)
+3. Paste your API key (starts with `rw_`) and click **Connect Account**
+4. You're ready to capture receipts!
 
 ## Usage
 
-1. Click the extension icon in your toolbar
-2. Enter your API key (get it from Settings > Integrations in ReceiptWise)
-3. Click "Capture Receipt" or use the keyboard shortcut `Alt+Shift+R`
-4. Click and drag to select the receipt area
-5. The receipt will be automatically uploaded and processed
+### Capture a Receipt
+1. Navigate to any webpage with a receipt
+2. Click the extension icon → **Capture Receipt**
+   - Or use keyboard shortcut: `⌃⇧R` (Mac) / `Alt+Shift+R` (Windows)
+3. Click and drag to select the receipt area
+4. Release to upload automatically
+5. View your receipt in ReceiptWise
+
+### Tips
+- Press `Esc` to cancel a capture
+- Minimum selection size is 20×20 pixels
+- The selection box shows dimensions while dragging
+- Click the notification to open your receipts
 
 ## File Structure
 

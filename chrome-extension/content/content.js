@@ -4,12 +4,18 @@
 let isCapturing = false;
 let overlay = null;
 let selectionBox = null;
+let sizeIndicator = null;
 let startX = 0;
 let startY = 0;
 
 // Listen for messages from popup or background
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'startCapture') {
+    // Prevent duplicate captures
+    if (isCapturing) {
+      sendResponse({ started: false, reason: 'already capturing' });
+      return true;
+    }
     startCapture();
     sendResponse({ started: true });
   }
@@ -26,7 +32,7 @@ function startCapture() {
   overlay.id = 'receiptwise-overlay';
   overlay.innerHTML = `
     <div class="receiptwise-instructions">
-      <span>Click and drag to select the receipt area</span>
+      <span>Click and drag to select area</span>
       <span class="receiptwise-hint">Press <kbd>Esc</kbd> to cancel</span>
     </div>
   `;
@@ -36,9 +42,15 @@ function startCapture() {
   selectionBox = document.createElement('div');
   selectionBox.id = 'receiptwise-selection';
   document.body.appendChild(selectionBox);
+  
+  // Create size indicator
+  sizeIndicator = document.createElement('div');
+  sizeIndicator.id = 'receiptwise-size';
+  sizeIndicator.className = 'receiptwise-size-indicator';
+  document.body.appendChild(sizeIndicator);
 
   // Add event listeners
-  document.addEventListener('mousedown', handleMouseDown);
+  overlay.addEventListener('mousedown', handleMouseDown);
   document.addEventListener('keydown', handleKeyDown);
 }
 
@@ -46,7 +58,12 @@ function startCapture() {
 function handleMouseDown(e) {
   if (!isCapturing) return;
   
+  // Only handle left mouse button
+  if (e.button !== 0) return;
+  
   e.preventDefault();
+  e.stopPropagation();
+  
   startX = e.clientX;
   startY = e.clientY;
 
@@ -76,6 +93,14 @@ function handleMouseMove(e) {
   selectionBox.style.top = `${top}px`;
   selectionBox.style.width = `${width}px`;
   selectionBox.style.height = `${height}px`;
+  
+  // Update size indicator
+  if (sizeIndicator && width > 50 && height > 50) {
+    sizeIndicator.textContent = `${Math.round(width)} × ${Math.round(height)}`;
+    sizeIndicator.style.left = `${left + width / 2}px`;
+    sizeIndicator.style.top = `${top + height + 8}px`;
+    sizeIndicator.style.display = 'block';
+  }
 }
 
 // Handle mouse up - complete selection
@@ -241,7 +266,7 @@ function cancelCapture() {
   isCapturing = false;
   
   // Remove event listeners
-  document.removeEventListener('mousedown', handleMouseDown);
+  if (overlay) overlay.removeEventListener('mousedown', handleMouseDown);
   document.removeEventListener('mousemove', handleMouseMove);
   document.removeEventListener('mouseup', handleMouseUp);
   document.removeEventListener('keydown', handleKeyDown);
@@ -254,6 +279,10 @@ function cancelCapture() {
   if (selectionBox) {
     selectionBox.remove();
     selectionBox = null;
+  }
+  if (sizeIndicator) {
+    sizeIndicator.remove();
+    sizeIndicator = null;
   }
 }
 

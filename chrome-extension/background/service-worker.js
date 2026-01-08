@@ -2,12 +2,43 @@
 // const API_BASE_URL = 'https://www.receiptwise.io';
 const API_BASE_URL = 'http://localhost:3000';
 
+// Track upload count for badge
+let uploadCount = 0;
+
 // Handle keyboard shortcut command
 chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'capture-receipt') {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id) {
-      chrome.tabs.sendMessage(tab.id, { action: 'startCapture' });
+    if (!tab?.id) return;
+    
+    // Skip chrome:// and extension pages
+    if (tab.url?.startsWith('chrome://') || tab.url?.startsWith('chrome-extension://')) {
+      showNotification('error', 'Cannot Capture', 'Please navigate to a regular webpage first.');
+      return;
+    }
+    
+    try {
+      // Try sending to content script first
+      await chrome.tabs.sendMessage(tab.id, { action: 'startCapture' });
+    } catch {
+      // Content script not loaded, inject it
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['content/content.js']
+        });
+        await chrome.scripting.insertCSS({
+          target: { tabId: tab.id },
+          files: ['content/content.css']
+        });
+        // Small delay then trigger capture
+        setTimeout(() => {
+          chrome.tabs.sendMessage(tab.id, { action: 'startCapture' }).catch(() => {});
+        }, 50);
+      } catch (err) {
+        console.error('Failed to inject content script:', err);
+        showNotification('error', 'Cannot Capture', 'Unable to capture on this page.');
+      }
     }
   }
 });
@@ -48,6 +79,7 @@ async function handleReceiptUpload(imageData, tabId) {
   try {
     // Notify popup that upload started
     notifyPopup('uploadStarted');
+    showNotification('uploading', 'Uploading...', 'Processing your receipt...');
 
     // Get API key from storage
     const { apiKey } = await chrome.storage.sync.get('apiKey');
@@ -112,12 +144,26 @@ function notifyPopup(action, data = {}) {
 function showNotification(type, title, message) {
   // Use badge to indicate status
   if (type === 'success') {
+    uploadCount++;
     chrome.action.setBadgeText({ text: '✓' });
     chrome.action.setBadgeBackgroundColor({ color: '#10b981' });
   } else if (type === 'error') {
     chrome.action.setBadgeText({ text: '!' });
     chrome.action.setBadgeBackgroundColor({ color: '#ef4444' });
+  } else if (type === 'uploading') {
+    chrome.action.setBadgeText({ text: '...' });
+    chrome.action.setBadgeBackgroundColor({ color: '#f59e0b' });
+    return; // Don't clear uploading badge
   }
+
+  // Show system notification
+  chrome.notifications.create({
+    type: 'basic',
+    iconUrl: 'icons/icon128.png',
+    title: title,
+    message: message,
+    priority: type === 'error' ? 2 : 1
+  }).catch(() => {});
 
   // Clear badge after 3 seconds
   setTimeout(() => {
@@ -130,5 +176,15 @@ chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     // Open options page on first install
     chrome.tabs.create({ url: 'popup/popup.html' });
+  } else if (details.reason === 'update') {
+    // Clear any stale state on update
+    uploadCount = 0;
   }
+});
+
+// Handle notification clicks
+chrome.notifications.onClicked.addListener((notificationId) => {
+  // Open ReceiptWise receipts page when notification clicked
+  chrome.tabs.create({ url: `${API_BASE_URL}/receipts` });
+  chrome.notifications.clear(notificationId);
 });

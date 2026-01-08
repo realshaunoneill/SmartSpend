@@ -16,8 +16,8 @@ const toggleVisibilityBtn = document.getElementById('toggle-visibility');
 // const API_BASE_URL = 'https://www.receiptwise.io';
 const API_BASE_URL = 'http://localhost:3000';
 
-// Initialize popup
-document.addEventListener('DOMContentLoaded', async () => {
+// Initialize popup immediately (script is at end of body, DOM is ready)
+(async () => {
   const { apiKey } = await chrome.storage.sync.get('apiKey');
   
   if (apiKey) {
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     showSetupView();
   }
-});
+})();
 
 // Show/Hide Views
 function showSetupView() {
@@ -66,8 +66,13 @@ saveKeyBtn.addEventListener('click', async () => {
   const apiKey = apiKeyInput.value.trim();
   
   if (!apiKey) {
-    apiKeyInput.style.borderColor = '#ef4444';
-    apiKeyInput.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)';
+    showInputError('Please enter your API key');
+    return;
+  }
+  
+  // Validate API key format (should start with rw_)
+  if (!apiKey.startsWith('rw_')) {
+    showInputError('Invalid format. API key should start with rw_');
     return;
   }
 
@@ -148,31 +153,13 @@ captureBtn.addEventListener('click', async () => {
     return;
   }
   
-  try {
-    // Try to send message to existing content script
-    await chrome.tabs.sendMessage(tab.id, { action: 'startCapture' });
-    window.close();
-  } catch (error) {
-    // Content script not loaded, inject it first
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/content.js']
-      });
-      await chrome.scripting.insertCSS({
-        target: { tabId: tab.id },
-        files: ['content/content.css']
-      });
-      // Wait a moment for script to initialize
-      setTimeout(async () => {
-        await chrome.tabs.sendMessage(tab.id, { action: 'startCapture' });
-        window.close();
-      }, 100);
-    } catch (injectError) {
-      console.error('Failed to inject content script:', injectError);
-      alert('Cannot capture on this page. Please try a different webpage.');
-    }
-  }
+  // Send message to trigger capture (content script is already injected via manifest)
+  chrome.tabs.sendMessage(tab.id, { action: 'startCapture' }).catch(() => {
+    // Ignore errors - content script might not be ready yet on first page load
+  });
+  
+  // Close popup immediately to allow capture
+  window.close();
 });
 
 // Disconnect Account
@@ -208,3 +195,19 @@ apiKeyInput.addEventListener('input', () => {
   apiKeyInput.style.borderColor = '';
   apiKeyInput.style.boxShadow = '';
 });
+
+// Allow Enter key to submit API key
+apiKeyInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    saveKeyBtn.click();
+  }
+});
+
+// Helper to show input error
+function showInputError(message) {
+  apiKeyInput.style.borderColor = '#ef4444';
+  apiKeyInput.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)';
+  apiKeyInput.setAttribute('title', message);
+  apiKeyInput.focus();
+}
