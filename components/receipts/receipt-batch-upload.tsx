@@ -347,8 +347,9 @@ export function ReceiptBatchUpload({
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
           className={cn(
-            'relative flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 transition-all duration-200',
+            'relative flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 transition-all duration-200 cursor-pointer',
             isDragging
               ? 'border-primary bg-primary/10 scale-[1.02] shadow-lg'
               : 'border-muted-foreground/25 bg-gradient-to-b from-muted/30 to-muted/50 hover:border-primary/50 hover:bg-muted/80',
@@ -376,10 +377,10 @@ export function ReceiptBatchUpload({
                   <Upload className="h-10 w-10 text-muted-foreground" />
                 </div>
                 <span className="text-base font-medium text-foreground">
-                  Drag & drop receipts here
+                  Click to upload or drag & drop receipts
                 </span>
                 <span className="mt-1 text-sm text-muted-foreground">
-                  or choose an option below
+                  PNG, JPG, or HEIC (max 15MB each)
                 </span>
               </>
             )}
