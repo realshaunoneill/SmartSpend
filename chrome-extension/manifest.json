@@ -21,9 +21,11 @@
   "permissions": [
     "activeTab",
     "storage",
-    "tabs"
+    "tabs",
+    "scripting"
   ],
   "host_permissions": [
+    "<all_urls>",
     "https://www.receiptwise.io/*",
     "https://receiptwise.io/*"
   ],
@@ -34,7 +36,7 @@
     "capture-receipt": {
       "suggested_key": {
         "default": "Alt+Shift+R",
-        "mac": "Alt+Shift+R"
+        "mac": "MacCtrl+Shift+R"
       },
       "description": "Capture receipt from screen"
     }

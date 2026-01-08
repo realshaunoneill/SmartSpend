@@ -1,5 +1,6 @@
 // API Configuration
-import { API_BASE_URL } from '../popup/popup';
+// const API_BASE_URL = 'https://www.receiptwise.io';
+const API_BASE_URL = 'http://localhost:3000';
 
 // Handle keyboard shortcut command
 chrome.commands.onCommand.addListener(async (command) => {

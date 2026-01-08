@@ -13,8 +13,8 @@ const retryBtn = document.getElementById('retry-btn');
 const toggleVisibilityBtn = document.getElementById('toggle-visibility');
 
 // API Configuration
-// export const API_BASE_URL = 'https://www.receiptwise.io';
-export const API_BASE_URL = 'http://localhost:3000';
+// const API_BASE_URL = 'https://www.receiptwise.io';
+const API_BASE_URL = 'http://localhost:3000';
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
@@ -138,12 +138,40 @@ async function verifyApiKey(apiKey) {
 
 // Capture Button Click
 captureBtn.addEventListener('click', async () => {
-  // Send message to content script to start capture
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   
-  if (tab?.id) {
-    chrome.tabs.sendMessage(tab.id, { action: 'startCapture' });
-    window.close(); // Close popup to allow capture
+  if (!tab?.id) return;
+  
+  // Check if we can inject scripts (not on chrome:// or extension pages)
+  if (tab.url?.startsWith('chrome://') || tab.url?.startsWith('chrome-extension://')) {
+    alert('Cannot capture on Chrome system pages. Please navigate to a regular webpage.');
+    return;
+  }
+  
+  try {
+    // Try to send message to existing content script
+    await chrome.tabs.sendMessage(tab.id, { action: 'startCapture' });
+    window.close();
+  } catch (error) {
+    // Content script not loaded, inject it first
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['content/content.js']
+      });
+      await chrome.scripting.insertCSS({
+        target: { tabId: tab.id },
+        files: ['content/content.css']
+      });
+      // Wait a moment for script to initialize
+      setTimeout(async () => {
+        await chrome.tabs.sendMessage(tab.id, { action: 'startCapture' });
+        window.close();
+      }, 100);
+    } catch (injectError) {
+      console.error('Failed to inject content script:', injectError);
+      alert('Cannot capture on this page. Please try a different webpage.');
+    }
   }
 });
 
