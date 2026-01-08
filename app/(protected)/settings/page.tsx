@@ -25,12 +25,12 @@ import { useUser as useUserData } from '@/lib/hooks/use-user';
 import { useOnboarding } from '@/components/onboarding/onboarding-provider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { PlayCircle, User, CreditCard, Home, Download, AlertTriangle, Settings2, Sparkles, Trash2, Clock, Mail, FileImage } from 'lucide-react';
+import { PlayCircle, User, CreditCard, Home, Download, AlertTriangle, Settings2, Sparkles, Trash2, Clock, Mail, FileImage, Puzzle, Copy, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import type { HouseholdWithMembers } from '@/lib/types/api-responses';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { SUPPORTED_CURRENCIES } from '@/lib/utils/currency';
 
-const VALID_TABS = ['profile', 'preferences', 'subscription', 'household', 'data'] as const;
+const VALID_TABS = ['profile', 'preferences', 'subscription', 'household', 'integrations', 'data'] as const;
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -43,6 +43,9 @@ export default function SettingsPage() {
   const [isExportingImages, setIsExportingImages] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [isLoadingApiKey, setIsLoadingApiKey] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
   const queryClient = useQueryClient();
 
   // Tab state synced with URL using nuqs
@@ -262,6 +265,45 @@ export default function SettingsPage() {
     deleteAccountMutation.mutate();
   };
 
+  // API Key functions
+  const fetchApiKey = async () => {
+    setIsLoadingApiKey(true);
+    try {
+      const response = await fetch('/api/extension/api-key');
+      if (!response.ok) throw new Error('Failed to fetch API key');
+      const data = await response.json();
+      setApiKey(data.key);
+    } catch (error) {
+      console.error('Error fetching API key:', error);
+      toast.error('Failed to fetch API key');
+    } finally {
+      setIsLoadingApiKey(false);
+    }
+  };
+
+  const regenerateApiKey = async () => {
+    setIsLoadingApiKey(true);
+    try {
+      const response = await fetch('/api/extension/api-key', { method: 'POST' });
+      if (!response.ok) throw new Error('Failed to regenerate API key');
+      const data = await response.json();
+      setApiKey(data.key);
+      toast.success('API key regenerated successfully');
+    } catch (error) {
+      console.error('Error regenerating API key:', error);
+      toast.error('Failed to regenerate API key');
+    } finally {
+      setIsLoadingApiKey(false);
+    }
+  };
+
+  const copyApiKey = () => {
+    if (apiKey) {
+      navigator.clipboard.writeText(apiKey);
+      toast.success('API key copied to clipboard');
+    }
+  };
+
   // Check if deletion is scheduled
   const isDeletionScheduled = userData?.deletionScheduledAt !== null && userData?.deletionScheduledAt !== undefined;
   const deletionDate = isDeletionScheduled ? new Date(userData.deletionScheduledAt!) : null;
@@ -312,6 +354,10 @@ export default function SettingsPage() {
             <TabsTrigger value="household" className="gap-2">
               <Home className="h-4 w-4 hidden sm:block" />
               Household
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="gap-2">
+              <Puzzle className="h-4 w-4 hidden sm:block" />
+              Integrations
             </TabsTrigger>
             <TabsTrigger value="data" className="gap-2">
               <Download className="h-4 w-4 hidden sm:block" />
@@ -580,6 +626,81 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Integrations Tab */}
+          <TabsContent value="integrations" className="space-y-6 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Chrome Extension</CardTitle>
+                <CardDescription>
+                  Capture receipts from anywhere on the web with our browser extension
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg bg-muted/50 p-4 space-y-3">
+                  <h4 className="font-medium text-sm">How it works</h4>
+                  <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+                    <li>Install the ReceiptWise Clipper extension from the Chrome Web Store</li>
+                    <li>Copy your API key below and paste it in the extension</li>
+                    <li>Use the snipping tool to capture receipts from any webpage</li>
+                  </ol>
+                </div>
+
+                {userData?.subscribed ? (
+                  <div className="space-y-3">
+                    <Label htmlFor="api-key">API Key</Label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          id="api-key"
+                          value={apiKey ? (showApiKey ? apiKey : '•'.repeat(40)) : 'Click "Generate" to create your API key'}
+                          readOnly
+                          className="font-mono text-xs pr-10"
+                        />
+                        {apiKey && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                            onClick={() => setShowApiKey(!showApiKey)}
+                          >
+                            {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        )}
+                      </div>
+                      {apiKey ? (
+                        <>
+                          <Button variant="outline" size="icon" onClick={copyApiKey} title="Copy API key">
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="icon" onClick={regenerateApiKey} disabled={isLoadingApiKey} title="Regenerate API key">
+                            <RefreshCw className={`h-4 w-4 ${isLoadingApiKey ? 'animate-spin' : ''}`} />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button onClick={fetchApiKey} disabled={isLoadingApiKey}>
+                          {isLoadingApiKey ? 'Generating...' : 'Generate'}
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Keep your API key secret. If compromised, regenerate it immediately.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed p-4 text-center">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Upgrade to Premium to use the Chrome extension
+                    </p>
+                    <Button onClick={handleUpgrade}>
+                      Upgrade to Premium
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Data Tab */}
