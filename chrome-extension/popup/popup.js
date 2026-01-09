@@ -1,4 +1,5 @@
 // DOM Elements
+const container = document.getElementById('container');
 const setupView = document.getElementById('setup-view');
 const mainView = document.getElementById('main-view');
 const apiKeyInput = document.getElementById('api-key');
@@ -16,16 +17,35 @@ const toggleVisibilityBtn = document.getElementById('toggle-visibility');
 // const API_BASE_URL = 'https://www.receiptwise.io';
 const API_BASE_URL = 'http://localhost:3000';
 
-// Initialize popup immediately (script is at end of body, DOM is ready)
-(async () => {
-  const { apiKey } = await chrome.storage.sync.get('apiKey');
+// Cache API key state
+let cachedApiKey = null;
+let currentTab = null;
 
+// Pre-fetch current tab info immediately
+chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => {
+  currentTab = tabs[0];
+});
+
+// Initialize popup immediately with cached state
+chrome.storage.sync.get('apiKey').then(({ apiKey }) => {
+  cachedApiKey = apiKey;
   if (apiKey) {
     showMainView();
   } else {
     showSetupView();
   }
-})();
+  // Show UI with fade-in
+  requestAnimationFrame(() => {
+    container.classList.add('ready');
+  });
+});
+
+// Listen for storage changes to update cache
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'sync' && changes.apiKey) {
+    cachedApiKey = changes.apiKey.newValue;
+  }
+});
 
 // Show/Hide Views
 function showSetupView() {
@@ -90,6 +110,7 @@ saveKeyBtn.addEventListener('click', async () => {
 
     if (isValid) {
       await chrome.storage.sync.set({ apiKey });
+      cachedApiKey = apiKey;
       showMainView();
     } else {
       apiKeyInput.style.borderColor = '#ef4444';
@@ -200,7 +221,8 @@ async function captureFullTabAndOpenCropper() {
 
 // Capture Button Click
 captureBtn.addEventListener('click', async () => {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  // Use cached tab or fetch if not available
+  const tab = currentTab || (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
 
   if (!tab?.id || !tab.url) {
     alert('Unable to access this tab.');
@@ -214,51 +236,27 @@ captureBtn.addEventListener('click', async () => {
     return;
   }
 
+  // Close popup immediately for faster response
+  window.close();
+
   // Check if this is a restricted URL (but can still screenshot)
   if (isRestrictedUrl(tab.url)) {
     // Use fallback: capture full tab and open cropper
-    await captureFullTabAndOpenCropper();
+    chrome.runtime.sendMessage({ action: 'captureAndCrop' });
     return;
   }
 
-  // Try normal content script flow
-  try {
-    await chrome.tabs.sendMessage(tab.id, { action: 'ping' });
-    // Content script responded, start capture
-    await chrome.tabs.sendMessage(tab.id, { action: 'startCapture' });
-    window.close();
-  } catch {
-    // Content script not loaded, try to inject it
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/content.js']
-      });
-      await chrome.scripting.insertCSS({
-        target: { tabId: tab.id },
-        files: ['content/content.css']
-      });
-      // Small delay then start capture
-      setTimeout(async () => {
-        try {
-          await chrome.tabs.sendMessage(tab.id, { action: 'startCapture' });
-          window.close();
-        } catch {
-          // Injection worked but message failed - use fallback
-          await captureFullTabAndOpenCropper();
-        }
-      }, 100);
-    } catch (err) {
-      console.error('Injection failed:', err);
-      // Use fallback for any injection failure
-      await captureFullTabAndOpenCropper();
-    }
-  }
+  // Try normal content script flow - send to background to handle
+  chrome.runtime.sendMessage({ 
+    action: 'startCapture',
+    tabId: tab.id 
+  });
 });
 
 // Disconnect Account
 disconnectBtn.addEventListener('click', async () => {
   await chrome.storage.sync.remove('apiKey');
+  cachedApiKey = null;
   apiKeyInput.value = '';
   showSetupView();
 });

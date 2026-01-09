@@ -4,11 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ReceiptWise Clipper</title>
+  <!-- Critical CSS for instant render -->
+  <style>
+    body { margin: 0; padding: 0; width: 380px; min-height: 520px; }
+    .container { opacity: 0; transition: opacity 0.1s; }
+    .container.ready { opacity: 1; }
+    .hidden { display: none !important; }
+  </style>
   <!-- Use system fonts for instant loading -->
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="container">
+  <div class="container" id="container">
     <!-- Header with gradient accent -->
     <header class="header">
       <div class="header-content">

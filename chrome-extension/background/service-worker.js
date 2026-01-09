@@ -141,6 +141,44 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     })();
     sendResponse({ received: true });
+  } else if (message.action === 'startCapture') {
+    // Handle capture request from popup
+    (async () => {
+      const tabId = message.tabId || sender.tab?.id;
+      if (!tabId) return;
+      
+      try {
+        // Try to ping content script
+        await chrome.tabs.sendMessage(tabId, { action: 'ping' });
+        // Content script is ready, start capture
+        await chrome.tabs.sendMessage(tabId, { action: 'startCapture' });
+      } catch {
+        // Content script not loaded, inject it
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId },
+            files: ['content/content.js']
+          });
+          await chrome.scripting.insertCSS({
+            target: { tabId },
+            files: ['content/content.css']
+          });
+          // Wait briefly then start capture
+          setTimeout(async () => {
+            try {
+              await chrome.tabs.sendMessage(tabId, { action: 'startCapture' });
+            } catch {
+              // Fallback to screenshot+crop
+              await captureFullTabAndOpenCropper(tabId);
+            }
+          }, 100);
+        } catch (err) {
+          // Injection failed, use fallback
+          await captureFullTabAndOpenCropper(tabId);
+        }
+      }
+    })();
+    sendResponse({ received: true });
   } else if (message.action === 'captureTab') {
     // Capture the visible tab for the content script
     captureVisibleTab(sender.tab?.id).then(imageData => {
