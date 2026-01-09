@@ -5,15 +5,89 @@ const API_BASE_URL = 'http://localhost:3000';
 // Track upload count for badge
 let uploadCount = 0;
 
+// List of restricted URLs where content scripts can't run
+const RESTRICTED_PATTERNS = [
+  'chrome://',
+  'chrome-extension://',
+  'edge://',
+  'about:',
+  'data:',
+  'file://',
+  'devtools://',
+  'view-source:',
+  'https://mail.google.com',
+  'https://accounts.google.com',
+  'https://myaccount.google.com', 
+  'https://payments.google.com',
+  'https://pay.google.com',
+  'https://chrome.google.com/webstore',
+  'https://addons.mozilla.org',
+  'https://microsoftedge.microsoft.com',
+];
+
+function isRestrictedUrl(url) {
+  if (!url) return true;
+  return RESTRICTED_PATTERNS.some(pattern => url.startsWith(pattern));
+}
+
+function getBlockedMessage(url) {
+  if (!url) return 'Cannot capture on this page.';
+  if (url.includes('mail.google.com')) return 'Gmail blocks extensions. Opening screenshot cropper...';
+  if (url.includes('accounts.google.com')) return 'Google login pages block extensions.';
+  if (url.includes('chrome.google.com')) return 'Chrome Web Store blocks extensions.';
+  if (url.startsWith('chrome://')) return 'Browser system pages cannot be captured.';
+  return 'This page blocks extensions. Opening screenshot cropper...';
+}
+
+// Check if URL is completely blocked (can't even take screenshot)
+function isCompletelyBlocked(url) {
+  if (!url) return true;
+  const blocked = ['chrome://', 'chrome-extension://', 'edge://', 'about:', 'devtools://', 'view-source:'];
+  return blocked.some(pattern => url.startsWith(pattern));
+}
+
+// Capture full tab and open cropper for restricted sites
+async function captureFullTabAndOpenCropper(tabId) {
+  try {
+    // Capture the visible tab
+    const imageData = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
+    
+    // Generate a unique key for this screenshot
+    const screenshotKey = Date.now().toString();
+    
+    // Store screenshot temporarily
+    await chrome.storage.local.set({ [`screenshot_${screenshotKey}`]: imageData });
+    
+    // Open cropper page
+    chrome.tabs.create({
+      url: `cropper/cropper.html?key=${screenshotKey}`,
+      active: true
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to capture tab:', error);
+    showNotification('error', 'Capture Failed', 'Unable to take screenshot of this page.');
+    return false;
+  }
+}
+
 // Handle keyboard shortcut command
 chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'capture-receipt') {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab?.id) return;
+    if (!tab?.id || !tab.url) return;
     
-    // Skip chrome:// and extension pages
-    if (tab.url?.startsWith('chrome://') || tab.url?.startsWith('chrome-extension://')) {
-      showNotification('error', 'Cannot Capture', 'Please navigate to a regular webpage first.');
+    // Check if completely blocked (can't even screenshot)
+    if (isCompletelyBlocked(tab.url)) {
+      showNotification('error', 'Cannot Capture', 'Browser system pages cannot be captured.');
+      return;
+    }
+    
+    // Check if this is a restricted URL (content scripts blocked but can still screenshot)
+    if (isRestrictedUrl(tab.url)) {
+      // Use fallback: capture full tab and open cropper
+      await captureFullTabAndOpenCropper(tab.id);
       return;
     }
     
@@ -33,11 +107,15 @@ chrome.commands.onCommand.addListener(async (command) => {
         });
         // Small delay then trigger capture
         setTimeout(() => {
-          chrome.tabs.sendMessage(tab.id, { action: 'startCapture' }).catch(() => {});
+          chrome.tabs.sendMessage(tab.id, { action: 'startCapture' }).catch(async () => {
+            // If still fails, use fallback
+            await captureFullTabAndOpenCropper(tab.id);
+          });
         }, 50);
       } catch (err) {
         console.error('Failed to inject content script:', err);
-        showNotification('error', 'Cannot Capture', 'Unable to capture on this page.');
+        // Use fallback for any injection failure
+        await captureFullTabAndOpenCropper(tab.id);
       }
     }
   }
@@ -47,6 +125,21 @@ chrome.commands.onCommand.addListener(async (command) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'uploadReceipt') {
     handleReceiptUpload(message.imageData, sender.tab?.id);
+    sendResponse({ received: true });
+  } else if (message.action === 'uploadReceiptWithResponse') {
+    // Upload with response for cropper page
+    handleReceiptUploadWithResponse(message.imageData)
+      .then(result => sendResponse(result))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true; // Keep channel open for async response
+  } else if (message.action === 'captureAndCrop') {
+    // Popup requesting fallback capture
+    (async () => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab?.id) {
+        await captureFullTabAndOpenCropper(tab.id);
+      }
+    })();
     sendResponse({ received: true });
   } else if (message.action === 'captureTab') {
     // Capture the visible tab for the content script
@@ -113,9 +206,34 @@ async function handleReceiptUpload(imageData, tabId) {
       body: formData,
     });
 
+    // Check content type before parsing
+    const contentType = response.headers.get('content-type');
+    const isJson = contentType && contentType.includes('application/json');
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Upload failed (${response.status})`);
+      let errorMessage = `Upload failed (${response.status})`;
+      
+      if (isJson) {
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // JSON parse failed, use default message
+        }
+      } else if (response.status === 404) {
+        errorMessage = 'API endpoint not found. Is your server running?';
+      } else if (response.status === 401) {
+        errorMessage = 'Invalid API key. Please check your settings.';
+      } else if (response.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
+      throw new Error(errorMessage);
+    }
+
+    // Parse JSON response
+    if (!isJson) {
+      throw new Error('Invalid server response. Expected JSON.');
     }
 
     const result = await response.json();
@@ -130,6 +248,83 @@ async function handleReceiptUpload(imageData, tabId) {
     console.error('Upload error:', error);
     notifyPopup('uploadError', { error: error.message });
     showNotification('error', 'Upload Failed', error.message);
+  }
+}
+
+// Handle receipt upload with response (for cropper page)
+async function handleReceiptUploadWithResponse(imageData) {
+  try {
+    // Get API key from storage
+    const { apiKey } = await chrome.storage.sync.get('apiKey');
+
+    if (!apiKey) {
+      return { success: false, error: 'Not connected. Please set your API key in the extension popup.' };
+    }
+
+    // Convert base64 to blob
+    const base64Data = imageData.split(',')[1];
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'image/png' });
+
+    // Create form data
+    const formData = new FormData();
+    formData.append('file', blob, `receipt-${Date.now()}.png`);
+
+    // Upload to ReceiptWise API
+    const response = await fetch(`${API_BASE_URL}/api/extension/upload`, {
+      method: 'POST',
+      headers: {
+        'X-API-Key': apiKey,
+      },
+      body: formData,
+    });
+
+    // Check content type before parsing
+    const contentType = response.headers.get('content-type');
+    const isJson = contentType && contentType.includes('application/json');
+
+    if (!response.ok) {
+      let errorMessage = `Upload failed (${response.status})`;
+      
+      if (isJson) {
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // JSON parse failed, use default message
+        }
+      } else if (response.status === 404) {
+        errorMessage = 'API endpoint not found. Is your server running?';
+      } else if (response.status === 401) {
+        errorMessage = 'Invalid API key. Please check your settings.';
+      } else if (response.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
+      throw new Error(errorMessage);
+    }
+
+    // Parse JSON response
+    if (!isJson) {
+      throw new Error('Invalid server response. Expected JSON.');
+    }
+
+    const result = await response.json();
+
+    // Show success notification
+    showNotification('success', 'Receipt Uploaded!', 'Your receipt has been sent to ReceiptWise for processing.');
+
+    return { success: true, receiptId: result.receiptId };
+
+  } catch (error) {
+    console.error('Upload error:', error);
+    showNotification('error', 'Upload Failed', error.message);
+    return { success: false, error: error.message };
   }
 }
 

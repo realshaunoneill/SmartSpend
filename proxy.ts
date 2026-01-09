@@ -18,6 +18,7 @@ const isPublicRoute = createRouteMatcher([
   '/twitter-image(.*)',
   '/api/webhooks(.*)',
   '/api/stripe/webhooks', // Stripe webhooks
+  '/api/extension(.*)', // Chrome extension API (uses API key auth)
   '/ingest(.*)', // PostHog analytics
 ]);
 

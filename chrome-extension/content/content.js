@@ -10,6 +10,11 @@ let startY = 0;
 
 // Listen for messages from popup or background
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'ping') {
+    // Simple ping to check if content script is loaded
+    sendResponse({ pong: true });
+    return true;
+  }
   if (message.action === 'startCapture') {
     // Prevent duplicate captures
     if (isCapturing) {

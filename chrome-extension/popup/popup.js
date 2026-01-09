@@ -141,25 +141,119 @@ async function verifyApiKey(apiKey) {
   }
 }
 
+// List of restricted URLs where content scripts can't run
+const RESTRICTED_PATTERNS = [
+  'chrome://',
+  'chrome-extension://',
+  'edge://',
+  'about:',
+  'data:',
+  'file://',
+  'devtools://',
+  'view-source:',
+  // Google properties that block content scripts
+  'https://mail.google.com',
+  'https://accounts.google.com',
+  'https://myaccount.google.com', 
+  'https://payments.google.com',
+  'https://pay.google.com',
+  'https://chrome.google.com/webstore',
+  // Other restricted sites
+  'https://addons.mozilla.org',
+  'https://microsoftedge.microsoft.com',
+];
+
+function isRestrictedUrl(url) {
+  if (!url) return true;
+  return RESTRICTED_PATTERNS.some(pattern => url.startsWith(pattern));
+}
+
+function getBlockedReason(url) {
+  if (!url) return 'this page';
+  if (url.startsWith('chrome://') || url.startsWith('edge://')) return 'browser system pages';
+  if (url.startsWith('chrome-extension://')) return 'extension pages';
+  if (url.includes('mail.google.com')) return 'Gmail';
+  if (url.includes('accounts.google.com')) return 'Google login pages';
+  if (url.includes('chrome.google.com/webstore')) return 'Chrome Web Store';
+  if (url.includes('google.com')) return 'this Google page';
+  return 'this restricted page';
+}
+
+// Check if URL is completely blocked (can't even take screenshot)
+function isCompletelyBlocked(url) {
+  if (!url) return true;
+  const blocked = ['chrome://', 'chrome-extension://', 'edge://', 'about:', 'devtools://', 'view-source:'];
+  return blocked.some(pattern => url.startsWith(pattern));
+}
+
+// Capture full tab and open cropper (fallback for restricted sites)
+async function captureFullTabAndOpenCropper() {
+  try {
+    // Send message to background to handle the capture
+    chrome.runtime.sendMessage({ action: 'captureAndCrop' });
+    window.close();
+  } catch (error) {
+    console.error('Failed to initiate capture:', error);
+    alert('Failed to capture. Please try again.');
+  }
+}
+
 // Capture Button Click
 captureBtn.addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  if (!tab?.id) return;
-
-  // Check if we can inject scripts (not on chrome:// or extension pages)
-  if (tab.url?.startsWith('chrome://') || tab.url?.startsWith('chrome-extension://')) {
-    alert('Cannot capture on Chrome system pages. Please navigate to a regular webpage.');
+  if (!tab?.id || !tab.url) {
+    alert('Unable to access this tab.');
     return;
   }
 
-  // Send message to trigger capture (content script is already injected via manifest)
-  chrome.tabs.sendMessage(tab.id, { action: 'startCapture' }).catch(() => {
-    // Ignore errors - content script might not be ready yet on first page load
-  });
+  // Check if completely blocked (can't even screenshot)
+  if (isCompletelyBlocked(tab.url)) {
+    const reason = getBlockedReason(tab.url);
+    alert(`Cannot capture on ${reason}.\\n\\nPlease navigate to a regular webpage and try again.`);
+    return;
+  }
 
-  // Close popup immediately to allow capture
-  window.close();
+  // Check if this is a restricted URL (but can still screenshot)
+  if (isRestrictedUrl(tab.url)) {
+    // Use fallback: capture full tab and open cropper
+    await captureFullTabAndOpenCropper();
+    return;
+  }
+
+  // Try normal content script flow
+  try {
+    await chrome.tabs.sendMessage(tab.id, { action: 'ping' });
+    // Content script responded, start capture
+    await chrome.tabs.sendMessage(tab.id, { action: 'startCapture' });
+    window.close();
+  } catch {
+    // Content script not loaded, try to inject it
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['content/content.js']
+      });
+      await chrome.scripting.insertCSS({
+        target: { tabId: tab.id },
+        files: ['content/content.css']
+      });
+      // Small delay then start capture
+      setTimeout(async () => {
+        try {
+          await chrome.tabs.sendMessage(tab.id, { action: 'startCapture' });
+          window.close();
+        } catch {
+          // Injection worked but message failed - use fallback
+          await captureFullTabAndOpenCropper();
+        }
+      }, 100);
+    } catch (err) {
+      console.error('Injection failed:', err);
+      // Use fallback for any injection failure
+      await captureFullTabAndOpenCropper();
+    }
+  }
 });
 
 // Disconnect Account

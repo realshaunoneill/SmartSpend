@@ -44,7 +44,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["content/content.css"],
+      "resources": ["content/content.css", "cropper/cropper.html", "cropper/cropper.js"],
       "matches": ["<all_urls>"]
     }
   ],
