@@ -25,7 +25,7 @@ import { useUser as useUserData } from '@/lib/hooks/use-user';
 import { useOnboarding } from '@/components/onboarding/onboarding-provider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { PlayCircle, User, CreditCard, Home, Download, AlertTriangle, Settings2, Sparkles, Trash2, Clock, Mail, FileImage, Puzzle, Copy, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { PlayCircle, User, CreditCard, Home, Download, AlertTriangle, Settings2, Sparkles, Trash2, Clock, Mail, FileImage, Puzzle, Copy, RefreshCw, Eye, EyeOff, Plus, Key } from 'lucide-react';
 import type { HouseholdWithMembers } from '@/lib/types/api-responses';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { SUPPORTED_CURRENCIES } from '@/lib/utils/currency';
@@ -43,9 +43,17 @@ export default function SettingsPage() {
   const [isExportingImages, setIsExportingImages] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [apiKey, setApiKey] = useState<string | null>(null);
-  const [isLoadingApiKey, setIsLoadingApiKey] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
+  const [apiKeys, setApiKeys] = useState<Array<{
+    id: string;
+    name: string;
+    maskedKey: string;
+    createdAt: string;
+    lastUsedAt: string | null;
+  }>>([]);
+  const [newApiKey, setNewApiKey] = useState<{ key: string; name: string } | null>(null);
+  const [isLoadingApiKeys, setIsLoadingApiKeys] = useState(false);
+  const [newKeyName, setNewKeyName] = useState('');
+  const [showNewKeyDialog, setShowNewKeyDialog] = useState(false);
   const queryClient = useQueryClient();
 
   // Tab state synced with URL using nuqs
@@ -266,43 +274,84 @@ export default function SettingsPage() {
   };
 
   // API Key functions
-  const fetchApiKey = async () => {
-    setIsLoadingApiKey(true);
+  const fetchApiKeys = async () => {
+    setIsLoadingApiKeys(true);
     try {
       const response = await fetch('/api/extension/api-key');
-      if (!response.ok) throw new Error('Failed to fetch API key');
+      if (!response.ok) throw new Error('Failed to fetch API keys');
       const data = await response.json();
-      setApiKey(data.key);
+      setApiKeys(data.keys || []);
     } catch (error) {
-      console.error('Error fetching API key:', error);
-      toast.error('Failed to fetch API key');
+      console.error('Error fetching API keys:', error);
+      toast.error('Failed to fetch API keys');
     } finally {
-      setIsLoadingApiKey(false);
+      setIsLoadingApiKeys(false);
     }
   };
 
-  const regenerateApiKey = async () => {
-    setIsLoadingApiKey(true);
+  const createApiKey = async () => {
+    if (!newKeyName.trim()) {
+      toast.error('Please enter a name for the API key');
+      return;
+    }
+
+    setIsLoadingApiKeys(true);
     try {
-      const response = await fetch('/api/extension/api-key', { method: 'POST' });
-      if (!response.ok) throw new Error('Failed to regenerate API key');
+      const response = await fetch('/api/extension/api-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newKeyName.trim() }),
+      });
+      if (!response.ok) throw new Error('Failed to create API key');
       const data = await response.json();
-      setApiKey(data.key);
-      toast.success('API key regenerated successfully');
+      
+      // Show the full key once
+      setNewApiKey({ key: data.key, name: data.name });
+      setNewKeyName('');
+      setShowNewKeyDialog(false);
+      
+      // Refresh the list
+      await fetchApiKeys();
+      toast.success('API key created successfully');
     } catch (error) {
-      console.error('Error regenerating API key:', error);
-      toast.error('Failed to regenerate API key');
+      console.error('Error creating API key:', error);
+      toast.error('Failed to create API key');
     } finally {
-      setIsLoadingApiKey(false);
+      setIsLoadingApiKeys(false);
     }
   };
 
-  const copyApiKey = () => {
-    if (apiKey) {
-      navigator.clipboard.writeText(apiKey);
-      toast.success('API key copied to clipboard');
+  const deleteApiKey = async (keyId: string) => {
+    setIsLoadingApiKeys(true);
+    try {
+      const response = await fetch('/api/extension/api-key', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyId }),
+      });
+      if (!response.ok) throw new Error('Failed to delete API key');
+      
+      await fetchApiKeys();
+      toast.success('API key deleted successfully');
+    } catch (error) {
+      console.error('Error deleting API key:', error);
+      toast.error('Failed to delete API key');
+    } finally {
+      setIsLoadingApiKeys(false);
     }
   };
+
+  const copyApiKey = (key: string) => {
+    navigator.clipboard.writeText(key);
+    toast.success('API key copied to clipboard');
+  };
+
+  // Load API keys when tab changes to integrations
+  useEffect(() => {
+    if (currentTab === 'integrations' && userData?.subscribed) {
+      fetchApiKeys();
+    }
+  }, [currentTab, userData?.subscribed]);
 
   // Check if deletion is scheduled
   const isDeletionScheduled = userData?.deletionScheduledAt !== null && userData?.deletionScheduledAt !== undefined;
@@ -642,51 +691,182 @@ export default function SettingsPage() {
                   <h4 className="font-medium text-sm">How it works</h4>
                   <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
                     <li>Install the ReceiptWise Clipper extension from the Chrome Web Store</li>
-                    <li>Copy your API key below and paste it in the extension</li>
+                    <li>Create an API key below and copy it into the extension</li>
                     <li>Use the snipping tool to capture receipts from any webpage</li>
                   </ol>
                 </div>
 
                 {userData?.subscribed ? (
-                  <div className="space-y-3">
-                    <Label htmlFor="api-key">API Key</Label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Input
-                          id="api-key"
-                          value={apiKey ? (showApiKey ? apiKey : '•'.repeat(40)) : 'Click "Generate" to create your API key'}
-                          readOnly
-                          className="font-mono text-xs pr-10"
-                        />
-                        {apiKey && (
+                  <div className="space-y-4">
+                    {/* New API Key Dialog */}
+                    {newApiKey && (
+                      <div className="rounded-lg border-2 border-green-500 bg-green-50 dark:bg-green-950/20 p-4 space-y-3">
+                        <div className="flex items-start gap-3">
+                          <div className="rounded-full bg-green-500/10 p-2">
+                            <Key className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          </div>
+                          <div className="flex-1 space-y-2">
+                            <h4 className="font-semibold text-green-900 dark:text-green-100">
+                              API Key Created: {newApiKey.name}
+                            </h4>
+                            <p className="text-sm text-green-700 dark:text-green-300">
+                              Copy this key now - you won't be able to see it again!
+                            </p>
+                            <div className="flex gap-2">
+                              <Input
+                                value={newApiKey.key}
+                                readOnly
+                                className="font-mono text-xs bg-white dark:bg-gray-900"
+                              />
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => copyApiKey(newApiKey.key)}
+                                className="shrink-0"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
                           <Button
-                            type="button"
                             variant="ghost"
                             size="sm"
-                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
-                            onClick={() => setShowApiKey(!showApiKey)}
+                            onClick={() => setNewApiKey(null)}
+                            className="shrink-0"
                           >
-                            {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            Dismiss
                           </Button>
-                        )}
+                        </div>
                       </div>
-                      {apiKey ? (
-                        <>
-                          <Button variant="outline" size="icon" onClick={copyApiKey} title="Copy API key">
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="icon" onClick={regenerateApiKey} disabled={isLoadingApiKey} title="Regenerate API key">
-                            <RefreshCw className={`h-4 w-4 ${isLoadingApiKey ? 'animate-spin' : ''}`} />
-                          </Button>
-                        </>
+                    )}
+
+                    {/* API Keys List */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label>Your API Keys</Label>
+                        <AlertDialog open={showNewKeyDialog} onOpenChange={setShowNewKeyDialog}>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" disabled={isLoadingApiKeys}>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Create New Key
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Create New API Key</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Give your API key a name to help you identify it later (e.g., "Chrome Extension", "Work Laptop").
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <div className="space-y-2">
+                              <Label htmlFor="key-name">Key Name</Label>
+                              <Input
+                                id="key-name"
+                                placeholder="e.g., Chrome Extension"
+                                value={newKeyName}
+                                onChange={(e) => setNewKeyName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !isLoadingApiKeys) {
+                                    createApiKey();
+                                  }
+                                }}
+                              />
+                            </div>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={() => setNewKeyName('')}>Cancel</AlertDialogCancel>
+                              <Button onClick={createApiKey} disabled={isLoadingApiKeys || !newKeyName.trim()}>
+                                {isLoadingApiKeys ? 'Creating...' : 'Create Key'}
+                              </Button>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+
+                      {isLoadingApiKeys && apiKeys.length === 0 ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="text-center">
+                            <div className="mx-auto h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                            <p className="mt-2 text-sm text-muted-foreground">Loading API keys...</p>
+                          </div>
+                        </div>
+                      ) : apiKeys.length === 0 ? (
+                        <div className="rounded-lg border border-dashed p-6 text-center">
+                          <Key className="h-8 w-8 mx-auto text-muted-foreground/50" />
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            No API keys yet. Create one to get started.
+                          </p>
+                        </div>
                       ) : (
-                        <Button onClick={fetchApiKey} disabled={isLoadingApiKey}>
-                          {isLoadingApiKey ? 'Generating...' : 'Generate'}
-                        </Button>
+                        <div className="space-y-2">
+                          {apiKeys.map((key) => (
+                            <div
+                              key={key.id}
+                              className="flex items-center gap-3 rounded-lg border p-3 bg-card"
+                            >
+                              <div className="rounded-full bg-primary/10 p-2">
+                                <Key className="h-4 w-4 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium text-sm">{key.name}</p>
+                                </div>
+                                <p className="text-xs text-muted-foreground font-mono">
+                                  {key.maskedKey}
+                                </p>
+                                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    Created {new Date(key.createdAt).toLocaleDateString()}
+                                  </span>
+                                  {key.lastUsedAt && (
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      Last used {new Date(key.lastUsedAt).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                  {!key.lastUsedAt && (
+                                    <span className="text-yellow-600 dark:text-yellow-400">Never used</span>
+                                  )}
+                                </div>
+                              </div>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    disabled={isLoadingApiKeys}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete API Key?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete "{key.name}"? Any applications using this key will stop working immediately.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <Button
+                                      variant="destructive"
+                                      onClick={() => deleteApiKey(key.id)}
+                                      disabled={isLoadingApiKeys}
+                                    >
+                                      {isLoadingApiKeys ? 'Deleting...' : 'Delete Key'}
+                                    </Button>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
+
                     <p className="text-xs text-muted-foreground">
-                      Keep your API key secret. If compromised, regenerate it immediately.
+                      Keep your API keys secret. If a key is compromised, delete it immediately and create a new one.
                     </p>
                   </div>
                 ) : (

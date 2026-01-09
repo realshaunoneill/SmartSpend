@@ -1,11 +1,12 @@
 'use client';
 
-import { Store, MapPin, Info, Calendar, Clock, CreditCard, Hash, Receipt as ReceiptIcon, Tag, Building2, AlertCircle, RefreshCw, CheckCircle, Share2, Lock, Home, Upload } from 'lucide-react';
+import { Store, MapPin, Info, Calendar, Clock, CreditCard, Hash, Receipt as ReceiptIcon, Tag, Building2, AlertCircle, RefreshCw, CheckCircle, Share2, Lock, Home, Upload, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ReceiptAssignmentDialog } from '@/components/receipts/receipt-assignment-dialog';
 import { DeleteReceiptButton } from './delete-receipt-button';
 import { BusinessExpenseDialog } from './business-expense-dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { formatCategory, capitalizeText } from '@/lib/utils/format-category';
 import type { ReceiptWithItems, OCRData } from '@/lib/types/api-responses';
 import { useState } from 'react';
@@ -101,6 +102,17 @@ export function ReceiptHeader({
 
   return (
     <div>
+      {/* Warning for non-receipt uploads */}
+      {receipt.isReceipt === false && (
+        <Alert className="mb-4 bg-yellow-50 dark:bg-yellow-950/20 border-yellow-300 dark:border-yellow-800">
+          <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+          <AlertDescription className="text-yellow-800 dark:text-yellow-300">
+            <strong>Not a Receipt:</strong> This image doesn't appear to be a receipt, invoice, or purchase-related document. 
+            It may be a screenshot, photo, or other type of content. Receipt data extraction may be incomplete or inaccurate.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary/10">

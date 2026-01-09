@@ -60,6 +60,7 @@ export const receipts = pgTable('receipts', {
   processingTokens: jsonb('processing_tokens'), // OpenAI token usage: { prompt_tokens, completion_tokens, total_tokens }
   processingStatus: text('processing_status').notNull().default('pending'), // 'pending' | 'processing' | 'completed' | 'failed'
   processingError: text('processing_error'), // Error message if processing failed
+  isReceipt: boolean('is_receipt').default(true), // Whether this is actually a receipt (AI-detected)
   // Business expense fields
   isBusinessExpense: boolean('is_business_expense').default(false),
   businessCategory: text('business_category'),

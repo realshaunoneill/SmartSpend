@@ -13,7 +13,13 @@ function generateApiKey(): string {
   return `rw_${randomBytes(32).toString('hex')}`;
 }
 
-// GET - Retrieve existing API key or create new one
+// Mask API key for display (show only last 8 characters)
+function maskApiKey(key: string): string {
+  if (key.length <= 8) return key;
+  return `${'•'.repeat(key.length - 8)}${key.slice(-8)}`;
+}
+
+// GET - List all API keys for the user (masked for security)
 export async function GET(req: NextRequest) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   
@@ -26,8 +32,8 @@ export async function GET(req: NextRequest) {
     const subCheck = await requireSubscription(user);
     if (subCheck) return subCheck;
 
-    // Look for existing active API key
-    const [existingKey] = await db
+    // Get all active API keys for the user
+    const keys = await db
       .select()
       .from(apiKeys)
       .where(
@@ -36,48 +42,28 @@ export async function GET(req: NextRequest) {
           eq(apiKeys.isRevoked, false)
         )
       )
-      .limit(1);
+      .orderBy(apiKeys.createdAt);
 
-    if (existingKey) {
-      return NextResponse.json({
-        id: existingKey.id,
-        key: existingKey.key,
-        name: existingKey.name,
-        createdAt: existingKey.createdAt,
-        lastUsedAt: existingKey.lastUsedAt,
-      });
-    }
+    // Return masked keys for security
+    const maskedKeys = keys.map(k => ({
+      id: k.id,
+      name: k.name,
+      maskedKey: maskApiKey(k.key),
+      createdAt: k.createdAt,
+      lastUsedAt: k.lastUsedAt,
+    }));
 
-    // Create new API key
-    const newKey = generateApiKey();
-    const [created] = await db
-      .insert(apiKeys)
-      .values({
-        userId: user.id,
-        key: newKey,
-        name: 'Chrome Extension',
-      })
-      .returning();
-
-    submitLogEvent('api-key', 'Created new API key', correlationId, { userId: user.id });
-
-    return NextResponse.json({
-      id: created.id,
-      key: created.key,
-      name: created.name,
-      createdAt: created.createdAt,
-      lastUsedAt: created.lastUsedAt,
-    });
+    return NextResponse.json({ keys: maskedKeys });
   } catch (error) {
-    submitLogEvent('api-key', `Error managing API key: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
+    submitLogEvent('api-key', `Error listing API keys: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
-      { error: 'Failed to manage API key' },
+      { error: 'Failed to list API keys' },
       { status: 500 }
     );
   }
 }
 
-// POST - Regenerate API key
+// POST - Create a new API key
 export async function POST(req: NextRequest) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   
@@ -90,11 +76,9 @@ export async function POST(req: NextRequest) {
     const subCheck = await requireSubscription(user);
     if (subCheck) return subCheck;
 
-    // Revoke all existing keys
-    await db
-      .update(apiKeys)
-      .set({ isRevoked: true })
-      .where(eq(apiKeys.userId, user.id));
+    // Parse request body for optional key name
+    const body = await req.json().catch(() => ({}));
+    const keyName = body.name || 'Chrome Extension';
 
     // Create new API key
     const newKey = generateApiKey();
@@ -103,29 +87,30 @@ export async function POST(req: NextRequest) {
       .values({
         userId: user.id,
         key: newKey,
-        name: 'Chrome Extension',
+        name: keyName,
       })
       .returning();
 
-    submitLogEvent('api-key', 'Regenerated API key', correlationId, { userId: user.id });
+    submitLogEvent('api-key', 'Created new API key', correlationId, { userId: user.id, keyName });
 
+    // Return full key only on creation (user needs to copy it)
     return NextResponse.json({
       id: created.id,
-      key: created.key,
+      key: created.key, // Full key shown only once
       name: created.name,
       createdAt: created.createdAt,
       lastUsedAt: created.lastUsedAt,
     });
   } catch (error) {
-    submitLogEvent('api-key', `Error regenerating API key: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
+    submitLogEvent('api-key', `Error creating API key: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
-      { error: 'Failed to regenerate API key' },
+      { error: 'Failed to create API key' },
       { status: 500 }
     );
   }
 }
 
-// DELETE - Revoke API key
+// DELETE - Revoke specific API key by ID
 export async function DELETE(req: NextRequest) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
   
@@ -134,13 +119,37 @@ export async function DELETE(req: NextRequest) {
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
-    // Revoke all existing keys
-    await db
+    // Get key ID from request body
+    const body = await req.json();
+    const { keyId } = body;
+
+    if (!keyId) {
+      return NextResponse.json(
+        { error: 'API key ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Revoke the specific key (verify it belongs to the user)
+    const result = await db
       .update(apiKeys)
       .set({ isRevoked: true })
-      .where(eq(apiKeys.userId, user.id));
+      .where(
+        and(
+          eq(apiKeys.id, keyId),
+          eq(apiKeys.userId, user.id)
+        )
+      )
+      .returning();
 
-    submitLogEvent('api-key', 'Revoked API key', correlationId, { userId: user.id });
+    if (result.length === 0) {
+      return NextResponse.json(
+        { error: 'API key not found or access denied' },
+        { status: 404 }
+      );
+    }
+
+    submitLogEvent('api-key', 'Revoked API key', correlationId, { userId: user.id, keyId });
 
     return NextResponse.json({ success: true });
   } catch (error) {
