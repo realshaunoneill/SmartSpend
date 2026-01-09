@@ -107,7 +107,7 @@ export function ReceiptHeader({
         <Alert className="mb-4 bg-yellow-50 dark:bg-yellow-950/20 border-yellow-300 dark:border-yellow-800">
           <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
           <AlertDescription className="text-yellow-800 dark:text-yellow-300">
-            <strong>Not a Receipt:</strong> This image doesn't appear to be a receipt, invoice, or purchase-related document. 
+            <strong>Not a Receipt:</strong> This image doesn't appear to be a receipt, invoice, or purchase-related document.
             It may be a screenshot, photo, or other type of content. Receipt data extraction may be incomplete or inaccurate.
           </AlertDescription>
         </Alert>

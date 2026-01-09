@@ -19,8 +19,8 @@ async function authenticateApiKey(apiKey: string) {
     .where(
       and(
         eq(apiKeys.key, apiKey),
-        eq(apiKeys.isRevoked, false)
-      )
+        eq(apiKeys.isRevoked, false),
+      ),
     )
     .limit(1);
 
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (!apiKey) {
       return NextResponse.json(
         { error: 'API key required' },
-        { status: 401, headers }
+        { status: 401, headers },
       );
     }
 
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid API key' },
-        { status: 401, headers }
+        { status: 401, headers },
       );
     }
 
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (!receiptId) {
       return NextResponse.json(
         { error: 'Receipt ID is required' },
-        { status: 400, headers }
+        { status: 400, headers },
       );
     }
 
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (receipt.processingStatus === 'completed') {
       return NextResponse.json(
         { message: 'Receipt already processed', receiptId },
-        { headers }
+        { headers },
       );
     }
 
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       receipt.imageUrl,
       user.email,
       user.id,
-      correlationId
+      correlationId,
     );
 
     const { data: ocrData, usage } = result;
@@ -189,7 +189,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         total: ocrData.total,
         currency,
       },
-      { headers }
+      { headers },
     );
   } catch (error) {
     submitLogEvent('extension-process', `Processing error: ${error instanceof Error ? error.message : 'Unknown'}`, correlationId, {
@@ -198,7 +198,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json(
       { error: 'Processing failed' },
-      { status: 500, headers }
+      { status: 500, headers },
     );
   }
 }

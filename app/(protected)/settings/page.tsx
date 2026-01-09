@@ -25,7 +25,7 @@ import { useUser as useUserData } from '@/lib/hooks/use-user';
 import { useOnboarding } from '@/components/onboarding/onboarding-provider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { PlayCircle, User, CreditCard, Home, Download, AlertTriangle, Settings2, Sparkles, Trash2, Clock, Mail, FileImage, Puzzle, Copy, RefreshCw, Eye, EyeOff, Plus, Key } from 'lucide-react';
+import { PlayCircle, User, CreditCard, Home, Download, AlertTriangle, Settings2, Sparkles, Trash2, Clock, Mail, FileImage, Puzzle, Copy, Plus, Key, Lock } from 'lucide-react';
 import type { HouseholdWithMembers } from '@/lib/types/api-responses';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { SUPPORTED_CURRENCIES } from '@/lib/utils/currency';
@@ -865,9 +865,21 @@ export default function SettingsPage() {
                       )}
                     </div>
 
-                    <p className="text-xs text-muted-foreground">
-                      Keep your API keys secret. If a key is compromised, delete it immediately and create a new one.
-                    </p>
+                    <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20 p-4 space-y-2">
+                      <div className="flex items-start gap-2">
+                        <Lock className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                            API Key Security & Permissions
+                          </p>
+                          <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                            <li>• <strong>Write-only access:</strong> API keys can only upload receipts, not read or modify existing data</li>
+                            <li>• <strong>Extension use only:</strong> These keys are designed exclusively for the Chrome Extension</li>
+                            <li>• <strong>Keep secret:</strong> Never share your API keys. If compromised, delete and create a new one immediately</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="rounded-lg border border-dashed p-4 text-center">

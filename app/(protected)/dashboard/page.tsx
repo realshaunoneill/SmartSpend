@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useDashboardStats } from '@/lib/hooks/use-dashboard-stats';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { useUser } from '@/lib/hooks/use-user';
-import { Upload, Receipt, BarChart3, ArrowRight, Loader2, Sparkles, PieChart, Crown, Check } from 'lucide-react';
+import { Upload, Receipt, BarChart3, ArrowRight, Loader2, Sparkles, PieChart, Crown, Check, Chrome } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { UpcomingPayments } from '@/components/subscriptions/upcoming-payments';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
@@ -197,6 +197,23 @@ export default function DashboardPage() {
                   <p className="text-sm text-muted-foreground">
                     View insights and analyze your spending patterns
                   </p>
+                </div>
+              </div>
+
+              {/* Chrome Extension Tip */}
+              <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+                    <Chrome className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                      Pro Tip: Use our Chrome Extension
+                    </h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Capture receipts from anywhere on the web with a quick screenshot. Install from Settings → Integrations.
+                    </p>
+                  </div>
                 </div>
               </div>
 

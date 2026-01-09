@@ -13,15 +13,15 @@ const ENV_PATH_PREFIX = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
 const MAX_UPLOAD_SIZE_MB = 15;
 
 // Authenticate using API key
-async function authenticateApiKey(apiKey: string, correlationId: CorrelationId) {
+async function authenticateApiKey(apiKey: string, _correlationId: CorrelationId) {
   const [keyRecord] = await db
     .select()
     .from(apiKeys)
     .where(
       and(
         eq(apiKeys.key, apiKey),
-        eq(apiKeys.isRevoked, false)
-      )
+        eq(apiKeys.isRevoked, false),
+      ),
     )
     .limit(1);
 
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (!apiKey) {
       return NextResponse.json(
         { error: 'API key required' },
-        { status: 401, headers }
+        { status: 401, headers },
       );
     }
 
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if ('error' in authResult) {
       return NextResponse.json(
         { error: authResult.error },
-        { status: authResult.status, headers }
+        { status: authResult.status, headers },
       );
     }
 
@@ -113,14 +113,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       if (!allowedTypes.includes(file.type)) {
         return NextResponse.json(
           { error: 'Invalid file type. Allowed: JPEG, PNG, WebP' },
-          { status: 400, headers }
+          { status: 400, headers },
         );
       }
 
       if (file.size > MAX_UPLOAD_SIZE_MB * 1024 * 1024) {
         return NextResponse.json(
           { error: `File too large. Max size: ${MAX_UPLOAD_SIZE_MB}MB` },
-          { status: 400, headers }
+          { status: 400, headers },
         );
       }
 
@@ -144,7 +144,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       if (!response.ok) {
         return NextResponse.json(
           { error: 'Failed to fetch image from URL' },
-          { status: 400, headers }
+          { status: 400, headers },
         );
       }
 
@@ -155,7 +155,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       if (buffer.length > MAX_UPLOAD_SIZE_MB * 1024 * 1024) {
         return NextResponse.json(
           { error: `Image too large. Max size: ${MAX_UPLOAD_SIZE_MB}MB` },
-          { status: 400, headers }
+          { status: 400, headers },
         );
       }
 
@@ -175,7 +175,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     } else {
       return NextResponse.json(
         { error: 'No file or imageUrl provided' },
-        { status: 400, headers }
+        { status: 400, headers },
       );
     }
 
@@ -218,7 +218,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         imageUrl: finalImageUrl,
         processingStatus: 'pending',
       },
-      { headers }
+      { headers },
     );
   } catch (error) {
     submitLogEvent('extension-upload', `Extension upload error: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {
@@ -227,7 +227,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json(
       { error: 'Upload failed' },
-      { status: 500, headers }
+      { status: 500, headers },
     );
   }
 }

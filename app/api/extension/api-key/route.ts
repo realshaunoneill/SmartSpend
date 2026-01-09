@@ -39,8 +39,8 @@ export async function GET(req: NextRequest) {
       .where(
         and(
           eq(apiKeys.userId, user.id),
-          eq(apiKeys.isRevoked, false)
-        )
+          eq(apiKeys.isRevoked, false),
+        ),
       )
       .orderBy(apiKeys.createdAt);
 
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
     submitLogEvent('api-key', `Error listing API keys: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: 'Failed to list API keys' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
     submitLogEvent('api-key', `Error creating API key: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: 'Failed to create API key' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -126,7 +126,7 @@ export async function DELETE(req: NextRequest) {
     if (!keyId) {
       return NextResponse.json(
         { error: 'API key ID is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -137,15 +137,15 @@ export async function DELETE(req: NextRequest) {
       .where(
         and(
           eq(apiKeys.id, keyId),
-          eq(apiKeys.userId, user.id)
-        )
+          eq(apiKeys.userId, user.id),
+        ),
       )
       .returning();
 
     if (result.length === 0) {
       return NextResponse.json(
         { error: 'API key not found or access denied' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -156,7 +156,7 @@ export async function DELETE(req: NextRequest) {
     submitLogEvent('api-key', `Error revoking API key: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, {}, true);
     return NextResponse.json(
       { error: 'Failed to revoke API key' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

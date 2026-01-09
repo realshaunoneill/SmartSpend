@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Receipt, Scan, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock, Search, Cloud } from 'lucide-react';
+import { Receipt, Scan, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock, Search, Cloud, Chrome } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -48,6 +48,12 @@ const features = [
     description: 'Never lose a receipt again. All household receipts stored securely and searchable.',
     gradient: 'from-green-500/10 to-emerald-500/10',
   },
+  {
+    icon: Chrome,
+    title: 'Chrome Extension',
+    description: 'Capture receipts from any webpage with our browser extension. One-click snipping tool for email receipts and online purchases.',
+    gradient: 'from-indigo-500/10 to-blue-500/10',
+  },
 ];
 
 const stats = [
@@ -64,6 +70,7 @@ const benefits = [
   'Automatic categorization',
   'Export reports for taxes',
   'Track shared subscriptions',
+  'Chrome extension for easy capture',
 ];
 
 export default function LandingPage() {
@@ -130,8 +137,8 @@ export default function LandingPage() {
             {!isLoaded ? (
               // Show skeleton buttons while loading
               <>
-                <Skeleton className="h-12 w-[180px] rounded-md" />
-                <Skeleton className="h-12 w-[160px] rounded-md" />
+                <Skeleton className="h-12 w-44 rounded-md" />
+                <Skeleton className="h-12 w-40 rounded-md" />
               </>
             ) : isSignedIn ? (
               <Link href="/dashboard">

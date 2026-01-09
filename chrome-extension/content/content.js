@@ -109,7 +109,7 @@ function handleMouseMove(e) {
 }
 
 // Handle mouse up - complete selection
-async function handleMouseUp(e) {
+async function handleMouseUp(_e) {
   if (!isCapturing) return;
 
   document.removeEventListener('mousemove', handleMouseMove);
@@ -214,7 +214,7 @@ async function captureWithCanvas(rect) {
             0,
             0,
             rect.width,
-            rect.height
+            rect.height,
           );
           resolve(canvas);
         };
@@ -249,7 +249,7 @@ async function cropImage(imageDataUrl, rect) {
         0,
         0,
         rect.width * dpr,
-        rect.height * dpr
+        rect.height * dpr,
       );
       
       resolve(canvas.toDataURL('image/png'));

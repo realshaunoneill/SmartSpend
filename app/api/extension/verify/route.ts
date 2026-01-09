@@ -87,7 +87,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           subscribed: user.subscribed,
         },
       },
-      { headers }
+      { headers },
     );
   } catch (error) {
     return NextResponse.json(

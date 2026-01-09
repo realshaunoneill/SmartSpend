@@ -123,7 +123,7 @@ uploadBtn.addEventListener('click', async () => {
       left: currentSelection.left * scaleX,
       top: currentSelection.top * scaleY,
       width: currentSelection.width * scaleX,
-      height: currentSelection.height * scaleY
+      height: currentSelection.height * scaleY,
     };
     
     // Create canvas and crop
@@ -141,7 +141,7 @@ uploadBtn.addEventListener('click', async () => {
       0,
       0,
       scaledSelection.width,
-      scaledSelection.height
+      scaledSelection.height,
     );
     
     const croppedImageData = canvas.toDataURL('image/png');
