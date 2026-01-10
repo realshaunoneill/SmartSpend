@@ -13,7 +13,7 @@ import { UpcomingSubscriptionCard } from '@/components/subscriptions/upcoming-su
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Clock, Calendar, AlertCircle, Crown, Check, CreditCard, Bell, PieChart, ArrowRight, Sparkles } from 'lucide-react';
+import { Clock, Calendar, AlertCircle, Crown, Check, CreditCard, Bell, PieChart, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
 import { addDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 
