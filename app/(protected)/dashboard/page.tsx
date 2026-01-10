@@ -8,10 +8,11 @@ import { ReceiptList } from '@/components/receipts/receipt-list';
 import { HouseholdSelector } from '@/components/households/household-selector';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats } from '@/lib/hooks/use-dashboard-stats';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { useUser } from '@/lib/hooks/use-user';
-import { Upload, Receipt, BarChart3, ArrowRight, Loader2, Sparkles, PieChart, Crown, Check, Chrome } from 'lucide-react';
+import { Upload, Receipt, BarChart3, ArrowRight, Sparkles, PieChart, Crown, Check, Chrome } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { UpcomingPayments } from '@/components/subscriptions/upcoming-payments';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
@@ -33,23 +34,50 @@ export default function DashboardPage() {
 
   const { stats, isLoading: statsLoading } = useDashboardStats(actualHouseholdId, isPersonalOnly);
 
-  // Show loading state while stats are loading
+  // Show skeleton loading state
   if (statsLoading) {
     return (
       <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Dashboard</h1>
-              <p className="mt-1 text-sm text-muted-foreground sm:mt-2">Track your spending and manage your receipts</p>
-            </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Dashboard</h1>
+            <p className="mt-1 text-sm text-muted-foreground sm:mt-2">Track your spending and manage your receipts</p>
           </div>
-          <div className="flex min-h-[400px] items-center justify-center">
-            <div className="text-center">
-              <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-              <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
-            </div>
-          </div>
-        </main>
+          <Skeleton className="h-10 w-48" />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-4 rounded-full" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-20 mb-1" />
+                <Skeleton className="h-3 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          {[1, 2].map((i) => (
+            <Card key={i}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-4 w-48" />
+                  </div>
+                  <Skeleton className="h-9 w-32" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-[200px] w-full rounded-lg" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </main>
     );
   }
 

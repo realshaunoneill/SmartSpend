@@ -8,7 +8,7 @@ import { FeaturesGrid } from '@/components/upgrade/features-grid';
 import { ComparisonTable } from '@/components/upgrade/comparison-table';
 import { UpgradeCTA } from '@/components/upgrade/upgrade-cta';
 import { useUser } from '@/lib/hooks/use-user';
-import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function UpgradePage() {
   const router = useRouter();
@@ -21,11 +21,38 @@ export default function UpgradePage() {
     }
   }, [isLoading, isSubscribed, router]);
 
-  // Show loading state while checking subscription
+  // Show skeleton loading state while checking subscription
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-7xl flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="container mx-auto px-4 py-8 max-w-7xl space-y-12">
+        {/* Hero Skeleton - matches loading.tsx */}
+        <div className="text-center space-y-4">
+          <Skeleton className="h-12 w-80 mx-auto" />
+          <Skeleton className="h-6 w-96 mx-auto" />
+        </div>
+        {/* Pricing Cards Skeleton - matches loading.tsx */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className={`rounded-lg border bg-card p-6 space-y-4 ${i === 2 ? 'border-primary' : ''}`}>
+              {i === 2 && <Skeleton className="h-6 w-24 mx-auto rounded-full" />}
+              <Skeleton className="h-7 w-28 mx-auto" />
+              <div className="space-y-1">
+                <Skeleton className="h-10 w-24 mx-auto" />
+                <Skeleton className="h-4 w-20 mx-auto" />
+              </div>
+              <Skeleton className="h-4 w-48 mx-auto" />
+              <div className="space-y-3 pt-4">
+                {[1, 2, 3, 4, 5].map((j) => (
+                  <div key={j} className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4 rounded-full shrink-0" />
+                    <Skeleton className="h-4 flex-1" />
+                  </div>
+                ))}
+              </div>
+              <Skeleton className="h-11 w-full mt-4" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }  // If subscribed, show nothing while redirecting
