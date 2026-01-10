@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { useHouseholds } from '@/lib/hooks/use-households';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { HouseholdReceipts } from '@/components/households/household-receipts';
-import { Users, Home, Share2, Receipt, Shield, Crown, Check, UserPlus, Loader2, ArrowRight } from 'lucide-react';
+import { Users, Home, Share2, Receipt, Shield, Crown, Check, UserPlus, ArrowRight } from 'lucide-react';
 import type { HouseholdWithMembers, MemberWithUser } from '@/lib/types/api-responses';
 
 const trialDays = process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS ? parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) : 0;
@@ -66,14 +66,67 @@ export default function SharingPage() {
   const isCurrentUserAdmin = selectedHousehold && user ?
     members.find((m: { user_id: string; role: string }) => m.user_id === user.id)?.role === 'admin' : false;
 
-  // Show loading state
+  // Show skeleton loading state
   if (userLoading) {
     return (
       <main className="container mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
-          <div className="flex h-[400px] items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <Skeleton className="h-8 sm:h-9 w-48" />
+            <Skeleton className="h-4 w-80 mt-1 sm:mt-2" />
           </div>
-        </main>
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <Skeleton className="h-6 w-40" />
+            </div>
+            <Skeleton className="h-4 w-56" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[1, 2].map((i) => (
+              <div key={i} className="flex items-center justify-between p-4 rounded-lg border">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-9 w-20" />
+                  <Skeleton className="h-9 w-20" />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+        <div className="space-y-4">
+          <Skeleton className="h-6 w-32" />
+          {[1, 2].map((i) => (
+            <Card key={i}>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-5 w-36" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {[1, 2, 3].map((j) => (
+                    <Skeleton key={j} className="h-10 w-32 rounded-lg" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </main>
     );
   }
 

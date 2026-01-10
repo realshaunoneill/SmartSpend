@@ -7,8 +7,9 @@ import { OnboardingProvider } from '@/components/onboarding/onboarding-provider'
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour';
 import { useOnboarding } from '@/components/onboarding/onboarding-provider';
 import { Navigation } from '@/components/layout/navigation';
-import { Loader2, ShieldX, Mail } from 'lucide-react';
+import { ShieldX, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useClerk } from '@clerk/nextjs';
 
 function BlockedUserPage({ reason }: { reason?: string }) {
@@ -76,11 +77,60 @@ export default function ProtectedLayout({
   // Show loading state while authentication is being checked
   if (!clerkLoaded || userDataLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
+      <div className="min-h-screen bg-background">
+        {/* Navigation Skeleton */}
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+          <div className="container flex h-14 items-center justify-between">
+            <div className="flex items-center gap-6">
+              <Skeleton className="h-8 w-32" />
+              <div className="hidden md:flex items-center gap-4">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-9 w-9 rounded-full" />
+              <Skeleton className="h-9 w-9 rounded-full" />
+            </div>
+          </div>
+        </header>
+        {/* Page Content Skeleton */}
+        <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-9 w-40" />
+              <Skeleton className="h-5 w-72" />
+            </div>
+            <Skeleton className="h-10 w-48" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-lg border bg-card p-6">
+                <div className="flex items-center justify-between pb-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-4 rounded-full" />
+                </div>
+                <Skeleton className="h-8 w-20 mb-1" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            ))}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {[1, 2].map((i) => (
+              <div key={i} className="rounded-lg border bg-card">
+                <div className="p-6 pb-4">
+                  <Skeleton className="h-5 w-32 mb-2" />
+                  <Skeleton className="h-4 w-48" />
+                </div>
+                <div className="p-6 pt-0">
+                  <Skeleton className="h-[200px] w-full rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
       </div>
     );
   }
