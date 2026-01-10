@@ -76,9 +76,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       timestamp: new Date().toISOString(),
     });
 
-    // Track receipt upload event in PostHog
+    // Track receipt upload event in PostHog (if enabled)
     const posthog = getPostHogClient();
-    posthog.capture({
+    posthog?.capture({
       distinctId: clerkId,
       event: 'receipt_uploaded',
       properties: {
