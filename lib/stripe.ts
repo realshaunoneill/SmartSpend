@@ -143,7 +143,13 @@ export async function createCheckoutSession(
 
     // Create checkout session with the customer
     // Use the APP_URL with fallback to production domain to prevent localhost URLs in production
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.receiptwise.io';
+    // Also explicitly check for localhost and override in production environment
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.receiptwise.io';
+
+    // Safety check: never use localhost in production
+    if (process.env.NODE_ENV === 'production' && appUrl.includes('localhost')) {
+      appUrl = 'https://www.receiptwise.io';
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -276,7 +282,7 @@ export async function findAndReassociateStripeCustomer(
 
     if (existingCustomer.data.length > 0) {
       const customerId = existingCustomer.data[0].id;
-      
+
       submitLogEvent('stripe', `Found existing Stripe customer ${customerId} for ${email}`, correlationId, { userId, customerId, email });
 
       // Update the user record with the found Stripe customer ID
