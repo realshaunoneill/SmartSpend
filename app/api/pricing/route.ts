@@ -23,7 +23,7 @@ const getCachedPriceDetails = unstable_cache(
       throw new Error('Monthly price ID not configured');
     }
 
-    submitLogEvent('pricing', 'Fetching price details from Stripe', correlationId, { monthlyPriceId, annualPriceId });
+    submitLogEvent('pricing', 'Fetching price details from Stripe testing', correlationId, { monthlyPriceId, annualPriceId });
 
     // Fetch monthly price
     const monthlyPrice = await stripe.prices.retrieve(monthlyPriceId, {
