@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Receipt, Scan, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock, Search, Cloud, Chrome } from 'lucide-react';
+import { Receipt, Scan, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock, Search, Cloud, Chrome, Crown, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,6 +10,13 @@ import { Navigation } from '@/components/layout/navigation';
 import { Testimonials, SocialProofBanner } from '@/components/landing/testimonials';
 import { ExitIntentPopup } from '@/components/landing/exit-intent-popup';
 import { useUser } from '@clerk/nextjs';
+
+const scrollToSection = (id: string) => {
+  const element = document.getElementById(id);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth' });
+  }
+};
 
 const features = [
   {
@@ -155,7 +162,12 @@ export default function LandingPage() {
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="gap-2 border-border/50 backdrop-blur-sm">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="gap-2 border-border/50 backdrop-blur-sm"
+                  onClick={() => scrollToSection('features')}
+                >
                   <TrendingUp className="h-4 w-4" />
                   See How It Works
                 </Button>
@@ -205,7 +217,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="border-t border-border/50 px-4 py-20">
+      <section id="features" className="border-t border-border/50 px-4 py-20 scroll-mt-20">
         <div className="mx-auto max-w-6xl">
           <div className="mb-16 text-center">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-foreground">
@@ -311,6 +323,145 @@ export default function LandingPage() {
 
       {/* Testimonials Section */}
       <Testimonials />
+
+      {/* Pricing Section */}
+      <section id="pricing" className="border-t border-border/50 bg-muted/30 px-4 py-20 scroll-mt-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-12 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-foreground">
+              <Crown className="h-3.5 w-3.5 text-primary" />
+              Simple Pricing
+            </div>
+            <h2 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
+              Start Free, Upgrade When Ready
+            </h2>
+            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+              Try all features free for {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS || '7'} days. No credit card required.
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-2">
+            {/* Free Plan */}
+            <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm">
+              <CardContent className="p-8">
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold text-foreground">Free</h3>
+                  <p className="text-sm text-muted-foreground">Perfect to get started</p>
+                </div>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-foreground">€0</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+                <ul className="mb-8 space-y-3">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-foreground">5 receipts per month</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-foreground">AI receipt scanning</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-foreground">Basic spending insights</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-foreground">1 household</span>
+                  </li>
+                </ul>
+                {!isLoaded ? (
+                  <Skeleton className="h-10 w-full rounded-md" />
+                ) : isSignedIn ? (
+                  <Link href="/dashboard" className="block">
+                    <Button variant="outline" className="w-full">
+                      Go to Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link href="/sign-up" className="block">
+                    <Button variant="outline" className="w-full">
+                      Get Started Free
+                    </Button>
+                  </Link>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Pro Plan */}
+            <Card className="relative overflow-hidden border-primary/50 bg-card/50 backdrop-blur-sm shadow-lg shadow-primary/10">
+              <div className="absolute right-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
+                Most Popular
+              </div>
+              <CardContent className="p-8">
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold text-foreground">Pro</h3>
+                  <p className="text-sm text-muted-foreground">For power users & families</p>
+                </div>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-foreground">€4.99</span>
+                  <span className="text-muted-foreground">/month</span>
+                  <p className="mt-1 text-sm text-primary">or €39.99/year (save 33%)</p>
+                </div>
+                <ul className="mb-8 space-y-3">
+                  <li className="flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">Unlimited receipts</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-foreground">AI receipt scanning</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-foreground">Advanced analytics & insights</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-foreground">Unlimited households</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-foreground">Subscription tracking</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-foreground">Chrome extension</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-foreground">Export to CSV/JSON</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-foreground">Priority support</span>
+                  </li>
+                </ul>
+                {!isLoaded ? (
+                  <Skeleton className="h-10 w-full rounded-md" />
+                ) : isSignedIn ? (
+                  <Link href="/upgrade" className="block">
+                    <Button className="w-full gap-2 shadow-lg shadow-primary/20">
+                      Upgrade to Pro
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link href="/sign-up" className="block">
+                    <Button className="w-full gap-2 shadow-lg shadow-primary/20">
+                      Start {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS || '7'}-Day Free Trial
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
+                <p className="mt-3 text-center text-xs text-muted-foreground">
+                  No credit card required • Cancel anytime
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
 
       {/* Security Section */}
       <section className="border-t border-border/50 px-4 py-20">
