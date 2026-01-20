@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ReceiptWise Clipper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Quickly capture and upload receipts to ReceiptWise using a snipping tool",
   "icons": {
     "16": "icons/icon16.png",
@@ -46,14 +46,6 @@
     {
       "resources": ["content/content.css", "cropper/cropper.html", "cropper/cropper.js"],
       "matches": ["<all_urls>"]
-    }
-  ],
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content/content.js"],
-      "css": ["content/content.css"],
-      "run_at": "document_end"
     }
   ]
 }

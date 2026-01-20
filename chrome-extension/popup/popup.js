@@ -13,9 +13,8 @@ const errorMessage = document.getElementById('error-message');
 const retryBtn = document.getElementById('retry-btn');
 const toggleVisibilityBtn = document.getElementById('toggle-visibility');
 
-// API Configuration
-// const API_BASE_URL = 'https://www.receiptwise.io';
-const API_BASE_URL = 'http://localhost:3000';
+// API Configuration - Use production URL
+const API_BASE_URL = 'https://www.receiptwise.io';
 
 // Cache API key state
 let cachedApiKey = null;
@@ -249,7 +248,8 @@ captureBtn.addEventListener('click', async () => {
   // Try normal content script flow - send to background to handle
   chrome.runtime.sendMessage({ 
     action: 'startCapture',
-    tabId: tab.id 
+    tabId: tab.id,
+    url: tab.url
   });
 });
 
