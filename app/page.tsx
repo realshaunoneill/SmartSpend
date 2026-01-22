@@ -71,13 +71,13 @@ const stats = [
 ];
 
 const benefits = [
-  'Perfect for families & roommates',
-  'Real-time collaboration',
-  'Everyone can upload receipts',
-  'Automatic categorization',
-  'Export reports for taxes',
-  'Track shared subscriptions',
-  'Chrome extension for easy capture',
+  { text: 'Perfect for families & roommates', comingSoon: false },
+  { text: 'Real-time collaboration', comingSoon: false },
+  { text: 'Everyone can upload receipts', comingSoon: false },
+  { text: 'Automatic categorization', comingSoon: false },
+  { text: 'Export reports for taxes', comingSoon: false },
+  { text: 'Track shared subscriptions', comingSoon: false },
+  { text: 'Chrome extension for easy capture', comingSoon: true },
 ];
 
 export default function LandingPage() {
@@ -234,6 +234,7 @@ export default function LandingPage() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => {
               const Icon = feature.icon;
+              const isComingSoon = feature.title === 'Chrome Extension';
               return (
                 <Card
                   key={feature.title}
@@ -247,6 +248,16 @@ export default function LandingPage() {
                     <h3 className="mb-2 text-lg font-semibold text-foreground">{feature.title}</h3>
                     <p className="text-sm text-muted-foreground">{feature.description}</p>
                   </CardContent>
+                  {/* Coming Soon Overlay for Chrome Extension */}
+                  {isComingSoon && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-[2px]">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="rounded-full bg-primary/10 px-4 py-1.5 ring-1 ring-primary/20">
+                          <span className="text-sm font-semibold text-primary">Coming Soon</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </Card>
               );
             })}
@@ -272,11 +283,14 @@ export default function LandingPage() {
               </p>
               <ul className="mb-8 grid gap-3 sm:grid-cols-2">
                 {benefits.map((benefit) => (
-                  <li key={benefit} className="flex items-center gap-2">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                  <li key={benefit.text} className="flex items-center gap-2">
+                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${benefit.comingSoon ? 'bg-muted' : 'bg-primary/10'}`}>
+                      <CheckCircle2 className={`h-3.5 w-3.5 ${benefit.comingSoon ? 'text-muted-foreground/60' : 'text-primary'}`} />
                     </div>
-                    <span className="text-sm font-medium text-foreground">{benefit}</span>
+                    <span className={`text-sm font-medium ${benefit.comingSoon ? 'text-muted-foreground' : 'text-foreground'}`}>{benefit.text}</span>
+                    {benefit.comingSoon && (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary ring-1 ring-primary/20">Soon</span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -425,8 +439,9 @@ export default function LandingPage() {
                     <span className="text-sm text-foreground">Subscription tracking</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                    <span className="text-sm text-foreground">Chrome extension</span>
+                    <CheckCircle2 className="h-4 w-4 text-muted-foreground/60" />
+                    <span className="text-sm text-muted-foreground">Chrome extension</span>
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary ring-1 ring-primary/20">Soon</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-primary" />
