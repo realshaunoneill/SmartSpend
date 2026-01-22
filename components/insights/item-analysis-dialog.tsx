@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useItemAnalysis } from '@/hooks/use-item-analysis';
 import { useCurrency } from '@/lib/hooks/use-currency';
-import { Loader2, TrendingUp, ShoppingCart, Calendar, Store, ShoppingBag, AlertCircle, RefreshCcw, ExternalLink, Receipt } from 'lucide-react';
+import { Loader2, TrendingUp, ShoppingCart, Calendar, Store, ShoppingBag, AlertCircle, RefreshCcw, ExternalLink, Receipt, ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
@@ -416,7 +416,26 @@ export function ItemAnalysisDialog({
                         key={purchase.receiptId || index}
                         className="group relative p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                       >
-                        <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          {/* Receipt Thumbnail */}
+                          {purchase.imageUrl ? (
+                            <div 
+                              className="shrink-0 w-16 h-20 sm:w-20 sm:h-24 rounded-md overflow-hidden bg-muted border cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+                              onClick={() => purchase.receiptId && handleViewReceipt(purchase.receiptId)}
+                            >
+                              <img 
+                                src={purchase.imageUrl} 
+                                alt="Receipt" 
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="shrink-0 w-16 h-20 sm:w-20 sm:h-24 rounded-md bg-muted border flex items-center justify-center">
+                              <ImageIcon className="h-6 w-6 text-muted-foreground/50" />
+                            </div>
+                          )}
+
+                          {/* Purchase Details */}
                           <div className="flex-1 min-w-0 space-y-2">
                             <div className="flex items-center gap-2 flex-wrap">
                               <Store className="h-4 w-4 text-muted-foreground shrink-0" />

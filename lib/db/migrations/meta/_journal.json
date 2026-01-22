@@ -85,6 +85,20 @@
       "when": 1765843794445,
       "tag": "0011_hot_johnny_storm",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1767899228955,
+      "tag": "0012_glamorous_spirit",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1767919431690,
+      "tag": "0013_striped_junta",
+      "breakpoints": true
     }
   ]
 }

@@ -20,6 +20,7 @@ const receiptItemSchema = z.object({
 });
 
 const receiptDataSchema = z.object({
+  isReceipt: z.boolean().default(true).describe('Whether this image appears to be a receipt, invoice, or purchase-related document. False if it\'s a screenshot, meme, random image, etc.'),
   merchant: z.string().nullable().optional(),
   total: z.number().nullable().optional(),
   currency: z.string().nullable().optional(),
@@ -125,10 +126,17 @@ export async function analyzeReceiptWithGPT4o(
           content: [
             {
               type: 'text',
-              text: `Today's date is ${currentDate}. Analyze this receipt/invoice image and extract the following information:
+              text: `Today's date is ${currentDate}. Analyze this image and extract receipt information.
+
+FIRST: Determine if this is actually a receipt, invoice, or purchase-related document.
+- Set isReceipt to TRUE for: receipts, invoices, bills, purchase orders, payment confirmations
+- Set isReceipt to FALSE for: screenshots, memes, random photos, documents unrelated to purchases, text messages, social media posts, articles, etc.
+
+If isReceipt is FALSE, you can skip detailed extraction (but still try to identify what the image contains in the merchant field for context).
 
 REQUIRED FIELDS:
-- merchant: merchant/store name
+- isReceipt: boolean - whether this is actually a receipt/invoice/purchase document
+- merchant: merchant/store name (or description of image content if not a receipt)
 - total: total amount (number)
 - currency: currency code (e.g., "GBP", "USD", "EUR")
 - date: transaction date or invoice date (format as YYYY-MM-DD). Look for: "Date", "Due date", "Invoice date", "Transaction date", or any visible date on the document. If no date is visible, use today's date: ${currentDate}

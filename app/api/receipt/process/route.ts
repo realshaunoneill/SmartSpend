@@ -151,6 +151,7 @@ export async function POST(req: NextRequest) {
       currency: ocrData.currency,
       date: ocrData.date,
       category: ocrData.category,
+      isReceipt: ocrData.isReceipt,
       merchantType: ocrData.merchantType,
       paymentMethod: ocrData.paymentMethod,
       itemCount: ocrData.items?.length || 0,
@@ -178,6 +179,7 @@ export async function POST(req: NextRequest) {
         receiptNumber: ocrData.receiptNumber,
         paymentMethod: ocrData.paymentMethod,
         category: ocrData.category || 'other',
+        isReceipt: ocrData.isReceipt ?? true, // Store AI's determination
         processingStatus: 'completed', // Mark as successfully processed
         processingTokens: usage, // Store token usage for cost calculation
         processingError: null, // Clear any previous error

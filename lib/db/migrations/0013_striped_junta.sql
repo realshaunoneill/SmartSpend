@@ -1,0 +1,1 @@
+ALTER TABLE "receipts" ADD COLUMN "is_receipt" boolean DEFAULT true;

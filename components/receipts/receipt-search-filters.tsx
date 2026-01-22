@@ -118,9 +118,9 @@ export function ReceiptSearchFilters({
   };
 
   const handleSearchAllToggle = useCallback(() => {
-    const newFilters = { 
-      ...filters, 
-      searchAllHouseholds: !filters.searchAllHouseholds 
+    const newFilters = {
+      ...filters,
+      searchAllHouseholds: !filters.searchAllHouseholds,
     };
     onFiltersChange(newFilters);
   }, [filters, onFiltersChange]);
@@ -192,7 +192,7 @@ export function ReceiptSearchFilters({
         {/* Search All Households Toggle */}
         {hasHouseholdFilter && searchValue && (
           <Button
-            variant={filters.searchAllHouseholds ? "secondary" : "outline"}
+            variant={filters.searchAllHouseholds ? 'secondary' : 'outline'}
             size="sm"
             onClick={handleSearchAllToggle}
             className="whitespace-nowrap"

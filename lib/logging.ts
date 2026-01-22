@@ -40,7 +40,10 @@ export type EventType =
   | 'invitation'
   | 'checkout'
   | 'subscription'
-  | 'admin';
+  | 'admin'
+  | 'api-key'
+  | 'extension-upload'
+  | 'extension-process';
 export type CorrelationId = `${string}-${string}-${string}-${string}-${string}`;
 
 const LOG_TOKEN = process.env.LOG_TOKEN;

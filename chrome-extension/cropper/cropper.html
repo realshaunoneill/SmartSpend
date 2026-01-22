@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crop Receipt - ReceiptWise</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+      background: #18181b;
+      color: #fafafa;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(180deg, rgba(24, 24, 27, 0.98) 0%, rgba(24, 24, 27, 0.9) 100%);
+      backdrop-filter: blur(8px);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      border-bottom: 1px solid #27272a;
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .logo {
+      width: 32px;
+      height: 32px;
+      background: #10b981;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .subtitle {
+      font-size: 13px;
+      color: #a1a1aa;
+      margin-left: 8px;
+    }
+    
+    .instructions {
+      font-size: 14px;
+      color: #a1a1aa;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .instructions kbd {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      background: #3f3f46;
+      border: 1px solid #52525b;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #e4e4e7;
+    }
+    
+    .header-right {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s ease;
+    }
+    
+    .btn-cancel {
+      background: #3f3f46;
+      color: #fafafa;
+    }
+    
+    .btn-cancel:hover {
+      background: #52525b;
+    }
+    
+    .btn-upload {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-upload:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    
+    .btn-upload:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .canvas-container {
+      position: fixed;
+      top: 70px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px;
+      background: #09090b;
+    }
+    
+    #screenshot {
+      max-width: 100%;
+      height: auto;
+      cursor: crosshair;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+    
+    .selection-overlay {
+      position: absolute;
+      pointer-events: none;
+      z-index: 10;
+    }
+    
+    .selection-box {
+      position: absolute;
+      border: 2px solid #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+      display: none;
+    }
+    
+    .selection-box.active {
+      display: block;
+    }
+    
+    .size-indicator {
+      position: absolute;
+      bottom: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 10px;
+      background: rgba(24, 24, 27, 0.95);
+      color: #e4e4e7;
+      font-family: monospace;
+      font-size: 12px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(9, 9, 11, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 200;
+    }
+    
+    .loading.hidden {
+      display: none;
+    }
+    
+    .loading-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #27272a;
+      border-top-color: #10b981;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    .success-icon {
+      display: none;
+      color: #10b981;
+    }
+    
+    .loading.success .spinner {
+      display: none;
+    }
+    
+    .loading.success .success-icon {
+      display: block;
+      animation: scaleIn 0.3s ease;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes scaleIn {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+      from { transform: translate(-50%, 20px); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
+    }
+    
+    .loading-text {
+      font-size: 14px;
+      color: #a1a1aa;
+    }
+    
+    .loading.success .loading-text {
+      color: #10b981;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="7" y1="8" x2="17" y2="8"/>
+          <line x1="7" y1="12" x2="14" y2="12"/>
+          <line x1="7" y1="16" x2="11" y2="16"/>
+        </svg>
+      </div>
+      <span class="title">ReceiptWise</span>
+      <span class="subtitle">Select the receipt area</span>
+    </div>
+    <div class="instructions">
+      <span>Click and drag to select</span>
+      <span><kbd>Esc</kbd> to cancel</span>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-cancel" id="cancel-btn">Cancel</button>
+      <button class="btn btn-upload" id="upload-btn" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Upload Receipt
+      </button>
+    </div>
+  </div>
+  
+  <div class="canvas-container" id="container">
+    <img id="screenshot" alt="Screenshot">
+    <div class="selection-box" id="selection">
+      <div class="size-indicator" id="size-indicator"></div>
+    </div>
+  </div>
+  
+  <div class="loading hidden" id="loading">
+    <div class="loading-icon">
+      <div class="spinner"></div>
+      <svg class="success-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+    </div>
+    <div class="loading-text">Uploading receipt...</div>
+  </div>
+
+  <script src="cropper.js"></script>
+</body>
+</html>

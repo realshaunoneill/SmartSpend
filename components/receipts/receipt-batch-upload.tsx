@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Upload, Loader2, CheckCircle2, XCircle, X, RefreshCw, Camera, Sparkles, FileImage, Info } from 'lucide-react';
+import { Upload, Loader2, CheckCircle2, XCircle, X, RefreshCw, Camera, Sparkles, FileImage } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';

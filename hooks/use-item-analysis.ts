@@ -14,6 +14,22 @@ interface TopItem {
   merchantCount?: number;
 }
 
+export interface RecentPurchase {
+  date: string;
+  merchant: string;
+  quantity: string;
+  price: string;
+  receiptId: string;
+  imageUrl?: string;
+  currency?: string;
+  itemCount?: number;
+  items?: Array<{
+    name: string;
+    quantity: string;
+    price: string;
+  }>;
+}
+
 export interface ItemAnalysis {
   itemName: string;
   searchPeriod: {
@@ -41,13 +57,7 @@ export interface ItemAnalysis {
     total: number;
     average: number;
   }>;
-  recentPurchases: Array<{
-    date: string;
-    merchant: string;
-    quantity: string;
-    price: string;
-    receiptId: string;
-  }>;
+  recentPurchases: RecentPurchase[];
   itemVariants?: Array<{
     name: string;
     count: number;
@@ -73,23 +83,64 @@ async function analyzeItem(
     userCurrency?: string;
   },
 ): Promise<ItemAnalysis> {
-      // Use the top items endpoint to get all items
-      const params = new URLSearchParams({
-        limit: '200', // Get more items to find all related ones
+      // Fetch top items and purchase history in parallel
+      const topItemsParams = new URLSearchParams({
+        limit: '200',
         sortBy: 'frequency',
         ...(options?.householdId && { householdId: options.householdId }),
         ...(options?.months && { months: options.months.toString() }),
       });
 
-      const response = await fetch(`/api/receipts/items/top?${params}`);
+      const historyParams = new URLSearchParams({
+        itemName,
+        limit: '10',
+        ...(options?.householdId && { householdId: options.householdId }),
+        ...(options?.months && { months: options.months.toString() }),
+      });
 
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error');
-        console.error('[ItemAnalysis] API error:', response.status, errorText);
-        throw new Error(`Failed to analyze item (${response.status})`);
+      const [topItemsResponse, historyResponse] = await Promise.all([
+        fetch(`/api/receipts/items/top?${topItemsParams}`),
+        fetch(`/api/receipts/items/history?${historyParams}`),
+      ]);
+
+      if (!topItemsResponse.ok) {
+        const errorText = await topItemsResponse.text().catch(() => 'Unknown error');
+        console.error('[ItemAnalysis] Top items API error:', topItemsResponse.status, errorText);
+        throw new Error(`Failed to analyze item (${topItemsResponse.status})`);
       }
 
-      const data = await response.json();
+      const data = await topItemsResponse.json();
+
+      // Parse purchase history (optional - don't fail if it errors)
+      let purchaseHistory: RecentPurchase[] = [];
+      if (historyResponse.ok) {
+        try {
+          const historyData = await historyResponse.json();
+          purchaseHistory = (historyData.purchases || []).map((p: {
+            receiptId: string;
+            merchant: string;
+            date: string;
+            imageUrl?: string;
+            currency?: string;
+            quantity: string;
+            price: string;
+            itemCount?: number;
+            items?: Array<{ name: string; quantity: string; price: string }>;
+          }) => ({
+            receiptId: p.receiptId,
+            merchant: p.merchant,
+            date: p.date,
+            imageUrl: p.imageUrl,
+            currency: p.currency,
+            quantity: p.quantity,
+            price: p.price,
+            itemCount: p.itemCount,
+            items: p.items,
+          }));
+        } catch (e) {
+          console.error('[ItemAnalysis] Failed to parse purchase history:', e);
+        }
+      }
 
       // Validate response structure
       if (!data || !Array.isArray(data.topItems)) {
@@ -183,14 +234,17 @@ async function analyzeItem(
           average: averagePrice,
         })),
         monthlyTrend: [],
-        recentPurchases: [{
-          date: lastPurchased,
-          merchant: firstMerchant,
-          quantity: totalQuantity.toString(),
-          price: totalSpent.toString(),
-          receiptId: '',
-        }],
-        itemVariants, // Add variants to the response
+        // Use actual purchase history if available, otherwise use synthetic data
+        recentPurchases: purchaseHistory.length > 0
+          ? purchaseHistory
+          : [{
+              date: lastPurchased,
+              merchant: firstMerchant,
+              quantity: totalQuantity.toString(),
+              price: totalSpent.toString(),
+              receiptId: '',
+            }],
+        itemVariants,
       };
 
       return transformedData;

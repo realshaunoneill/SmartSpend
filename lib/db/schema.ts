@@ -60,6 +60,7 @@ export const receipts = pgTable('receipts', {
   processingTokens: jsonb('processing_tokens'), // OpenAI token usage: { prompt_tokens, completion_tokens, total_tokens }
   processingStatus: text('processing_status').notNull().default('pending'), // 'pending' | 'processing' | 'completed' | 'failed'
   processingError: text('processing_error'), // Error message if processing failed
+  isReceipt: boolean('is_receipt').default(true), // Whether this is actually a receipt (AI-detected)
   // Business expense fields
   isBusinessExpense: boolean('is_business_expense').default(false),
   businessCategory: text('business_category'),
@@ -98,6 +99,24 @@ export const householdInvitations = pgTable('household_invitations', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
+
+// API Keys Table - for Chrome extension and other integrations
+export const apiKeys = pgTable('api_keys', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull().default('Chrome Extension'),
+  key: text('key').notNull().unique(),
+  lastUsedAt: timestamp('last_used_at'),
+  expiresAt: timestamp('expires_at'), // NULL for non-expiring keys
+  isRevoked: boolean('is_revoked').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => ({
+  userIdIdx: index('api_keys_user_id_idx').on(table.userId),
+  keyIdx: index('api_keys_key_idx').on(table.key),
+}));
+
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type NewApiKey = typeof apiKeys.$inferInsert;
 
 // TypeScript Types
 export type User = typeof users.$inferSelect;

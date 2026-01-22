@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ReceiptIcon, Calendar, Store, Users, AlertCircle, RefreshCw, Clock, CheckCircle, Briefcase } from 'lucide-react';
+import { ReceiptIcon, Calendar, Store, Users, AlertCircle, RefreshCw, Clock, CheckCircle, Briefcase, AlertTriangle, ImageOff } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -127,21 +127,36 @@ export function ReceiptList({ receipts, onReceiptClick, onRetry }: ReceiptListPr
           </div>
         ) : (
           <div className="space-y-3">
-            {receipts.map((receipt) => (
+            {receipts.map((receipt) => {
+              // Check if this is not actually a receipt
+              const isNotReceipt = receipt.isReceipt === false;
+              
+              return (
               <div
                 key={receipt.id}
                 onClick={() => handleReceiptClick(receipt)}
-                className="flex flex-col gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50 cursor-pointer sm:flex-row sm:items-center sm:gap-4 sm:p-4"
+                className={`flex flex-col gap-3 rounded-lg border p-3 transition-colors cursor-pointer sm:flex-row sm:items-center sm:gap-4 sm:p-4 ${
+                  isNotReceipt 
+                    ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-300 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-950/30' 
+                    : 'bg-card hover:bg-muted/50'
+                }`}
               >
                 {/* Receipt Image Thumbnail */}
                 <div className="shrink-0">
-                  <div className="h-16 w-16 overflow-hidden rounded-md border bg-muted">
+                  <div className="h-16 w-16 overflow-hidden rounded-md border bg-muted relative">
                     {receipt.imageUrl ? (
-                      <img
-                        src={receipt.imageUrl || '/placeholder.svg'}
-                        alt={`Receipt from ${receipt.merchantName || 'merchant'}`}
-                        className="h-full w-full object-cover"
-                      />
+                      <>
+                        <img
+                          src={receipt.imageUrl || '/placeholder.svg'}
+                          alt={`Receipt from ${receipt.merchantName || 'merchant'}`}
+                          className="h-full w-full object-cover"
+                        />
+                        {isNotReceipt && (
+                          <div className="absolute inset-0 bg-yellow-500/20 flex items-center justify-center">
+                            <AlertTriangle className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
                         <ReceiptIcon className="h-8 w-8 text-muted-foreground" />
@@ -165,6 +180,12 @@ export function ReceiptList({ receipts, onReceiptClick, onRetry }: ReceiptListPr
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground sm:gap-3">
+                    {isNotReceipt && (
+                      <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-800 dark:text-yellow-300 border-yellow-400 dark:border-yellow-700">
+                        <ImageOff className="h-3 w-3 mr-1" />
+                        Not a Receipt
+                      </Badge>
+                    )}
                     {receipt.transactionDate && (
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
@@ -234,7 +255,8 @@ export function ReceiptList({ receipts, onReceiptClick, onRetry }: ReceiptListPr
                   )}
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         )}
       </CardContent>

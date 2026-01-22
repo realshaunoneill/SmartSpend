@@ -13,7 +13,7 @@ import { ReceiptSearchFilters, type ReceiptFilters } from '@/components/receipts
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Upload, Camera, Scan, FileText, Crown, Sparkles } from 'lucide-react';
+import { Calendar, Upload, Camera, Scan, FileText, Crown, Sparkles, Chrome } from 'lucide-react';
 import { useUser as useClerkUser } from '@clerk/nextjs';
 import { useUser } from '@/lib/hooks/use-user';
 import { useReceipts, useRecentReceipts } from '@/lib/hooks/use-receipts';
@@ -174,6 +174,12 @@ function ReceiptsPageContent() {
             <p className="mt-1 text-sm text-muted-foreground sm:mt-2">
               Upload and manage your receipts with automatic scanning
             </p>
+            {isSubscribed && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
+                <Chrome className="h-3.5 w-3.5" />
+                <span>Try our Chrome Extension for quick captures from anywhere on the web</span>
+              </div>
+            )}
           </div>
 
           {households.length > 0 && (
