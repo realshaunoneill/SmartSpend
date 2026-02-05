@@ -11,6 +11,10 @@ import {
   Download,
   CreditCard,
   X,
+  Target,
+  Calendar,
+  Tag,
+  AlertTriangle,
 } from 'lucide-react';
 
 const features = [
@@ -20,6 +24,41 @@ const features = [
     description: 'Upload and scan receipts with AI extraction',
     free: 'View only',
     premium: 'Unlimited uploads',
+  },
+  {
+    icon: <Zap className="w-5 h-5" />,
+    title: 'AI Processing',
+    description: 'Automatic receipt scanning and item extraction',
+    free: 'Not available',
+    premium: 'GPT-4o powered',
+  },
+  {
+    icon: <Calendar className="w-5 h-5" />,
+    title: 'Spending Forecast',
+    description: 'AI predicts your next month spending patterns',
+    free: 'Not available',
+    premium: 'AI predictions',
+  },
+  {
+    icon: <Target className="w-5 h-5" />,
+    title: 'Smart Budgets',
+    description: 'AI-generated budget recommendations by category',
+    free: 'Not available',
+    premium: 'AI budgets',
+  },
+  {
+    icon: <AlertTriangle className="w-5 h-5" />,
+    title: 'Spending Alerts',
+    description: 'AI detects unusual spending and price changes',
+    free: 'Not available',
+    premium: 'AI anomaly detection',
+  },
+  {
+    icon: <Tag className="w-5 h-5" />,
+    title: 'Price Tracking',
+    description: 'Track prices of items you buy frequently',
+    free: 'Not available',
+    premium: 'Price trends',
   },
   {
     icon: <BarChart3 className="w-5 h-5" />,
@@ -55,13 +94,6 @@ const features = [
     description: 'Get help when you need it with priority email support',
     free: 'Community support',
     premium: 'Priority support',
-  },
-  {
-    icon: <Zap className="w-5 h-5" />,
-    title: 'AI Processing',
-    description: 'Automatic receipt scanning and item extraction',
-    free: 'Not available',
-    premium: 'Included',
   },
   {
     icon: <Clock className="w-5 h-5" />,

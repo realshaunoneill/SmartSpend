@@ -43,7 +43,15 @@ export type EventType =
   | 'admin'
   | 'api-key'
   | 'extension-upload'
-  | 'extension-process';
+  | 'extension-process'
+  | 'budget'
+  | 'budget-error'
+  | 'anomaly'
+  | 'anomaly-error'
+  | 'price-trends'
+  | 'price-trends-error'
+  | 'forecast'
+  | 'forecast-error';
 export type CorrelationId = `${string}-${string}-${string}-${string}-${string}`;
 
 const LOG_TOKEN = process.env.LOG_TOKEN;

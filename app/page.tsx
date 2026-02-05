@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Receipt, Scan, Users, BarChart3, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock, Search, Cloud, Chrome, Crown, Zap } from 'lucide-react';
+import { Receipt, Scan, Users, Shield, ArrowRight, CheckCircle2, Sparkles, TrendingUp, Lock, Search, Cloud, Chrome, Crown, Zap, Target, Bell, Brain, Calendar, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,19 +28,25 @@ const features = [
   {
     icon: Scan,
     title: 'AI Receipt Scanning',
-    description: 'Upload receipts and our AI extracts merchant, amount, date, and line items automatically.',
+    description: 'Upload receipts and our AI extracts merchant, amount, date, and line items automatically with 99% accuracy.',
     gradient: 'from-emerald-500/10 to-teal-500/10',
   },
   {
-    icon: BarChart3,
-    title: 'Spending Analytics',
-    description: 'See who spent what with household breakdowns, category analysis, and spending trends.',
+    icon: Target,
+    title: 'Smart Budgeting',
+    description: 'AI analyzes your spending patterns and creates personalized budget recommendations with actionable savings tips.',
     gradient: 'from-blue-500/10 to-cyan-500/10',
   },
   {
-    icon: Cloud,
-    title: 'Cloud Sync',
-    description: 'All household members see receipts in real-time with automatic cloud synchronization.',
+    icon: Bell,
+    title: 'Spending Alerts',
+    description: 'Get notified about unusual spending, price changes, and potential duplicate charges automatically.',
+    gradient: 'from-red-500/10 to-orange-500/10',
+  },
+  {
+    icon: Brain,
+    title: 'AI Insights',
+    description: 'Discover hidden patterns in your spending with intelligent analytics and personalized recommendations.',
     gradient: 'from-purple-500/10 to-pink-500/10',
   },
   {
@@ -52,14 +58,26 @@ const features = [
   {
     icon: Receipt,
     title: 'Receipt Storage',
-    description: 'Never lose a receipt again. All household receipts stored securely and searchable.',
+    description: 'Never lose a receipt again. All household receipts stored securely and searchable in the cloud.',
     gradient: 'from-green-500/10 to-emerald-500/10',
   },
   {
     icon: Chrome,
     title: 'Chrome Extension',
-    description: 'Capture receipts from any webpage with our browser extension. One-click snipping tool for email receipts and online purchases.',
+    description: 'Capture receipts from any webpage with our browser extension. One-click snipping tool for email receipts.',
     gradient: 'from-indigo-500/10 to-blue-500/10',
+  },
+  {
+    icon: Calendar,
+    title: 'AI Spending Forecast',
+    description: 'AI predicts your next month spending based on your patterns, helping you plan ahead and avoid surprises.',
+    gradient: 'from-cyan-500/10 to-sky-500/10',
+  },
+  {
+    icon: Tag,
+    title: 'Price Tracking',
+    description: 'Track prices of items you buy frequently. See trends, find the best deals, and never overpay.',
+    gradient: 'from-yellow-500/10 to-amber-500/10',
   },
 ];
 
@@ -71,11 +89,13 @@ const stats = [
 ];
 
 const benefits = [
-  { text: 'Perfect for families & roommates', comingSoon: false },
-  { text: 'Real-time collaboration', comingSoon: false },
-  { text: 'Everyone can upload receipts', comingSoon: false },
+  { text: 'AI-powered receipt scanning', comingSoon: false },
+  { text: 'Smart budget recommendations', comingSoon: false },
+  { text: 'Spending anomaly detection', comingSoon: false },
+  { text: 'AI spending forecasts', comingSoon: false },
+  { text: 'Price trend tracking', comingSoon: false },
   { text: 'Automatic categorization', comingSoon: false },
-  { text: 'Export reports for taxes', comingSoon: false },
+  { text: 'Household expense sharing', comingSoon: false },
   { text: 'Track shared subscriptions', comingSoon: false },
   { text: 'Chrome extension for easy capture', comingSoon: true },
 ];

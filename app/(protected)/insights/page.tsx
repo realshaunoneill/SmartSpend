@@ -5,6 +5,10 @@ import { SpendingSummaryCard } from '@/components/insights/spending-summary-card
 import { TopItemsList } from '@/components/insights/top-items-list';
 import { ItemSearchAnalysis } from '@/components/insights/item-search-analysis';
 import { SubscriptionInsights } from '@/components/insights/subscription-insights';
+import { BudgetRecommendations } from '@/components/insights/budget-recommendations';
+import { SpendingAnomalies } from '@/components/insights/spending-anomalies';
+import { PriceTrends } from '@/components/insights/price-trends';
+import { SpendingForecast } from '@/components/insights/spending-forecast';
 import { HouseholdSelector } from '@/components/households/household-selector';
 import { useUser } from '@/lib/hooks/use-user';
 import { useHouseholds } from '@/lib/hooks/use-households';
@@ -12,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Sparkles, TrendingUp, Search, CreditCard, Crown, Check, PieChart, Brain, ArrowRight } from 'lucide-react';
+import { Sparkles, TrendingUp, Search, CreditCard, Crown, Check, PieChart, Brain, ArrowRight, Target, Shield, Tag, Calendar } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
 
@@ -244,7 +248,7 @@ export default function InsightsPage() {
           </Card>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+            <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex lg:grid-cols-8">
               <TabsTrigger value="overview" className="gap-2">
                 <TrendingUp className="h-4 w-4 hidden sm:block" />
                 Overview
@@ -253,27 +257,59 @@ export default function InsightsPage() {
                 <Sparkles className="h-4 w-4 hidden sm:block" />
                 AI Summary
               </TabsTrigger>
+              <TabsTrigger value="forecast" className="gap-2">
+                <Calendar className="h-4 w-4 hidden sm:block" />
+                Forecast
+              </TabsTrigger>
+              <TabsTrigger value="budget" className="gap-2">
+                <Target className="h-4 w-4 hidden sm:block" />
+                Budget
+              </TabsTrigger>
+              <TabsTrigger value="prices" className="gap-2">
+                <Tag className="h-4 w-4 hidden sm:block" />
+                Prices
+              </TabsTrigger>
+              <TabsTrigger value="alerts" className="gap-2">
+                <Shield className="h-4 w-4 hidden sm:block" />
+                Alerts
+              </TabsTrigger>
               <TabsTrigger value="top-items" className="gap-2">
                 <Search className="h-4 w-4 hidden sm:block" />
-                Top Items
+                Items
               </TabsTrigger>
               <TabsTrigger value="subscriptions" className="gap-2">
                 <CreditCard className="h-4 w-4 hidden sm:block" />
-                Subscriptions
+                Subs
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 mt-6">
-              <SubscriptionInsights />
               <div className="grid gap-6 lg:grid-cols-2">
-                <SpendingSummaryCard householdId={actualHouseholdId} autoLoad />
-                <TopItemsList householdId={actualHouseholdId} autoLoad />
+                <SpendingAnomalies householdId={actualHouseholdId} />
+                <BudgetRecommendations householdId={actualHouseholdId} />
               </div>
+              <SubscriptionInsights />
             </TabsContent>
 
             <TabsContent value="ai-summary" className="space-y-6 mt-6">
               <SpendingSummaryCard householdId={actualHouseholdId} autoLoad />
               <ItemSearchAnalysis householdId={actualHouseholdId} />
+            </TabsContent>
+
+            <TabsContent value="forecast" className="space-y-6 mt-6">
+              <SpendingForecast householdId={actualHouseholdId} />
+            </TabsContent>
+
+            <TabsContent value="budget" className="space-y-6 mt-6">
+              <BudgetRecommendations householdId={actualHouseholdId} />
+            </TabsContent>
+
+            <TabsContent value="prices" className="space-y-6 mt-6">
+              <PriceTrends householdId={actualHouseholdId} />
+            </TabsContent>
+
+            <TabsContent value="alerts" className="space-y-6 mt-6">
+              <SpendingAnomalies householdId={actualHouseholdId} />
             </TabsContent>
 
             <TabsContent value="top-items" className="space-y-6 mt-6">

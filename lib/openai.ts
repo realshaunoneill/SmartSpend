@@ -362,4 +362,349 @@ Keep the response under 300 words and format it in a friendly, easy-to-read way.
   };
 }
 
+// Schema for budget recommendations
+const budgetRecommendationSchema = z.object({
+  monthlyBudget: z.number().describe('Recommended total monthly budget'),
+  categoryBudgets: z.array(z.object({
+    category: z.string(),
+    currentSpending: z.number(),
+    recommendedBudget: z.number(),
+    savingsPotential: z.number(),
+    priority: z.enum(['essential', 'important', 'discretionary']),
+  })).describe('Budget recommendations by category'),
+  savingsGoal: z.number().describe('Recommended monthly savings amount'),
+  keyInsights: z.array(z.string()).describe('Key insights about spending patterns'),
+  actionItems: z.array(z.object({
+    action: z.string(),
+    impact: z.enum(['high', 'medium', 'low']),
+    potentialSavings: z.number().nullable(),
+  })).describe('Actionable items to improve finances'),
+});
 
+export type BudgetRecommendation = z.infer<typeof budgetRecommendationSchema>;
+
+export interface BudgetRecommendationResult {
+  recommendation: BudgetRecommendation;
+  usage: TokenUsage;
+}
+
+/**
+ * Generate AI-powered budget recommendations based on spending history
+ */
+export async function generateBudgetRecommendations(
+  spendingData: {
+    monthlySpending: Array<{ month: string; total: number }>;
+    categoryBreakdown: Array<{ category: string; total: number; avgMonthly: number }>;
+    topMerchants: Array<{ merchant: string; total: number; frequency: number }>;
+    totalSpent: number;
+    months: number;
+    currency: string;
+  },
+  userEmail: string,
+  userId: string,
+  correlationId: CorrelationId,
+): Promise<BudgetRecommendationResult> {
+  submitLogEvent('budget', 'Generating AI budget recommendations', correlationId, {
+    userId,
+    userEmail,
+    totalSpent: spendingData.totalSpent,
+    months: spendingData.months,
+  });
+
+  const avgMonthlySpend = spendingData.totalSpent / spendingData.months;
+
+  const result = await generateObject({
+    model: openai('gpt-4o-mini'),
+    schema: budgetRecommendationSchema,
+    system: `You are an expert financial advisor helping users create personalized budgets. 
+Analyze their spending patterns and provide realistic, achievable budget recommendations.
+Consider lifestyle factors and prioritize essential spending while identifying discretionary cuts.
+Be specific with numbers and provide actionable advice.`,
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: 'generateBudgetRecommendations',
+      metadata: { userId, userEmail, correlationId, purpose: 'budget_recommendations' },
+    },
+    prompt: `Create personalized budget recommendations based on this spending data:
+
+Currency: ${spendingData.currency}
+Analysis Period: ${spendingData.months} months
+Total Spent: ${spendingData.currency} ${spendingData.totalSpent.toFixed(2)}
+Average Monthly: ${spendingData.currency} ${avgMonthlySpend.toFixed(2)}
+
+Monthly Spending Trend:
+${spendingData.monthlySpending.map(m => `${m.month}: ${spendingData.currency} ${m.total.toFixed(2)}`).join('\n')}
+
+Category Breakdown (Total / Monthly Avg):
+${spendingData.categoryBreakdown.map(c => `${c.category}: ${spendingData.currency} ${c.total.toFixed(2)} (${spendingData.currency} ${c.avgMonthly.toFixed(2)}/month)`).join('\n')}
+
+Top Merchants by Spending:
+${spendingData.topMerchants.map(m => `${m.merchant}: ${spendingData.currency} ${m.total.toFixed(2)} (${m.frequency} visits)`).join('\n')}
+
+Provide:
+1. A realistic monthly budget target (aim for 10-20% savings)
+2. Category-specific budgets based on their patterns
+3. Identify essential vs discretionary spending
+4. Calculate potential savings for each category
+5. 3-5 specific action items with estimated impact`,
+    maxTokens: 800,
+    temperature: 0.6,
+  });
+
+  submitLogEvent('budget', 'Budget recommendations generated', correlationId, {
+    promptTokens: result.usage.promptTokens,
+    completionTokens: result.usage.completionTokens,
+    totalTokens: result.usage.totalTokens,
+    model: 'gpt-4o-mini',
+    userId,
+    recommendedBudget: result.object.monthlyBudget,
+  });
+
+  return {
+    recommendation: result.object,
+    usage: {
+      promptTokens: result.usage.promptTokens,
+      completionTokens: result.usage.completionTokens,
+      totalTokens: result.usage.totalTokens,
+    },
+  };
+}
+
+// Schema for spending anomalies
+const spendingAnomalySchema = z.object({
+  anomalies: z.array(z.object({
+    type: z.enum(['price_spike', 'unusual_merchant', 'frequency_change', 'category_spike', 'large_purchase']),
+    severity: z.enum(['info', 'warning', 'alert']),
+    title: z.string(),
+    description: z.string(),
+    amount: z.number().nullable(),
+    date: z.string().nullable(),
+    merchant: z.string().nullable(),
+    category: z.string().nullable(),
+    comparison: z.string().nullable().describe('Comparison to normal spending pattern'),
+    recommendation: z.string().nullable(),
+  })),
+  overallRisk: z.enum(['low', 'medium', 'high']).describe('Overall spending risk assessment'),
+  summary: z.string().describe('Brief summary of detected anomalies'),
+});
+
+export type SpendingAnomaly = z.infer<typeof spendingAnomalySchema>;
+
+export interface SpendingAnomalyResult {
+  analysis: SpendingAnomaly;
+  usage: TokenUsage;
+}
+
+/**
+ * Detect spending anomalies and unusual patterns
+ */
+export async function detectSpendingAnomalies(
+  spendingData: {
+    recentTransactions: Array<{
+      merchant: string;
+      amount: number;
+      date: string;
+      category: string;
+    }>;
+    historicalAverages: {
+      dailyAvg: number;
+      weeklyAvg: number;
+      monthlyAvg: number;
+      categoryAverages: Array<{ category: string; avgMonthly: number }>;
+      merchantFrequency: Array<{ merchant: string; avgVisitsPerMonth: number; avgSpend: number }>;
+    };
+    currency: string;
+  },
+  userEmail: string,
+  userId: string,
+  correlationId: CorrelationId,
+): Promise<SpendingAnomalyResult> {
+  submitLogEvent('anomaly', 'Detecting spending anomalies', correlationId, {
+    userId,
+    userEmail,
+    transactionCount: spendingData.recentTransactions.length,
+  });
+
+  const result = await generateObject({
+    model: openai('gpt-4o-mini'),
+    schema: spendingAnomalySchema,
+    system: `You are a financial fraud and anomaly detection specialist. 
+Analyze spending patterns to identify unusual transactions, price spikes, and behavioral changes.
+Be helpful and non-alarming while still flagging potentially concerning patterns.
+Focus on actionable insights that help users understand their spending better.`,
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: 'detectSpendingAnomalies',
+      metadata: { userId, userEmail, correlationId, purpose: 'anomaly_detection' },
+    },
+    prompt: `Analyze these recent transactions for anomalies and unusual patterns:
+
+Currency: ${spendingData.currency}
+
+Historical Averages:
+- Daily Average: ${spendingData.currency} ${spendingData.historicalAverages.dailyAvg.toFixed(2)}
+- Weekly Average: ${spendingData.currency} ${spendingData.historicalAverages.weeklyAvg.toFixed(2)}
+- Monthly Average: ${spendingData.currency} ${spendingData.historicalAverages.monthlyAvg.toFixed(2)}
+
+Category Averages (Monthly):
+${spendingData.historicalAverages.categoryAverages.map(c => `${c.category}: ${spendingData.currency} ${c.avgMonthly.toFixed(2)}`).join('\n')}
+
+Typical Merchant Patterns:
+${spendingData.historicalAverages.merchantFrequency.map(m => `${m.merchant}: ${m.avgVisitsPerMonth.toFixed(1)} visits/month, avg ${spendingData.currency} ${m.avgSpend.toFixed(2)}/visit`).join('\n')}
+
+Recent Transactions (last 30 days):
+${spendingData.recentTransactions.map(t => `${t.date}: ${t.merchant} - ${spendingData.currency} ${t.amount.toFixed(2)} (${t.category})`).join('\n')}
+
+Look for:
+1. Prices significantly higher than usual for the same merchant
+2. New or unusual merchants
+3. Changes in shopping frequency
+4. Category spending spikes
+5. Unusually large single purchases
+6. Potential duplicate charges
+
+Provide helpful context and recommendations for any anomalies found.`,
+    maxTokens: 600,
+    temperature: 0.4,
+  });
+
+  submitLogEvent('anomaly', 'Anomaly detection complete', correlationId, {
+    promptTokens: result.usage.promptTokens,
+    completionTokens: result.usage.completionTokens,
+    totalTokens: result.usage.totalTokens,
+    model: 'gpt-4o-mini',
+    userId,
+    anomalyCount: result.object.anomalies.length,
+    overallRisk: result.object.overallRisk,
+  });
+
+  return {
+    analysis: result.object,
+    usage: {
+      promptTokens: result.usage.promptTokens,
+      completionTokens: result.usage.completionTokens,
+      totalTokens: result.usage.totalTokens,
+    },
+  };
+}
+
+// === Spending Forecast Schema ===
+const spendingForecastSchema = z.object({
+  nextMonthTotal: z.number().describe('Predicted total spending for next month'),
+  confidence: z.enum(['high', 'medium', 'low']).describe('Confidence level in forecast'),
+  categoryForecasts: z.array(z.object({
+    category: z.string(),
+    predictedAmount: z.number(),
+    trend: z.enum(['increasing', 'decreasing', 'stable']),
+    reasoning: z.string().optional(),
+  })).describe('Per-category spending forecasts'),
+  upcomingExpenses: z.array(z.object({
+    description: z.string(),
+    estimatedAmount: z.number(),
+    estimatedDate: z.string(),
+    isRecurring: z.boolean(),
+  })).describe('Expected upcoming expenses based on patterns'),
+  savingsOpportunities: z.array(z.object({
+    category: z.string(),
+    potentialSavings: z.number(),
+    suggestion: z.string(),
+  })).describe('Areas where user could save money'),
+  seasonalFactors: z.array(z.string()).describe('Seasonal factors that may affect spending'),
+  summary: z.string().describe('Brief plain-English summary of forecast'),
+});
+
+export type SpendingForecastAnalysis = z.infer<typeof spendingForecastSchema>;
+export type SpendingForecastResult = {
+  analysis: SpendingForecastAnalysis;
+  usage: { promptTokens: number; completionTokens: number; totalTokens: number };
+};
+
+/**
+ * Generate AI-powered spending forecast based on historical patterns
+ */
+export async function generateSpendingForecast(
+  spendingData: {
+    monthlyHistory: Array<{
+      month: string;
+      total: number;
+      categories: Array<{ category: string; amount: number }>;
+    }>;
+    recentRecurring: Array<{
+      merchant: string;
+      amount: number;
+      frequency: string;
+      category: string;
+    }>;
+    currency: string;
+    currentMonth: number;
+  },
+  userEmail: string,
+  userId: string,
+  correlationId: CorrelationId,
+): Promise<SpendingForecastResult> {
+  submitLogEvent('forecast', 'Generating spending forecast', correlationId, {
+    userId,
+    userEmail,
+    monthsOfData: spendingData.monthlyHistory.length,
+  });
+
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'];
+  const nextMonth = monthNames[(spendingData.currentMonth) % 12];
+
+  const result = await generateObject({
+    model: openai('gpt-4o-mini'),
+    schema: spendingForecastSchema,
+    system: `You are a personal finance forecasting assistant.
+Analyze spending patterns to predict future expenses and identify savings opportunities.
+Be realistic in your predictions and consider seasonal factors.
+Provide actionable insights that help users plan their finances.`,
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: 'generateSpendingForecast',
+      metadata: { userId, userEmail, correlationId, purpose: 'spending_forecast' },
+    },
+    prompt: `Create a spending forecast for ${nextMonth} based on this historical data:
+
+Currency: ${spendingData.currency}
+
+Monthly Spending History:
+${spendingData.monthlyHistory.map(m => {
+  const categoryBreakdown = m.categories.map(c => `  ${c.category}: ${spendingData.currency} ${c.amount.toFixed(2)}`).join('\n');
+  return `${m.month}: ${spendingData.currency} ${m.total.toFixed(2)} total\n${categoryBreakdown}`;
+}).join('\n\n')}
+
+Detected Recurring Expenses:
+${spendingData.recentRecurring.map(r => `${r.merchant} (${r.category}): ${spendingData.currency} ${r.amount.toFixed(2)} ${r.frequency}`).join('\n')}
+
+Based on this data:
+1. Predict total spending for ${nextMonth}
+2. Forecast spending by category with trends
+3. Identify expected upcoming expenses (subscriptions, regular bills)
+4. Find opportunities to save money
+5. Note any seasonal factors (holidays, back-to-school, weather-related costs)
+
+Be specific and practical with your predictions and suggestions.`,
+    maxTokens: 700,
+    temperature: 0.4,
+  });
+
+  submitLogEvent('forecast', 'Spending forecast generated', correlationId, {
+    promptTokens: result.usage.promptTokens,
+    completionTokens: result.usage.completionTokens,
+    totalTokens: result.usage.totalTokens,
+    model: 'gpt-4o-mini',
+    userId,
+    predictedTotal: result.object.nextMonthTotal,
+    confidence: result.object.confidence,
+  });
+
+  return {
+    analysis: result.object,
+    usage: {
+      promptTokens: result.usage.promptTokens,
+      completionTokens: result.usage.completionTokens,
+      totalTokens: result.usage.totalTokens,
+    },
+  };
+}
