@@ -9,9 +9,9 @@ export default function SupportPage() {
   return (
     <>
       <Navigation />
-      <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+      <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6" aria-labelledby="support-title">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Support Center</h1>
+          <h1 id="support-title" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Support Center</h1>
           <p className="mt-1 text-sm text-muted-foreground sm:mt-2">
             Get help with ReceiptWise or reach out to our team
           </p>
@@ -30,13 +30,13 @@ export default function SupportPage() {
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
                 <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20">
-                  <Mail className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                  <Mail className="h-5 w-5 text-blue-500 dark:text-blue-400" aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium group-hover:text-blue-500 transition-colors">Email Support</p>
                   <p className="text-sm text-muted-foreground truncate">support@receiptwise.io</p>
                 </div>
-                <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
               </a>
 
               <a
@@ -44,7 +44,7 @@ export default function SupportPage() {
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
                 <div className="p-2 rounded-full bg-neutral-100 dark:bg-neutral-900/30">
-                  <MessageCircle className="h-5 w-5 text-neutral-800 dark:text-neutral-200" />
+                  <MessageCircle className="h-5 w-5 text-neutral-800 dark:text-neutral-200" aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium group-hover:text-neutral-800 dark:group-hover:text-neutral-200 transition-colors">
@@ -52,10 +52,10 @@ export default function SupportPage() {
                   </p>
                   <p className="text-sm text-muted-foreground">Report bugs or request features</p>
                 </div>
-                <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
               </a>
 
-              <div className="absolute -z-10 right-0 bottom-0 top-1/2 left-1/2 bg-gradient-to-br from-blue-500/5 via-primary/5 to-transparent blur-3xl" />
+              <div className="absolute -z-10 right-0 bottom-0 top-1/2 left-1/2 bg-linear-to-br from-blue-500/5 via-primary/5 to-transparent blur-3xl" />
             </CardContent>
           </Card>
 
@@ -94,7 +94,7 @@ export default function SupportPage() {
                   Can't find what you're looking for? Contact our support team for personalized assistance.
                 </p>
               </div>
-              <div className="absolute -z-10 left-0 bottom-0 top-1/2 right-1/2 bg-gradient-to-bl from-primary/5 via-primary/5 to-transparent blur-3xl" />
+              <div className="absolute -z-10 left-0 bottom-0 top-1/2 right-1/2 bg-linear-to-bl from-primary/5 via-primary/5 to-transparent blur-3xl" />
             </CardContent>
           </Card>
         </div>
@@ -109,45 +109,45 @@ export default function SupportPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <Link href="/terms" className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group">
                 <div className="flex items-start gap-3">
-                  <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" aria-hidden="true" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium group-hover:text-primary transition-colors">Terms of Service</p>
                     <p className="text-sm text-muted-foreground mt-1">Review our terms and conditions</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
                 </div>
               </Link>
 
               <Link href="/privacy" className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group">
                 <div className="flex items-start gap-3">
-                  <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" aria-hidden="true" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium group-hover:text-primary transition-colors">Privacy Policy</p>
                     <p className="text-sm text-muted-foreground mt-1">How we handle and protect your data</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
                 </div>
               </Link>
 
               <Link href="/refund" className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group">
                 <div className="flex items-start gap-3">
-                  <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" aria-hidden="true" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium group-hover:text-primary transition-colors">Refund Policy</p>
                     <p className="text-sm text-muted-foreground mt-1">Learn about our refund process</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
                 </div>
               </Link>
 
               <Link href="/settings" className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group">
                 <div className="flex items-start gap-3">
-                  <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" aria-hidden="true" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium group-hover:text-primary transition-colors">Account Settings</p>
                     <p className="text-sm text-muted-foreground mt-1">Manage your subscription and preferences</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
                 </div>
               </Link>
 
@@ -156,12 +156,12 @@ export default function SupportPage() {
                 className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
                 <div className="flex items-start gap-3">
-                  <Mail className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <Mail className="h-5 w-5 text-primary mt-0.5 shrink-0" aria-hidden="true" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium group-hover:text-primary transition-colors">Account Help</p>
                     <p className="text-sm text-muted-foreground mt-1">Get assistance with your account</p>
                   </div>
-                  <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
                 </div>
               </a>
             </div>

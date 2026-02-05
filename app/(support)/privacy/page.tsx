@@ -7,9 +7,9 @@ export default function PrivacyPage() {
   return (
     <>
       <Navigation />
-      <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6 pb-12">
+      <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6 pb-12" aria-labelledby="privacy-title">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Privacy Policy</h1>
+          <h1 id="privacy-title" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Privacy Policy</h1>
           <p className="mt-1 text-sm text-muted-foreground sm:mt-2">
             Last updated: December 6, 2025
           </p>

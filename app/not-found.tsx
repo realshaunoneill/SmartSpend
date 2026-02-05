@@ -13,13 +13,13 @@ export default function NotFound() {
   return (
     <>
       <Navigation />
-      <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6 min-h-[calc(100vh-12rem)] flex items-center">
+      <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6 min-h-[calc(100vh-12rem)] flex items-center" aria-labelledby="error-title">
         <div className="w-full space-y-6">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted mb-6">
-              <FileQuestion className="h-10 w-10 text-muted-foreground" />
+              <FileQuestion className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
             </div>
-            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">404</h1>
+            <h1 id="error-title" className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">404</h1>
             <p className="mt-2 text-xl text-muted-foreground">Page Not Found</p>
             <p className="mt-1 text-sm text-muted-foreground sm:mt-2">
               The page you're looking for doesn't exist or has been moved.
@@ -39,7 +39,7 @@ export default function NotFound() {
                   className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
                 >
                   <div className="p-2 rounded-full bg-primary/10">
-                    <Home className="h-5 w-5 text-primary" />
+                    <Home className="h-5 w-5 text-primary" aria-hidden="true" />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium group-hover:text-primary transition-colors">Go Home</p>
@@ -52,7 +52,7 @@ export default function NotFound() {
                   className="w-full flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group text-left"
                 >
                   <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20">
-                    <ArrowLeft className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                    <ArrowLeft className="h-5 w-5 text-blue-500 dark:text-blue-400" aria-hidden="true" />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium group-hover:text-blue-500 transition-colors">Go Back</p>
@@ -65,7 +65,7 @@ export default function NotFound() {
                   className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
                 >
                   <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/20">
-                    <Search className="h-5 w-5 text-green-500 dark:text-green-400" />
+                    <Search className="h-5 w-5 text-green-500 dark:text-green-400" aria-hidden="true" />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium group-hover:text-green-500 transition-colors">View Dashboard</p>
@@ -80,7 +80,7 @@ export default function NotFound() {
             <Card className="relative overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <HelpCircle className="h-5 w-5 text-primary" />
+                  <HelpCircle className="h-5 w-5 text-primary" aria-hidden="true" />
                   Need Help?
                 </CardTitle>
                 <CardDescription>We're here to assist you</CardDescription>

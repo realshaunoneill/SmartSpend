@@ -410,11 +410,11 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+    <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6" aria-labelledby="settings-title">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl flex items-center gap-2">
-              <Settings2 className="h-7 w-7 text-muted-foreground" />
+            <h1 id="settings-title" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl flex items-center gap-2">
+              <Settings2 className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
               Settings
             </h1>
             <p className="mt-1 text-sm text-muted-foreground sm:mt-2">Manage your account and preferences</p>

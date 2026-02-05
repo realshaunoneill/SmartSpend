@@ -56,9 +56,9 @@ export default function RedirectPage() {
   }, [hasRedirected, clerkLoaded, router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center" role="status" aria-busy="true" aria-label="Redirecting to your destination">
       <div className="text-center space-y-4">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" aria-hidden="true" />
         <p className="text-muted-foreground">Setting up your experience...</p>
       </div>
     </div>

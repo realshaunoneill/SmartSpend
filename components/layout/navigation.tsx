@@ -68,7 +68,7 @@ export function Navigation() {
   // Show loading skeleton while checking auth state
   if (!isLoaded) {
     return (
-      <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+      <nav aria-label="Main navigation" className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="container mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -99,7 +99,7 @@ export function Navigation() {
   // If user is not authenticated, show public navigation
   if (isLoaded && !user) {
     return (
-      <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+      <nav aria-label="Main navigation" className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="container mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -120,7 +120,7 @@ export function Navigation() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+    <nav aria-label="Main navigation" className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -138,6 +138,7 @@ export function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={isActive ? 'page' : undefined}
                   className={cn(
                     'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
                     isActive
@@ -145,7 +146,7 @@ export function Navigation() {
                       : 'text-muted-foreground hover:bg-accent hover:text-foreground',
                   )}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-4 w-4" aria-hidden="true" />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -186,13 +187,13 @@ export function Navigation() {
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/settings">
-                  <Settings className="mr-2 h-4 w-4" />
+                  <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
                   Settings
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
+                <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -202,7 +203,8 @@ export function Navigation() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild className="md:hidden">
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Menu className="h-5 w-5" />
+                <Menu className="h-5 w-5" aria-hidden="true" />
+                <span className="sr-only">Open menu</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -213,12 +215,13 @@ export function Navigation() {
                   <DropdownMenuItem key={item.href} asChild>
                     <Link
                       href={item.href}
+                      aria-current={isActive ? 'page' : undefined}
                       className={cn(
                         'flex items-center gap-2',
                         isActive && 'bg-primary/10 text-primary',
                       )}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-4 w-4" aria-hidden="true" />
                       {item.label}
                     </Link>
                   </DropdownMenuItem>

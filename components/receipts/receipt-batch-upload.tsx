@@ -352,7 +352,7 @@ export function ReceiptBatchUpload({
             'relative flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 transition-all duration-200 cursor-pointer',
             isDragging
               ? 'border-primary bg-primary/10 scale-[1.02] shadow-lg'
-              : 'border-muted-foreground/25 bg-gradient-to-b from-muted/30 to-muted/50 hover:border-primary/50 hover:bg-muted/80',
+              : 'border-muted-foreground/25 bg-linear-to-b from-muted/30 to-muted/50 hover:border-primary/50 hover:bg-muted/80',
           )}
         >
           {/* Animated background elements when dragging */}

@@ -24,11 +24,12 @@ export default function UpgradePage() {
   // Show skeleton loading state while checking subscription
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-7xl space-y-12">
+      <main className="container mx-auto px-4 py-8 max-w-7xl space-y-20">
         {/* Hero Skeleton - matches loading.tsx */}
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-6">
+          <Skeleton className="h-6 w-32 mx-auto rounded-full" />
           <Skeleton className="h-12 w-80 mx-auto" />
-          <Skeleton className="h-6 w-96 mx-auto" />
+          <Skeleton className="h-6 w-96 max-w-full mx-auto" />
         </div>
         {/* Pricing Cards Skeleton - matches loading.tsx */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
@@ -53,7 +54,7 @@ export default function UpgradePage() {
             </div>
           ))}
         </div>
-      </div>
+      </main>
     );
   }  // If subscribed, show nothing while redirecting
   if (isSubscribed) {
@@ -61,12 +62,12 @@ export default function UpgradePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl space-y-20">
+    <main className="container mx-auto px-4 py-8 max-w-7xl space-y-20" aria-labelledby="upgrade-title">
         <UpgradeHero />
         <PricingCard />
         <FeaturesGrid />
         <ComparisonTable />
       <UpgradeCTA />
-    </div>
+    </main>
   );
 }

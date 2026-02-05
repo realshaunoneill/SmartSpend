@@ -17,10 +17,10 @@ export default function SuccessContent({
   userName,
 }: SuccessContentProps) {
   return (
-    <main className="container mx-auto max-w-4xl space-y-6 px-4 py-6 sm:p-6">
+    <main className="container mx-auto max-w-4xl space-y-6 px-4 py-6 sm:p-6" aria-labelledby="payment-success-title">
         <div className="flex flex-col items-center justify-center min-h-[50vh] sm:min-h-[60vh] space-y-6 sm:space-y-8">
           {/* Success Animation */}
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24">
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24" aria-hidden="true">
             <div className="absolute inset-0 rounded-full bg-green-100 dark:bg-green-900/30 animate-pulse"></div>
             <div className="absolute inset-0 flex items-center justify-center">
               <CheckCircle className="w-12 h-12 sm:w-16 sm:h-16 text-green-600 dark:text-green-500" />
@@ -29,7 +29,7 @@ export default function SuccessContent({
 
           {/* Success Message */}
           <div className="text-center space-y-2 px-2">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            <h1 id="payment-success-title" className="text-2xl sm:text-3xl font-bold text-foreground">
               Welcome to Premium{userName ? `, ${userName}` : ''}! 🎉
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground">
@@ -50,28 +50,28 @@ export default function SuccessContent({
             <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6 space-y-3 sm:space-y-4">
               <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
-                  <Receipt className="h-5 w-5 text-green-600 dark:text-green-500 mt-0.5 shrink-0" />
+                  <Receipt className="h-5 w-5 text-green-600 dark:text-green-500 mt-0.5 shrink-0" aria-hidden="true" />
                   <div className="min-w-0">
                     <p className="font-medium text-sm">Unlimited Receipts</p>
                     <p className="text-xs text-muted-foreground">Upload and process as many receipts as you need</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
-                  <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-500 mt-0.5 shrink-0" />
+                  <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-500 mt-0.5 shrink-0" aria-hidden="true" />
                   <div className="min-w-0">
                     <p className="font-medium text-sm">Advanced Insights</p>
                     <p className="text-xs text-muted-foreground">AI-powered spending analysis and trends</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
-                  <Users className="h-5 w-5 text-green-600 dark:text-green-500 mt-0.5 shrink-0" />
+                  <Users className="h-5 w-5 text-green-600 dark:text-green-500 mt-0.5 shrink-0" aria-hidden="true" />
                   <div className="min-w-0">
                     <p className="font-medium text-sm">Household Sharing</p>
                     <p className="text-xs text-muted-foreground">Share receipts with family members</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
-                  <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-500 mt-0.5 shrink-0" />
+                  <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-500 mt-0.5 shrink-0" aria-hidden="true" />
                   <div className="min-w-0">
                     <p className="font-medium text-sm">Premium Support</p>
                     <p className="text-xs text-muted-foreground">Priority customer support</p>
@@ -85,7 +85,7 @@ export default function SuccessContent({
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-md px-2 sm:px-0">
             <Button asChild className="flex-1 gap-2" size="lg">
               <Link href="/dashboard">
-                Go to Dashboard <ArrowRight className="h-4 w-4" />
+                Go to Dashboard <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
             <Button asChild variant="outline" className="flex-1" size="lg">

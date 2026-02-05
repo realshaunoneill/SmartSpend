@@ -94,10 +94,10 @@ export default function DashboardPage() {
   };
 
   return (
-    <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+    <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6" aria-labelledby="dashboard-title">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Dashboard</h1>
+            <h1 id="dashboard-title" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Dashboard</h1>
             <p className="mt-1 text-sm text-muted-foreground sm:mt-2">Track your spending and manage your receipts</p>
           </div>
 
@@ -139,14 +139,14 @@ export default function DashboardPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <PieChart className="h-5 w-5 text-muted-foreground" />
+                      <PieChart className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
                       <CardTitle className="text-lg">Spending by Category</CardTitle>
                     </div>
                     <Link href="/insights">
                       <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
-                        <Sparkles className="h-4 w-4" />
+                        <Sparkles className="h-4 w-4" aria-hidden="true" />
                         View AI Insights
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
                       </Button>
                     </Link>
                   </div>
@@ -190,7 +190,7 @@ export default function DashboardPage() {
           <Card className="border-2 border-dashed">
             <CardHeader className="text-center pb-4">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <Receipt className="h-8 w-8 text-primary" />
+                <Receipt className="h-8 w-8 text-primary" aria-hidden="true" />
               </div>
               <CardTitle className="text-2xl text-foreground">Welcome to ReceiptWise!</CardTitle>
               <CardDescription className="text-base">

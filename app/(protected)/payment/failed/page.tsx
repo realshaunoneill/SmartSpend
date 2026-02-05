@@ -37,10 +37,10 @@ export default function PaymentFailedPage() {
   ];
 
   return (
-    <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+    <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6" aria-labelledby="payment-failed-title">
         <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
           {/* Error Icon */}
-          <div className="relative w-24 h-24">
+          <div className="relative w-24 h-24" aria-hidden="true">
             <div className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/30 animate-pulse"></div>
             <div className="absolute inset-0 flex items-center justify-center">
               <AlertTriangle className="w-16 h-16 text-red-600 dark:text-red-500" />
@@ -49,7 +49,7 @@ export default function PaymentFailedPage() {
 
           {/* Error Message */}
           <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 id="payment-failed-title" className="text-3xl font-bold text-foreground">
               Payment Failed
             </h1>
             <p className="text-lg text-muted-foreground">
@@ -91,7 +91,7 @@ export default function PaymentFailedPage() {
               className="flex-1 gap-2"
               size="lg"
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
               Try Again
             </Button>
             <Button
@@ -101,7 +101,7 @@ export default function PaymentFailedPage() {
               size="lg"
             >
               <Link href="/dashboard">
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 Back to Dashboard
               </Link>
             </Button>
@@ -111,21 +111,21 @@ export default function PaymentFailedPage() {
           <Card className="w-full max-w-2xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <HelpCircle className="h-5 w-5" />
+                <HelpCircle className="h-5 w-5" aria-hidden="true" />
                 Need Help?
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="flex items-start gap-3 p-3 rounded-lg border">
-                  <CreditCard className="h-5 w-5 text-primary mt-0.5" />
+                  <CreditCard className="h-5 w-5 text-primary mt-0.5" aria-hidden="true" />
                   <div>
                     <p className="font-medium text-sm">Update Payment Method</p>
                     <p className="text-xs text-muted-foreground">Try using a different card or payment method</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 p-3 rounded-lg border">
-                  <Mail className="h-5 w-5 text-primary mt-0.5" />
+                  <Mail className="h-5 w-5 text-primary mt-0.5" aria-hidden="true" />
                   <div>
                     <p className="font-medium text-sm">Contact Support</p>
                     <p className="text-xs text-muted-foreground">We're here to help resolve any issues</p>

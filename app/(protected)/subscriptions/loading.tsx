@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SubscriptionsLoading() {
   return (
-    <div className="container mx-auto p-6 max-w-7xl space-y-6">
+    <main className="container mx-auto p-6 max-w-7xl space-y-6">
       {/* Header - matches page exactly */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -92,6 +92,6 @@ export default function SubscriptionsLoading() {
           </Card>
         ))}
       </div>
-    </div>
+    </main>
   );
 }

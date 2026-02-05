@@ -9,10 +9,10 @@ export default function RefundPage() {
   return (
     <>
       <Navigation />
-      <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+      <main className="container mx-auto max-w-4xl space-y-6 p-4 sm:p-6" aria-labelledby="refund-title">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Refund Policy</h1>
+            <h1 id="refund-title" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Refund Policy</h1>
             <p className="mt-1 text-sm text-muted-foreground sm:mt-2">
               Learn about our refund process and subscription management
             </p>
@@ -21,7 +21,7 @@ export default function RefundPage() {
             href="/support"
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
           >
-            <HelpCircle className="h-4 w-4" />
+            <HelpCircle className="h-4 w-4" aria-hidden="true" />
             <span>Support Center</span>
           </Link>
         </div>
@@ -37,7 +37,7 @@ export default function RefundPage() {
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20 mt-1 shrink-0">
-                    <RefreshCcw className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                    <RefreshCcw className="h-5 w-5 text-blue-500 dark:text-blue-400" aria-hidden="true" />
                   </div>
                   <div>
                     <h3 className="font-medium">Pro-Rated Refunds</h3>
@@ -49,7 +49,7 @@ export default function RefundPage() {
 
                 <div className="flex items-start gap-3">
                   <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/20 mt-1 shrink-0">
-                    <AlertCircle className="h-5 w-5 text-amber-500 dark:text-amber-400" />
+                    <AlertCircle className="h-5 w-5 text-amber-500 dark:text-amber-400" aria-hidden="true" />
                   </div>
                   <div>
                     <h3 className="font-medium">Technical Issues</h3>
@@ -61,7 +61,7 @@ export default function RefundPage() {
 
                 <div className="flex items-start gap-3">
                   <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/20 mt-1 shrink-0">
-                    <Clock className="h-5 w-5 text-green-500 dark:text-green-400" />
+                    <Clock className="h-5 w-5 text-green-500 dark:text-green-400" aria-hidden="true" />
                   </div>
                   <div>
                     <h3 className="font-medium">Processing Time</h3>
@@ -73,7 +73,7 @@ export default function RefundPage() {
 
                 <div className="flex items-start gap-3">
                   <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/20 mt-1 shrink-0">
-                    <XCircle className="h-5 w-5 text-red-500 dark:text-red-400" />
+                    <XCircle className="h-5 w-5 text-red-500 dark:text-red-400" aria-hidden="true" />
                   </div>
                   <div>
                     <h3 className="font-medium">Cancellation Anytime</h3>
@@ -84,7 +84,7 @@ export default function RefundPage() {
                 </div>
               </div>
 
-              <div className="absolute -z-10 right-0 bottom-0 top-1/2 left-1/2 bg-gradient-to-br from-blue-500/5 via-amber-500/5 to-transparent blur-3xl" />
+              <div className="absolute -z-10 right-0 bottom-0 top-1/2 left-1/2 bg-linear-to-br from-blue-500/5 via-amber-500/5 to-transparent blur-3xl" />
             </CardContent>
           </Card>
 
@@ -125,13 +125,13 @@ export default function RefundPage() {
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
                 <div className="p-2 rounded-full bg-primary/20">
-                  <CreditCard className="h-5 w-5 text-primary" />
+                  <CreditCard className="h-5 w-5 text-primary" aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium group-hover:text-primary transition-colors">Go to Settings</p>
                   <p className="text-sm text-muted-foreground">Access your billing portal</p>
                 </div>
-                <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
               </Link>
 
               <div className="pt-2 border-t">
@@ -140,7 +140,7 @@ export default function RefundPage() {
                 </p>
               </div>
 
-              <div className="absolute -z-10 left-0 bottom-0 top-1/2 right-1/2 bg-gradient-to-bl from-primary/5 via-primary/5 to-transparent blur-3xl" />
+              <div className="absolute -z-10 left-0 bottom-0 top-1/2 right-1/2 bg-linear-to-bl from-primary/5 via-primary/5 to-transparent blur-3xl" />
             </CardContent>
           </Card>
         </div>
@@ -158,13 +158,13 @@ export default function RefundPage() {
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
                 <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20 shrink-0">
-                  <Mail className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                  <Mail className="h-5 w-5 text-blue-500 dark:text-blue-400" aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium group-hover:text-blue-500 transition-colors">Email Support</p>
                   <p className="text-sm text-muted-foreground truncate">support@receiptwise.io</p>
                 </div>
-                <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
               </a>
 
               <Link
@@ -172,13 +172,13 @@ export default function RefundPage() {
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
               >
                 <div className="p-2 rounded-full bg-primary/20 shrink-0">
-                  <HelpCircle className="h-5 w-5 text-primary" />
+                  <HelpCircle className="h-5 w-5 text-primary" aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium group-hover:text-primary transition-colors">Support Center</p>
                   <p className="text-sm text-muted-foreground">More contact options</p>
                 </div>
-                <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
               </Link>
             </div>
 

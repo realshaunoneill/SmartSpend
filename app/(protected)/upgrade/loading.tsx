@@ -2,11 +2,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function UpgradeLoading() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl space-y-12">
+    <main className="container mx-auto px-4 py-8 max-w-7xl space-y-20">
       {/* Hero Skeleton - matches page exactly */}
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-6">
+        <Skeleton className="h-6 w-32 mx-auto rounded-full" />
         <Skeleton className="h-12 w-80 mx-auto" />
-        <Skeleton className="h-6 w-96 mx-auto" />
+        <Skeleton className="h-6 w-96 max-w-full mx-auto" />
       </div>
 
       {/* Pricing Cards - matches page grid exactly */}
@@ -32,6 +33,6 @@ export default function UpgradeLoading() {
           </div>
         ))}
       </div>
-    </div>
+    </main>
   );
 }

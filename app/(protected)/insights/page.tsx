@@ -30,10 +30,10 @@ export default function InsightsPage() {
   const actualHouseholdId = isPersonalOnly ? undefined : selectedHouseholdId;
 
   return (
-    <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+    <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6" aria-labelledby="insights-title">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            <h1 id="insights-title" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Spending Insights
             </h1>
             <p className="mt-1 text-sm text-muted-foreground sm:mt-2">
@@ -155,7 +155,7 @@ export default function InsightsPage() {
           <Card className="border-2 border-primary/20 bg-linear-to-br from-primary/5 via-transparent to-primary/5">
             <CardHeader className="text-center pb-4">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <Sparkles className="h-8 w-8 text-primary" />
+                <Sparkles className="h-8 w-8 text-primary" aria-hidden="true" />
               </div>
               <div className="flex items-center justify-center gap-2 mb-2">
                 <CardTitle className="text-2xl text-foreground">Unlock AI-Powered Insights</CardTitle>
@@ -174,7 +174,7 @@ export default function InsightsPage() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
-                    <Brain className="h-5 w-5 text-primary" />
+                    <Brain className="h-5 w-5 text-primary" aria-hidden="true" />
                   </div>
                   <h3 className="font-semibold mb-1 text-foreground">AI Summaries</h3>
                   <p className="text-sm text-muted-foreground">
@@ -183,7 +183,7 @@ export default function InsightsPage() {
                 </div>
                 <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
-                    <TrendingUp className="h-5 w-5 text-primary" />
+                    <TrendingUp className="h-5 w-5 text-primary" aria-hidden="true" />
                   </div>
                   <h3 className="font-semibold mb-1 text-foreground">Trend Analysis</h3>
                   <p className="text-sm text-muted-foreground">
@@ -192,7 +192,7 @@ export default function InsightsPage() {
                 </div>
                 <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
-                    <PieChart className="h-5 w-5 text-primary" />
+                    <PieChart className="h-5 w-5 text-primary" aria-hidden="true" />
                   </div>
                   <h3 className="font-semibold mb-1 text-foreground">Category Breakdown</h3>
                   <p className="text-sm text-muted-foreground">
@@ -201,7 +201,7 @@ export default function InsightsPage() {
                 </div>
                 <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
-                    <Search className="h-5 w-5 text-primary" />
+                    <Search className="h-5 w-5 text-primary" aria-hidden="true" />
                   </div>
                   <h3 className="font-semibold mb-1 text-foreground">Item Search</h3>
                   <p className="text-sm text-muted-foreground">
@@ -214,16 +214,9 @@ export default function InsightsPage() {
               <div className="rounded-lg border bg-card p-6">
                 <h3 className="font-semibold mb-4 text-foreground">What you'll discover:</h3>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {[
-                    'AI-powered spending summaries',
-                    'Top items and purchase trends',
-                    'Advanced item search and analysis',
-                    'Subscription cost overview',
-                    'Category spending breakdown',
-                    'Household expense filtering',
-                  ].map((feature, index) => (
+                  {['AI-powered spending summaries', 'Top items and purchase trends', 'Advanced item search and analysis', 'Subscription cost overview', 'Category spending breakdown', 'Household expense filtering'].map((feature, index) => (
                     <div key={index} className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-primary shrink-0" />
+                      <Check className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
                       <span className="text-sm text-foreground">{feature}</span>
                     </div>
                   ))}
@@ -237,9 +230,9 @@ export default function InsightsPage() {
                   size="lg"
                   className="gap-2 text-base h-12 px-8"
                 >
-                  <Crown className="h-5 w-5" />
+                  <Crown className="h-5 w-5" aria-hidden="true" />
                   {trialDays > 0 ? `Start ${trialDays}-Day Free Trial` : 'Upgrade to Premium'}
-                  <ArrowRight className="h-5 w-5" />
+                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
                 </Button>
                 <p className="text-sm text-muted-foreground">
                   {trialDays > 0

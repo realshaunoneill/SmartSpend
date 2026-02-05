@@ -95,8 +95,8 @@ export default function LandingPage() {
     return (
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-lg supports-backdrop-filter:bg-background/60">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="ReceiptWise" className="h-8 w-auto" />
+          <Link href="/" className="flex items-center gap-2" aria-label="ReceiptWise Home">
+            <img src="/logo.png" alt="" className="h-8 w-auto" aria-hidden="true" />
             <span className="text-xl font-bold text-foreground">ReceiptWise</span>
           </Link>
           <div className="flex items-center gap-4">
@@ -117,21 +117,26 @@ export default function LandingPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      {/* Skip Navigation Link for Accessibility */}
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-100 focus:top-4 focus:left-4 focus:bg-primary focus:text-primary-foreground focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg">
+        Skip to main content
+      </a>
       {/* Header */}
       <Header />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden px-4 py-20 sm:py-28">
+      <main id="main-content">
+      <section className="relative overflow-hidden px-4 py-20 sm:py-28" aria-labelledby="hero-title">
         {/* Background gradient */}
         <div className="absolute inset-0 -z-10 bg-linear-to-b from-primary/5 via-transparent to-transparent dark:from-primary/10" />
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.15),transparent_50%)]" />
 
         <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-foreground backdrop-blur-sm">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-foreground backdrop-blur-sm" role="status" aria-live="polite">
+            <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
             Now with AI-powered receipt scanning
           </div>
-          <h1 className="mb-6 text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+          <h1 id="hero-title" className="mb-6 text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
             Track Every Penny,{' '}
             <span className="bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Effortlessly
@@ -217,14 +222,14 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="border-t border-border/50 px-4 py-20 scroll-mt-20">
+      <section id="features" className="border-t border-border/50 px-4 py-20 scroll-mt-20" aria-labelledby="features-title">
         <div className="mx-auto max-w-6xl">
           <div className="mb-16 text-center">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-foreground">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
               Features
             </div>
-            <h2 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
+            <h2 id="features-title" className="mb-4 text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
               Everything You Need to Manage Expenses
             </h2>
             <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
@@ -339,14 +344,14 @@ export default function LandingPage() {
       <Testimonials />
 
       {/* Pricing Section */}
-      <section id="pricing" className="border-t border-border/50 bg-muted/30 px-4 py-20 scroll-mt-20">
+      <section id="pricing" className="border-t border-border/50 bg-muted/30 px-4 py-20 scroll-mt-20" aria-labelledby="pricing-title">
         <div className="mx-auto max-w-5xl">
           <div className="mb-12 text-center">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-foreground">
-              <Crown className="h-3.5 w-3.5 text-primary" />
+              <Crown className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
               Simple Pricing
             </div>
-            <h2 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
+            <h2 id="pricing-title" className="mb-4 text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
               Start Free, Upgrade When Ready
             </h2>
             <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
@@ -479,12 +484,12 @@ export default function LandingPage() {
       </section>
 
       {/* Security Section */}
-      <section className="border-t border-border/50 px-4 py-20">
+      <section className="border-t border-border/50 px-4 py-20" aria-labelledby="security-title">
         <div className="mx-auto max-w-4xl text-center">
           <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-            <Lock className="h-8 w-8 text-primary" />
+            <Lock className="h-8 w-8 text-primary" aria-hidden="true" />
           </div>
-          <h2 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl">
+          <h2 id="security-title" className="mb-4 text-3xl font-bold text-foreground sm:text-4xl">
             Your Data is Safe with Us
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
@@ -492,17 +497,17 @@ export default function LandingPage() {
           </p>
           <div className="grid gap-6 sm:grid-cols-3">
             <div className="rounded-lg border border-border/50 bg-card/50 p-6 backdrop-blur-sm">
-              <Shield className="mx-auto mb-3 h-8 w-8 text-primary" />
+              <Shield className="mx-auto mb-3 h-8 w-8 text-primary" aria-hidden="true" />
               <h3 className="mb-2 font-semibold text-foreground">256-bit Encryption</h3>
               <p className="text-sm text-muted-foreground">Military-grade security</p>
             </div>
             <div className="rounded-lg border border-border/50 bg-card/50 p-6 backdrop-blur-sm">
-              <Cloud className="mx-auto mb-3 h-8 w-8 text-primary" />
+              <Cloud className="mx-auto mb-3 h-8 w-8 text-primary" aria-hidden="true" />
               <h3 className="mb-2 font-semibold text-foreground">Secure Cloud Storage</h3>
               <p className="text-sm text-muted-foreground">Always backed up and accessible</p>
             </div>
             <div className="rounded-lg border border-border/50 bg-card/50 p-6 backdrop-blur-sm">
-              <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-primary" />
+              <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-primary" aria-hidden="true" />
               <h3 className="mb-2 font-semibold text-foreground">GDPR Ready</h3>
               <p className="text-sm text-muted-foreground">Privacy compliant</p>
             </div>
@@ -511,9 +516,9 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="border-t border-border/50 bg-linear-to-br from-primary to-primary/80 px-4 py-20">
+      <section className="border-t border-border/50 bg-linear-to-br from-primary to-primary/80 px-4 py-20" aria-labelledby="cta-title">
         <div className="mx-auto max-w-4xl text-center">
-          <h2 className="mb-4 text-3xl font-bold text-primary-foreground sm:text-4xl lg:text-5xl">
+          <h2 id="cta-title" className="mb-4 text-3xl font-bold text-primary-foreground sm:text-4xl lg:text-5xl">
             Ready to Start Saving?
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-lg text-primary-foreground/90">
@@ -529,10 +534,10 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 variant="secondary"
-                className="gap-2 shadow-xl transition-all hover:scale-105"
+                className="gap-2 shadow-xl transition-all hover:scale-105 focus:ring-2 focus:ring-offset-2 focus:ring-white"
               >
                 Go to Dashboard
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Button>
             </Link>
           ) : (
@@ -540,15 +545,16 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 variant="secondary"
-                className="gap-2 shadow-xl transition-all hover:scale-105"
+                className="gap-2 shadow-xl transition-all hover:scale-105 focus:ring-2 focus:ring-offset-2 focus:ring-white"
               >
                 Create Free Account
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Button>
             </Link>
           )}
         </div>
       </section>
+      </main>
 
       {/* Exit Intent Popup - only for non-signed-in users */}
       {isLoaded && !isSignedIn && <ExitIntentPopup />}

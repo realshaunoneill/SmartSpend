@@ -165,10 +165,10 @@ function ReceiptsPageContent() {
   if (!clerkUser) return null;
 
   return (
-    <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+    <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6" aria-labelledby="receipts-title">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            <h1 id="receipts-title" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Receipts
             </h1>
             <p className="mt-1 text-sm text-muted-foreground sm:mt-2">
@@ -176,7 +176,7 @@ function ReceiptsPageContent() {
             </p>
             {isSubscribed && (
               <div className="mt-2 flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
-                <Chrome className="h-3.5 w-3.5" />
+                <Chrome className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Try our Chrome Extension for quick captures from anywhere on the web</span>
               </div>
             )}
@@ -209,7 +209,7 @@ function ReceiptsPageContent() {
               <Card className="border-2 border-primary/20 bg-linear-to-br from-primary/5 via-transparent to-primary/5">
                 <CardHeader className="text-center pb-4">
                   <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                    <Upload className="h-7 w-7 text-primary" />
+                    <Upload className="h-7 w-7 text-primary" aria-hidden="true" />
                   </div>
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <CardTitle className="text-xl text-foreground">Unlock Receipt Uploads</CardTitle>
@@ -226,19 +226,19 @@ function ReceiptsPageContent() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="flex flex-col items-center text-center p-3 rounded-lg bg-muted/50">
-                      <Camera className="h-5 w-5 text-primary mb-2" />
+                      <Camera className="h-5 w-5 text-primary mb-2" aria-hidden="true" />
                       <span className="text-xs text-muted-foreground">Photo upload</span>
                     </div>
                     <div className="flex flex-col items-center text-center p-3 rounded-lg bg-muted/50">
-                      <Scan className="h-5 w-5 text-primary mb-2" />
+                      <Scan className="h-5 w-5 text-primary mb-2" aria-hidden="true" />
                       <span className="text-xs text-muted-foreground">AI scanning</span>
                     </div>
                     <div className="flex flex-col items-center text-center p-3 rounded-lg bg-muted/50">
-                      <FileText className="h-5 w-5 text-primary mb-2" />
+                      <FileText className="h-5 w-5 text-primary mb-2" aria-hidden="true" />
                       <span className="text-xs text-muted-foreground">Auto extraction</span>
                     </div>
                     <div className="flex flex-col items-center text-center p-3 rounded-lg bg-muted/50">
-                      <Sparkles className="h-5 w-5 text-primary mb-2" />
+                      <Sparkles className="h-5 w-5 text-primary mb-2" aria-hidden="true" />
                       <span className="text-xs text-muted-foreground">Smart categorization</span>
                     </div>
                   </div>
@@ -246,7 +246,7 @@ function ReceiptsPageContent() {
                     onClick={handleUpgradeClick}
                     className="w-full gap-2"
                   >
-                    <Crown className="h-4 w-4" />
+                    <Crown className="h-4 w-4" aria-hidden="true" />
                     {trialDays > 0 ? 'Start Free Trial' : 'Upgrade Now'}
                   </Button>
                   <p className="text-xs text-center text-muted-foreground">

@@ -86,7 +86,7 @@ function SubscriptionsPageContent() {
   // Show skeleton loading state
   if (userLoading) {
     return (
-      <div className="container mx-auto p-6 max-w-7xl space-y-6">
+      <main className="container mx-auto p-6 max-w-7xl space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Skeleton className="h-8 sm:h-9 w-48" />
@@ -166,18 +166,18 @@ function SubscriptionsPageContent() {
             </Card>
           ))}
         </div>
-      </div>
+      </main>
     );
   }
 
   // Show paywall for non-subscribed users
   if (!isSubscribed) {
     return (
-      <div className="container mx-auto p-6 max-w-7xl">
+      <main className="container mx-auto p-6 max-w-7xl" aria-labelledby="subscriptions-title">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Subscriptions</h1>
+              <h1 id="subscriptions-title" className="text-3xl font-bold text-foreground">Subscriptions</h1>
               <p className="text-muted-foreground">Track and manage your recurring expenses</p>
             </div>
           </div>
@@ -202,66 +202,55 @@ function SubscriptionsPageContent() {
             </CardHeader>
             <CardContent className="space-y-8">
               {/* Features Grid */}
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
-                    <CreditCard className="h-5 w-5 text-primary" />
-                  </div>
-                  <h3 className="font-semibold mb-1 text-foreground">Track Subscriptions</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Add all your recurring payments
-                  </p>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
+                  <CreditCard className="h-5 w-5 text-primary" aria-hidden="true" />
                 </div>
-                <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
-                    <Bell className="h-5 w-5 text-primary" />
-                  </div>
-                  <h3 className="font-semibold mb-1 text-foreground">Payment Reminders</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Never miss a due date
-                  </p>
-                </div>
-                <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
-                    <PieChart className="h-5 w-5 text-primary" />
-                  </div>
-                  <h3 className="font-semibold mb-1 text-foreground">Cost Analysis</h3>
-                  <p className="text-sm text-muted-foreground">
-                    See monthly & yearly totals
-                  </p>
-                </div>
-                <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
-                    <Calendar className="h-5 w-5 text-primary" />
-                  </div>
-                  <h3 className="font-semibold mb-1 text-foreground">Receipt Matching</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Link receipts to subscriptions
-                  </p>
-                </div>
+                <h3 className="font-semibold mb-1 text-foreground">Track Subscriptions</h3>
+                <p className="text-sm text-muted-foreground">
+                  Add all your recurring payments
+                </p>
               </div>
-
-              {/* Benefits List */}
-              <div className="rounded-lg border bg-card p-6">
-                <h3 className="font-semibold mb-4 text-foreground">What's included with Premium:</h3>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {[
-                    'Unlimited subscription tracking',
-                    'Payment due date reminders',
-                    'Monthly & yearly cost overview',
-                    'Missing payment detection',
-                    'Receipt-to-subscription linking',
-                    'Pause & resume subscriptions',
-                  ].map((feature, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-primary shrink-0" />
-                      <span className="text-sm text-foreground">{feature}</span>
-                    </div>
-                  ))}
+              <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
+                  <Bell className="h-5 w-5 text-primary" aria-hidden="true" />
                 </div>
+                <h3 className="font-semibold mb-1 text-foreground">Payment Reminders</h3>
+                <p className="text-sm text-muted-foreground">
+                  Never miss a due date
+                </p>
               </div>
-
-              {/* CTA */}
+              <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
+                  <PieChart className="h-5 w-5 text-primary" aria-hidden="true" />
+                </div>
+                <h3 className="font-semibold mb-1 text-foreground">Cost Analysis</h3>
+                <p className="text-sm text-muted-foreground">
+                  See monthly & yearly totals
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center p-4 rounded-lg bg-muted/50">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 mb-3">
+                  <Calendar className="h-5 w-5 text-primary" aria-hidden="true" />
+                </div>
+                <h3 className="font-semibold mb-1 text-foreground">Receipt Matching</h3>
+                <p className="text-sm text-muted-foreground">
+                  Link receipts to subscriptions
+                </p>
+              </div>
+            </div>              {/* Benefits List */}
+            <div className="rounded-lg border bg-card p-6">
+              <h3 className="font-semibold mb-4 text-foreground">What's included with Premium:</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {['Unlimited subscription tracking', 'Payment due date reminders', 'Monthly & yearly cost overview', 'Missing payment detection', 'Receipt-to-subscription linking', 'Pause & resume subscriptions'].map((feature, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+                    <span className="text-sm text-foreground">{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </div>              {/* CTA */}
               <div className="text-center space-y-4 pt-4 border-t">
                 <Button
                   onClick={() => router.push('/upgrade')}
@@ -280,16 +269,16 @@ function SubscriptionsPageContent() {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </main>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+    <main className="container mx-auto p-6 max-w-7xl" aria-labelledby="subscriptions-main-title">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Subscriptions</h1>
+          <h1 id="subscriptions-main-title" className="text-3xl font-bold text-foreground">Subscriptions</h1>
           <p className="text-muted-foreground">Track and manage your recurring expenses</p>
         </div>
         <CreateSubscriptionDialog />
@@ -298,7 +287,7 @@ function SubscriptionsPageContent() {
       {/* Empty State - No Subscriptions */}
       {!isLoading && (!subscriptions || subscriptions.length === 0) && (
         <div className="text-center py-12">
-          <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
           <h3 className="text-lg font-semibold mb-2 text-foreground">No subscriptions yet</h3>
           <p className="text-muted-foreground mb-4">Start tracking your recurring payments</p>
           <CreateSubscriptionDialog />
@@ -405,19 +394,19 @@ function SubscriptionsPageContent() {
           open={!!selectedSubscriptionId}
           onOpenChange={(open) => !open && setSelectedSubscriptionId(null)}
         />
-      </div>
+    </main>
   );
 }
 
 export default function SubscriptionsPage() {
   return (
     <Suspense fallback={
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      <main className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" aria-hidden="true" />
+        <span className="sr-only">Loading subscriptions...</span>
+      </main>
     }>
       <SubscriptionsPageContent />
     </Suspense>
   );
 }
-

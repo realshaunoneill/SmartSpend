@@ -93,7 +93,7 @@ export function InvitationNotifications() {
                   className={`p-3 space-y-3 ${index !== invitations.length - 1 ? 'border-b' : ''}`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 shrink-0">
+                    <div className="p-2 rounded-xl bg-linear-to-br from-primary/20 to-primary/5 shrink-0">
                       <Users className="h-4 w-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">

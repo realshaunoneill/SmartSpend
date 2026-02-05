@@ -196,10 +196,10 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+      <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6" aria-busy="true" aria-label="Loading admin panel">
           <div className="flex min-h-[400px] items-center justify-center">
             <div className="text-center">
-              <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" aria-hidden="true" />
               <p className="mt-4 text-muted-foreground">Loading admin panel...</p>
             </div>
           </div>
@@ -212,11 +212,11 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+    <main className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6" aria-labelledby="admin-title">
         <div className="flex items-center gap-3">
-          <ShieldCheck className="h-8 w-8 text-primary" />
+          <ShieldCheck className="h-8 w-8 text-primary" aria-hidden="true" />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            <h1 id="admin-title" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Admin Dashboard
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">

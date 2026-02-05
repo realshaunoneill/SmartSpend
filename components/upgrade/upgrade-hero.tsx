@@ -7,10 +7,10 @@ export function UpgradeHero() {
   return (
     <div className="text-center space-y-6">
       <Badge variant="secondary" className="gap-1.5">
-        <Crown className="w-3.5 h-3.5" />
+        <Crown className="w-3.5 h-3.5" aria-hidden="true" />
         Premium Features
       </Badge>
-      <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
+      <h1 id="upgrade-title" className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
         Upgrade to Premium
       </h1>
       <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
@@ -18,7 +18,7 @@ export function UpgradeHero() {
       </p>
       {trialDays > 0 && (
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <Gift className="w-4 h-4 text-primary" />
+          <Gift className="w-4 h-4 text-primary" aria-hidden="true" />
           <span>Start your <strong className="text-foreground">{trialDays}-day free trial</strong> today — no credit card required upfront</span>
         </div>
       )}
