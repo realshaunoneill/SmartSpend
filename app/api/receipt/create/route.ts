@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { receipts } from '@/lib/db/schema';
-import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers';
+import { getAuthenticatedUser, requireSubscription, requireNoPendingDeletion } from '@/lib/auth-helpers';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { getPostHogClient } from '@/lib/posthog-server';
 import { randomUUID } from 'crypto';
@@ -20,6 +20,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Check subscription
     const subCheck = await requireSubscription(user);
     if (subCheck) return subCheck;
+
+    const deletionCheck = requireNoPendingDeletion(user);
+    if (deletionCheck) return deletionCheck;
 
     const body = await req.json();
     const { imageUrl, householdId: providedHouseholdId } = body;

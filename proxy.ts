@@ -19,6 +19,7 @@ const isPublicRoute = createRouteMatcher([
   '/api/webhooks(.*)',
   '/api/stripe/webhooks', // Stripe webhooks
   '/api/extension(.*)', // Chrome extension API (uses API key auth)
+  '/api/cron(.*)', // Vercel Cron (authenticates with CRON_SECRET bearer token)
   '/ingest(.*)', // PostHog analytics
 ]);
 

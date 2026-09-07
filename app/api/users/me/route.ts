@@ -184,7 +184,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       success: true,
       deletionScheduledAt: deletionDate.toISOString(),
-      message: 'Your account has been scheduled for deletion in 24 hours. Contact support@receiptwise.io to cancel.',
+      message: 'Your account is scheduled for deletion in 24 hours. You can cancel this from Settings at any time before then.',
     });
   } catch (error) {
     Logger.error('Error scheduling account deletion', error as Error, { requestId });

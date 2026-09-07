@@ -36,7 +36,7 @@ export default function SignInPage() {
                   Smart expense tracking made simple
                 </h1>
                 <p className="mt-4 text-lg text-muted-foreground">
-                  Join thousands of users who are already managing their expenses smarter with AI-powered receipt scanning and insights.
+                  Scan a receipt, let AI pull out the detail, and share the whole picture with your household.
                 </p>
               </div>
 
@@ -83,7 +83,7 @@ export default function SignInPage() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm">
                       <CheckCircle2 className="h-4 w-4 text-primary" />
-                      <span className="text-foreground">Free to start, no credit card required</span>
+                      <span className="text-foreground">Free trial, cancel any time</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -160,11 +160,11 @@ export default function SignInPage() {
                     <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                        <span>No credit card required</span>
+                        <span>Free trial</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                        <span>Free forever plan</span>
+                        <span>Cancel any time</span>
                       </div>
                     </div>
                   </div>

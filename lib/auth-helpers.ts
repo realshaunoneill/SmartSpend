@@ -87,6 +87,30 @@ export async function requireSubscription(userOrResult: { user: User } | User | 
 }
 
 /**
+ * Reject requests from accounts inside their 24h deletion window.
+ *
+ * Deliberately NOT part of getAuthenticatedUser: /api/users/me must keep working so the
+ * settings page can render the "deletion scheduled" banner, and /api/users/cancel-deletion
+ * must keep working so the user isn't trapped. Apply this only to endpoints that create
+ * data or incur AI cost.
+ *
+ * Returns null if the account is not pending deletion, or a NextResponse error if it is.
+ */
+export function requireNoPendingDeletion(user: User) {
+  if (!user.deletionScheduledAt) {
+    return null;
+  }
+
+  return NextResponse.json(
+    {
+      error: 'Your account is scheduled for deletion. Cancel the deletion in Settings to continue using ReceiptWise.',
+      deletionScheduledAt: user.deletionScheduledAt,
+    },
+    { status: 403 },
+  );
+}
+
+/**
  * Require admin privileges
  * Returns null if admin, or NextResponse error if not
  */

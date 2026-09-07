@@ -1,10 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { receipts, receiptItems } from '@/lib/db/schema';
-import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers';
+import { getAuthenticatedUser, requireSubscription, requireNoPendingDeletion } from '@/lib/auth-helpers';
 import { analyzeReceiptWithGPT4o } from '@/lib/openai';
 import type { OCRItem } from '@/lib/types/api-responses';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { sanitizeErrorMessage } from '@/lib/errors';
 import { randomUUID } from 'crypto';
 import { invalidateInsightsCache } from '@/lib/utils/cache-helpers';
 import { eq, and, isNull } from 'drizzle-orm';
@@ -23,6 +24,9 @@ export async function POST(req: NextRequest) {
     // Check subscription for receipt processing
     const subCheck = await requireSubscription(user);
     if (subCheck) return subCheck;
+
+    const deletionCheck = requireNoPendingDeletion(user);
+    if (deletionCheck) return deletionCheck;
 
     const body = await req.json();
     const { receiptId } = body;
@@ -138,7 +142,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: 'Failed to process receipt',
-          message: error instanceof Error ? error.message : 'Unknown error',
+          message: error instanceof Error
+            ? sanitizeErrorMessage(error)
+            : 'Unknown error',
           receiptId,
         },
         { status: 500 },
@@ -326,10 +332,11 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     submitLogEvent('receipt-error', `Receipt processing error: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { error: error instanceof Error ? error.stack : undefined }, true);
+    // Stack traces and raw messages stay in the logs, never in the response body.
     return NextResponse.json(
       {
-        error: (error as Error).message,
-        details: error instanceof Error ? error.stack : undefined,
+        error: 'Failed to process receipt',
+        message: error instanceof Error ? sanitizeErrorMessage(error) : 'Unknown error',
       },
       { status: 500 },
     );

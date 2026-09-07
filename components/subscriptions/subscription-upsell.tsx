@@ -113,7 +113,7 @@ export function SubscriptionUpsell({
             <ArrowRight className="h-4 w-4" />
           </Button>
           {trialDays > 0 && (
-            <p className="text-xs text-muted-foreground">No credit card required • Cancel anytime</p>
+            <p className="text-xs text-muted-foreground">Cancel anytime during the trial</p>
           )}
         </div>
       </CardContent>

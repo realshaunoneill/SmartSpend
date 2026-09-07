@@ -1,9 +1,8 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { receipts, receiptItems, users } from '@/lib/db/schema';
-import type { Receipt } from '@/lib/db/schema';
-import { eq, desc, asc, count, isNull, and, or, gte, lte, ilike, sql, inArray } from 'drizzle-orm';
+import { receipts, receiptItems, users, householdUsers } from '@/lib/db/schema';
+import { eq, desc, asc, count, isNull, and, or, gte, lte, ilike, sql, inArray, exists } from 'drizzle-orm';
 import type { ReceiptWithItems } from '@/lib/types/api-responses';
 
 export interface GetReceiptsOptions {
@@ -159,9 +158,23 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
   const shouldSearchAllHouseholds = searchAllHouseholds && search;
 
   if (householdId && !shouldSearchAllHouseholds) {
-    // Get receipts for specific household
+    // Get receipts for specific household.
+    // The EXISTS clause is defence in depth: callers are expected to have already run
+    // requireHouseholdMembership, but without this the filter would be householdId alone
+    // and any authenticated user could read any household's receipts by guessing an id.
     const conditions = and(
       eq(receipts.householdId, householdId),
+      exists(
+        db
+          .select({ one: sql`1` })
+          .from(householdUsers)
+          .where(
+            and(
+              eq(householdUsers.householdId, householdId),
+              eq(householdUsers.userId, userId),
+            ),
+          ),
+      ),
       ...baseConditions,
       ...filterConditions,
     );
@@ -229,7 +242,7 @@ export async function getReceipts(options: GetReceiptsOptions): Promise<Paginate
   const userIds = [...new Set(userReceipts.map(r => r.userId))];
 
   // Batch fetch all items for all receipts
-  const allItems = receiptIds.length > 0 
+  const allItems = receiptIds.length > 0
     ? await db
         .select()
         .from(receiptItems)

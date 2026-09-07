@@ -1,10 +1,26 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser, filterReceiptsForSubscription } from '@/lib/auth-helpers';
+import {
+  getAuthenticatedUser,
+  filterReceiptsForSubscription,
+  requireHouseholdMembership,
+} from '@/lib/auth-helpers';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
 import { getReceipts } from '@/lib/receipt-scanner';
 import { randomUUID } from 'crypto';
 
 export const runtime = 'nodejs';
+
+const MAX_PAGE_SIZE = 100;
+
+/**
+ * Parse a positive integer query param, falling back to `fallback` for missing,
+ * non-numeric or out-of-range values. Prevents `?limit=999999` and `?page=abc`.
+ */
+function parsePositiveInt(raw: string | null, fallback: number, max?: number): number {
+  const parsed = parseInt(raw || '', 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+  return max ? Math.min(parsed, max) : parsed;
+}
 
 export async function GET(req: NextRequest) {
   const correlationId = (req.headers.get('x-correlation-id') || randomUUID()) as CorrelationId;
@@ -17,8 +33,16 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const householdId = searchParams.get('householdId');
     const personalOnly = searchParams.get('personalOnly') === 'true';
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const page = parsePositiveInt(searchParams.get('page'), 1);
+    const limit = parsePositiveInt(searchParams.get('limit'), 10, MAX_PAGE_SIZE);
+
+    // If householdId is provided, verify the caller is a member of it.
+    // Without this the household branch of getReceipts filters on householdId alone,
+    // which would return any household's receipts to any authenticated user.
+    if (householdId) {
+      const membershipCheck = await requireHouseholdMembership(householdId, user.id, correlationId);
+      if (membershipCheck) return membershipCheck;
+    }
 
     // Search and filter parameters
     const search = searchParams.get('search') || undefined;

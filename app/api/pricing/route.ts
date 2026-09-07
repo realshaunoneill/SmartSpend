@@ -115,11 +115,9 @@ export async function GET(request: NextRequest) {
       error: error instanceof Error ? error.stack : undefined,
     }, true);
 
+    // Stripe errors can carry account/price internals — keep them in the logs only.
     return NextResponse.json(
-      {
-        error: 'Failed to fetch pricing information',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: 'Failed to fetch pricing information' },
       { status: 500 },
     );
   }

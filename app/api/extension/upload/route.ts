@@ -196,8 +196,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       imageUrl: finalImageUrl,
     });
 
-    // Trigger async processing
-    const processUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.receiptwise.io'}/api/receipt/process`;
+    // Trigger async processing.
+    // Must be the /api/extension/process route: it accepts X-API-Key auth and is exempt
+    // from Clerk middleware. /api/receipt/process is Clerk-only, so posting there left
+    // every extension upload stuck at 'pending' forever.
+    const processUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.receiptwise.io'}/api/extension/process`;
     fetch(processUrl, {
       method: 'POST',
       headers: {

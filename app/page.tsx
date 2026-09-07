@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { Navigation } from '@/components/layout/navigation';
-import { Testimonials, SocialProofBanner } from '@/components/landing/testimonials';
+import { HowItWorks } from '@/components/landing/how-it-works';
 import { ExitIntentPopup } from '@/components/landing/exit-intent-popup';
 import { useUser } from '@clerk/nextjs';
 
@@ -63,12 +63,8 @@ const features = [
   },
 ];
 
-const stats = [
-  { value: '10K+', label: 'Active Users' },
-  { value: '500K+', label: 'Receipts Scanned' },
-  { value: '99.9%', label: 'Uptime' },
-  { value: '$2M+', label: 'Tracked Spending' },
-];
+// NOTE: no usage/user-count stats here on purpose. Anything claimed on this page has to
+// be independently true. Add real numbers only once they are real and measured.
 
 const benefits = [
   { text: 'Perfect for families & roommates', comingSoon: false },
@@ -77,7 +73,7 @@ const benefits = [
   { text: 'Automatic categorization', comingSoon: false },
   { text: 'Export reports for taxes', comingSoon: false },
   { text: 'Track shared subscriptions', comingSoon: false },
-  { text: 'Chrome extension for easy capture', comingSoon: true },
+  { text: 'Chrome extension for easy capture', comingSoon: false },
 ];
 
 export default function LandingPage() {
@@ -181,24 +177,9 @@ export default function LandingPage() {
           </div>
           {isLoaded && !isSignedIn && process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS && parseInt(process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS) > 0 && (
             <p className="mt-4 text-sm text-muted-foreground">
-              Start your {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS}-day free trial • No credit card required
+              Start your {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS}-day free trial • Cancel anytime
             </p>
           )}
-
-          {/* Social Proof Banner */}
-          <div className="mt-8">
-            <SocialProofBanner />
-          </div>
-
-          {/* Stats */}
-          <div className="mt-16 grid grid-cols-2 gap-6 sm:grid-cols-4">
-            {stats.map((stat) => (
-              <div key={stat.label} className="rounded-lg border border-border/50 bg-card/50 p-4 backdrop-blur-sm">
-                <div className="text-2xl font-bold text-foreground sm:text-3xl">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Dashboard Preview */}
@@ -239,7 +220,6 @@ export default function LandingPage() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => {
               const Icon = feature.icon;
-              const isComingSoon = feature.title === 'Chrome Extension';
               return (
                 <Card
                   key={feature.title}
@@ -253,16 +233,6 @@ export default function LandingPage() {
                     <h3 className="mb-2 text-lg font-semibold text-foreground">{feature.title}</h3>
                     <p className="text-sm text-muted-foreground">{feature.description}</p>
                   </CardContent>
-                  {/* Coming Soon Overlay for Chrome Extension */}
-                  {isComingSoon && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-[2px]">
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="rounded-full bg-primary/10 px-4 py-1.5 ring-1 ring-primary/20">
-                          <span className="text-sm font-semibold text-primary">Coming Soon</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </Card>
               );
             })}
@@ -283,7 +253,7 @@ export default function LandingPage() {
                 Built for Sharing
               </h2>
               <p className="mb-8 text-lg text-muted-foreground">
-                Join thousands of families, roommates, and couples who track expenses together with ReceiptWise.
+                Built for families, roommates and couples who track expenses together.
                 No more lost receipts, no more confusion about who paid what.
               </p>
               <ul className="mb-8 grid gap-3 sm:grid-cols-2">
@@ -340,8 +310,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <Testimonials />
+      {/* How It Works Section */}
+      <HowItWorks />
 
       {/* Pricing Section */}
       <section id="pricing" className="border-t border-border/50 bg-muted/30 px-4 py-20 scroll-mt-20" aria-labelledby="pricing-title">
@@ -352,66 +322,19 @@ export default function LandingPage() {
               Simple Pricing
             </div>
             <h2 id="pricing-title" className="mb-4 text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
-              Start Free, Upgrade When Ready
+              One plan, everything included
             </h2>
             <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-              Try all features free for {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS || '7'} days. No credit card required.
+              Try every feature free for {process.env.NEXT_PUBLIC_STRIPE_TRIAL_DAYS || '7'} days. Cancel any time during the trial and you won&apos;t be charged.
             </p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-2">
-            {/* Free Plan */}
-            <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm">
-              <CardContent className="p-8">
-                <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-foreground">Free</h3>
-                  <p className="text-sm text-muted-foreground">Perfect to get started</p>
-                </div>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-foreground">€0</span>
-                  <span className="text-muted-foreground">/month</span>
-                </div>
-                <ul className="mb-8 space-y-3">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                    <span className="text-sm text-foreground">5 receipts per month</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                    <span className="text-sm text-foreground">AI receipt scanning</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                    <span className="text-sm text-foreground">Basic spending insights</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                    <span className="text-sm text-foreground">1 household</span>
-                  </li>
-                </ul>
-                {!isLoaded ? (
-                  <Skeleton className="h-10 w-full rounded-md" />
-                ) : isSignedIn ? (
-                  <Link href="/dashboard" className="block">
-                    <Button variant="outline" className="w-full">
-                      Go to Dashboard
-                    </Button>
-                  </Link>
-                ) : (
-                  <Link href="/sign-up" className="block">
-                    <Button variant="outline" className="w-full">
-                      Get Started Free
-                    </Button>
-                  </Link>
-                )}
-              </CardContent>
-            </Card>
-
+          {/* A free tier is not implemented yet — see P1-1 in the readiness plan. The
+              €0 card that used to sit here advertised 5 receipts/month, which the API
+              rejected with a 403. It comes back when the €0 Stripe price is live. */}
+          <div className="mx-auto max-w-md">
             {/* Pro Plan */}
             <Card className="relative overflow-hidden border-primary/50 bg-card/50 backdrop-blur-sm shadow-lg shadow-primary/10">
-              <div className="absolute right-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
-                Most Popular
-              </div>
               <CardContent className="p-8">
                 <div className="mb-6">
                   <h3 className="text-xl font-semibold text-foreground">Pro</h3>
@@ -444,9 +367,8 @@ export default function LandingPage() {
                     <span className="text-sm text-foreground">Subscription tracking</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground/60" />
-                    <span className="text-sm text-muted-foreground">Chrome extension</span>
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary ring-1 ring-primary/20">Soon</span>
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-foreground">Chrome extension</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -475,7 +397,7 @@ export default function LandingPage() {
                   </Link>
                 )}
                 <p className="mt-3 text-center text-xs text-muted-foreground">
-                  No credit card required • Cancel anytime
+                  Card details required to start the trial • Cancel anytime
                 </p>
               </CardContent>
             </Card>
@@ -490,26 +412,40 @@ export default function LandingPage() {
             <Lock className="h-8 w-8 text-primary" aria-hidden="true" />
           </div>
           <h2 id="security-title" className="mb-4 text-3xl font-bold text-foreground sm:text-4xl">
-            Your Data is Safe with Us
+            How your data is handled
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
-            We use military-grade encryption and security measures to protect your household financial data. Your privacy is our top priority.
+            Receipts are financial records, so here is plainly what happens to them — and
+            what you can do about it. Full detail is in the{' '}
+            <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">
+              privacy policy
+            </Link>
+            .
           </p>
           <div className="grid gap-6 sm:grid-cols-3">
             <div className="rounded-lg border border-border/50 bg-card/50 p-6 backdrop-blur-sm">
               <Shield className="mx-auto mb-3 h-8 w-8 text-primary" aria-hidden="true" />
-              <h3 className="mb-2 font-semibold text-foreground">256-bit Encryption</h3>
-              <p className="text-sm text-muted-foreground">Military-grade security</p>
+              <h3 className="mb-2 font-semibold text-foreground">Encrypted in transit &amp; at rest</h3>
+              <p className="text-sm text-muted-foreground">
+                Served over TLS. Sign-in is handled by Clerk and payments by Stripe, so we
+                never store your password or card details.
+              </p>
             </div>
             <div className="rounded-lg border border-border/50 bg-card/50 p-6 backdrop-blur-sm">
               <Cloud className="mx-auto mb-3 h-8 w-8 text-primary" aria-hidden="true" />
-              <h3 className="mb-2 font-semibold text-foreground">Secure Cloud Storage</h3>
-              <p className="text-sm text-muted-foreground">Always backed up and accessible</p>
+              <h3 className="mb-2 font-semibold text-foreground">Used only to read your receipts</h3>
+              <p className="text-sm text-muted-foreground">
+                Images go to OpenAI for text extraction and nothing else. Per OpenAI&apos;s
+                API terms they are not used to train their models.
+              </p>
             </div>
             <div className="rounded-lg border border-border/50 bg-card/50 p-6 backdrop-blur-sm">
               <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-primary" aria-hidden="true" />
-              <h3 className="mb-2 font-semibold text-foreground">GDPR Ready</h3>
-              <p className="text-sm text-muted-foreground">Privacy compliant</p>
+              <h3 className="mb-2 font-semibold text-foreground">Yours to take or delete</h3>
+              <p className="text-sm text-muted-foreground">
+                Export everything as CSV or JSON whenever you like, and delete your
+                account and its data from Settings.
+              </p>
             </div>
           </div>
         </div>
@@ -524,7 +460,7 @@ export default function LandingPage() {
           <p className="mx-auto mb-8 max-w-2xl text-lg text-primary-foreground/90">
             {isLoaded && isSignedIn
               ? 'Start tracking your expenses and take control of your finances today.'
-              : 'Join ReceiptWise today and start tracking your expenses. Free to get started, no credit card required.'
+              : 'Try ReceiptWise free for a week. Cancel any time during the trial and you won’t be charged.'
             }
           </p>
           {!isLoaded ? (

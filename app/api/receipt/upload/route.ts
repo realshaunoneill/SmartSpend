@@ -1,7 +1,8 @@
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { NextResponse, type NextRequest } from 'next/server';
-import { getAuthenticatedUser, requireSubscription } from '@/lib/auth-helpers';
+import { getAuthenticatedUser, requireSubscription, requireNoPendingDeletion } from '@/lib/auth-helpers';
 import { type CorrelationId, submitLogEvent } from '@/lib/logging';
+import { sanitizeErrorMessage } from '@/lib/errors';
 import { randomUUID } from 'crypto';
 
 // Route configuration
@@ -24,6 +25,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Check subscription for receipt upload
     const subCheck = await requireSubscription(user);
     if (subCheck) return subCheck;
+
+    const deletionCheck = requireNoPendingDeletion(user);
+    if (deletionCheck) return deletionCheck;
 
     const body = (await request.json()) as HandleUploadBody;
 
@@ -71,10 +75,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(jsonResponse);
   } catch (error) {
     submitLogEvent('receipt-error', `Receipt upload error: ${error instanceof Error ? error.message : 'Unknown error'}`, correlationId, { error: error instanceof Error ? error.stack : undefined }, true);
+    // Stack traces and raw messages stay in the logs, never in the response body.
     return NextResponse.json(
       {
-        error: (error as Error).message,
-        details: error instanceof Error ? error.stack : undefined,
+        error: 'Failed to upload receipt',
+        message: error instanceof Error ? sanitizeErrorMessage(error) : 'Unknown error',
       },
       { status: 400 },
     );

@@ -55,8 +55,8 @@ export function UpgradeCTA() {
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Ready to get started?</h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
             {pricingDetails.trial > 0
-              ? `Start your ${pricingDetails.trial}-day free trial and join thousands of users taking control of their finances with ReceiptWise Premium`
-              : 'Join thousands of users who are taking control of their finances with ReceiptWise Premium'}
+              ? `Start your ${pricingDetails.trial}-day free trial and unlock every ReceiptWise Premium feature`
+              : 'Unlock every ReceiptWise Premium feature and take control of your spending'}
           </p>
           <div className="pt-2">
             <Button

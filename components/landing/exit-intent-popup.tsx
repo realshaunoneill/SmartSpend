@@ -71,11 +71,11 @@ export function ExitIntentPopup() {
           <DialogDescription className="text-base">
             {hasFreeTrial ? (
               <>
-                Start your <span className="font-semibold text-primary">{trialDays}-day free trial</span> today and see why thousands of families trust ReceiptWise to manage their expenses.
+                Start your <span className="font-semibold text-primary">{trialDays}-day free trial</span> and see how much easier shared expenses get when the receipts read themselves.
               </>
             ) : (
               <>
-                Join <span className="font-semibold text-primary">10,000+ users</span> who are already saving time and money with ReceiptWise.
+                Stop losing receipts. Let AI read them, and share the whole picture with your household.
               </>
             )}
           </DialogDescription>
@@ -116,7 +116,7 @@ export function ExitIntentPopup() {
 
           {hasFreeTrial && (
             <p className="text-center text-xs text-muted-foreground">
-              No credit card required • Cancel anytime
+              Cancel anytime during the trial and you won&apos;t be charged
             </p>
           )}
         </div>

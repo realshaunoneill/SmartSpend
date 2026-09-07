@@ -78,7 +78,7 @@ const onboardingSteps: OnboardingStep[] = [
       { icon: Users, text: 'Share expenses with family & roommates' },
       { icon: Zap, text: 'AI-powered receipt scanning' },
       { icon: Shield, text: 'Secure & encrypted data' },
-      { icon: Gift, text: 'Free trial - no credit card required upfront' },
+      { icon: Gift, text: 'Free trial — cancel any time before it ends' },
     ],
   },
   {

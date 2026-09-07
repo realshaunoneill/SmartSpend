@@ -19,7 +19,7 @@ export function UpgradeHero() {
       {trialDays > 0 && (
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <Gift className="w-4 h-4 text-primary" aria-hidden="true" />
-          <span>Start your <strong className="text-foreground">{trialDays}-day free trial</strong> today — no credit card required upfront</span>
+          <span>Start your <strong className="text-foreground">{trialDays}-day free trial</strong> — cancel any time before it ends</span>
         </div>
       )}
     </div>
